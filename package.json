@@ -1,5 +1,5 @@
 {
-  "name": "y",
+  "name": "@clearblade/asset-monitor",
   "version": "1.0.0",
   "description": "Asset Monitor Biolerplate",
   "scripts": {
