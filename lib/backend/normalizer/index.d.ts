@@ -1,5 +1,5 @@
 /// <reference types="clearbladejs-server" />
-import { Assets } from "../collection-schema/Assets";
+import { Assets } from "../collection-schema/assets";
 export declare type MessageParser = (err: boolean, msg: any, topic: string) => Array<Assets>;
 export interface NormalizerPublishConfig {
     [key: string]: PublishConfig;

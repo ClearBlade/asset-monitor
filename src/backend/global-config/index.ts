@@ -1,8 +1,7 @@
-import { Util } from "../Util";
-import { NormalizerPublishConfig } from "../Normalizer";
-import { Assets } from "../CollectionSchemas/assets";
+import { Topics } from "../util";
+import { NormalizerPublishConfig } from "../normalizer";
+import { Assets } from "../collection-schema/assets";
 
-var util = Util();
 export interface LogLevel {
     [key: string]: LogLevels
 }
@@ -72,7 +71,7 @@ let globalConfig: GlobalConfig = {
   ASSET_HISTORY_CONFIG: ["location_x", "location_y", "location_z"],
   NORMALIZER_PUB_CONFIG: {
     locationConfig: {
-      topicFn: util.Topics.DBUpdateAssetLocation,
+      topicFn: Topics.DBUpdateAssetLocation,
       keysToPublish: [
         "location_x",
         "location_y",
@@ -88,11 +87,11 @@ let globalConfig: GlobalConfig = {
       ]
     },
     statusConfig: {
-      topicFn: util.Topics.DBUpdateAssetStatus,
+      topicFn: Topics.DBUpdateAssetStatus,
       keysToPublish: ["custom_data", "type"]
     },
     historyConfig: {
-      topicFn: util.Topics.AssetHistory,
+      topicFn: Topics.AssetHistory,
       keysToPublish: [
         "location_x",
         "location_y",

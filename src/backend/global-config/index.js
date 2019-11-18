@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var Util_1 = require("../Util");
+var Util_1 = require("../util");
 var util = Util_1.Util();
 ;
 var LogLevels;

@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var GlobalConfig_1 = require("../GlobalConfig");
-var Logger_1 = require("../Logger");
-require("../PromisePolyfill");
+var GlobalConfig_1 = require("../global-config");
+var Logger_1 = require("../logger");
+require("../promise-polyfill");
 // @ts-ignore
 var ClearBlade = global.ClearBlade;
 function CbCollectionLib(collectionName) {

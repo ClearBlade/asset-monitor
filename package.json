@@ -70,15 +70,5 @@
     "setupFiles": [
       "./src/setupTests.ts"
     ]
-  },
-  "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
-    "declaration": true,
-    "outDir": "./lib",
-    "strict": true
-  },
-  "include": ["src/backend/Normalizer"],
-  "exclude": ["node_modules", "**/__tests__/*"]
-
+  }
 }

@@ -1,5 +1,5 @@
 
-import { GC, LogLevels } from "../GlobalConfig";
+import { GC, LogLevels } from "../global-config";
 
 // @ts-ignore
 var ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
@@ -8,7 +8,7 @@ var ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
 var log: { (s: any): void } = global.log;
 
 interface Loggable {
-    publishLog(logLevel: LogLevels, ...message:any[])
+    publishLog(logLevel: LogLevels, ...message:any[]):void;
 }
 
 /**
@@ -18,7 +18,7 @@ interface Loggable {
 export function Logger(): Loggable {
     // pass the loglevel and the message: any type is allowed
     var messaging = ClearBlade.Messaging();
-    function publishLog(logLevel: LogLevels, ...messages) {
+    function publishLog(logLevel: LogLevels, ...messages:any[]) {
         
         var pubMsg = " ";
         if (messages.length > 0) {
@@ -44,7 +44,7 @@ export function Logger(): Loggable {
         }
     }
 
-    function prettyLog(...args) {
+    function prettyLog(...args:any[]) {
       if (args.length > 0) {
         return `${args
             .map(a => (typeof a === "object" ? JSON.stringify(a) : a))

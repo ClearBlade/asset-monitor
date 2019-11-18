@@ -1,15 +1,11 @@
-import { Util } from "../Util";
-import { Logger } from "../Logger";
-import { GC } from "../GlobalConfig";
-import { Assets } from "../CollectionSchemas/Assets";
+import { Logger } from "../logger";
+import { GC } from "../global-config";
+import { Assets } from "../collection-schema/assets";
 
 // @ts-ignore
 var ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
 // @ts-ignore
 var log: { (s: any): void } = global.log;
-
-var util = Util();
-
 export type MessageParser = (
   err: boolean,
   msg: any,
@@ -92,9 +88,11 @@ export function publisher(assets: Array<Assets>, pubConfig: PublishConfig) {
   let messaging = ClearBlade.Messaging();
   for (let i = 0, l = assets.length; i < l; i++) {
     const assetID = assets[i]["id"];
+    //@ts-ignore
     const topic = pubConfig.topicFn(assetID);
     let pubData = {};
     pubConfig.keysToPublish.forEach(function(value) {
+      //@ts-ignore
       pubData[value] = assets[i][value];
     });
     messaging.publish(topic, JSON.stringify(pubData));
