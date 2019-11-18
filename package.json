@@ -1,15 +1,12 @@
 {
-  "name": "asset-monitor",
+  "name": "@clearblade/asset-monitor",
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "prepublish": "tsc",
+   "test": "echo \"Error: no test specified\" && exit 1",
+   "prepublish": "tsc",
    "build": "tsc",
-   "lint": "tslint -p tsconfig.json",
-   "prepare": "npm run build",
-   "preversion": "npm run lint"
-  
+   "lint": "tslint -p tsconfig.json"
   },
   "keywords": [],
   "author": "",
