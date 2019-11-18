@@ -1,15 +1,15 @@
 {
-  "name": "@clearblade/asset-monitor",
+  "name": "y",
   "version": "1.0.0",
-  "description": "",
+  "description": "Asset Monitor Biolerplate",
   "scripts": {
-   "test": "echo \"Error: no test specified\" && exit 1",
-   "prepublish": "tsc",
-   "build": "tsc",
-   "lint": "tslint -p tsconfig.json"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublish": "tsc",
+    "build": "tsc",
+    "lint": "tslint -p tsconfig.json"
   },
   "keywords": [],
-  "author": "",
+  "author": "yashjain28",
   "license": "ISC",
   "types": "index.d.ts",
   "main": "src/index.js",
@@ -67,5 +67,18 @@
     "setupFiles": [
       "./src/setupTests.ts"
     ]
-  }
+  },
+  "directories": {
+    "example": "examples",
+    "lib": "lib"
+  },
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ClearBlade/asset-monitor.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ClearBlade/asset-monitor/issues"
+  },
+  "homepage": "https://github.com/ClearBlade/asset-monitor#readme"
 }
