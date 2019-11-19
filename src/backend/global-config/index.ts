@@ -1,6 +1,5 @@
 import { Topics } from "../util";
 import { NormalizerPublishConfig } from "../normalizer";
-import { Assets } from "../collection-schema/assets";
 
 export interface LogLevel {
     [key: string]: LogLevels
