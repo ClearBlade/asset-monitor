@@ -6,7 +6,9 @@ export interface LogLevel {
     [key: string]: LogLevels
 }
 
-export interface CustomConfig extends Assets{};
+export interface NormalizerDeviceMap{
+  [index:string]:string;
+};
 
 export enum LogLevels {
     INFO = "info",
@@ -49,7 +51,7 @@ export interface GlobalConfig {
   LOG_LEVEL: LogLevel;
   LOG_SETTING: LogLevels;
   CUSTOM_CONFIGS: {
-    [key: string]: CustomConfig;
+    [key: string]: NormalizerDeviceMap;
   };
   ASSET_HISTORY_CONFIG: AssetHistoryConfig;
   NORMALIZER_PUB_CONFIG: NormalizerPublishConfig;
@@ -128,7 +130,8 @@ let globalConfig: GlobalConfig = {
   UPDATE_ASSET_STATUS_CONFIG: {
     keysToUpdate: ["custom_data"],
     updateMethod: AssetStatusUpdateMethod.MERGE
-  }
+  },
+
 };
 
 export function CreateConfig(config: GlobalConfig["CUSTOM_CONFIGS"]) {

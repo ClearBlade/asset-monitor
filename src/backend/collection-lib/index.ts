@@ -1,6 +1,6 @@
-import { CollectionName, GC } from "../GlobalConfig";
-import { Logger } from "../Logger";
-import "../PromisePolyfill";
+import { CollectionName, GC } from "../global-config";
+import { Logger } from "../logger";
+import "../promise-polyfill";
 
 // @ts-ignore
 var ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
