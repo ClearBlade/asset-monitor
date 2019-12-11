@@ -5,7 +5,6 @@ import "../promise-polyfill";
 // @ts-ignore
 var ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
 
-
 interface CollectionUpdateOptions {
   query: CbServer.QueryObj;
   changes: Object;
@@ -22,7 +21,10 @@ interface CollectionFetchOptions {
 export function CbCollectionLib(collectionName: CollectionName) {
   let logger = Logger();
   if (!collectionName) {
-    logger.publishLog(GC.LOG_LEVEL.ERROR, "Remember to pass collection name while using the library :(");
+    logger.publishLog(
+      GC.LOG_LEVEL.ERROR,
+      "Remember to pass collection name while using the library :("
+    );
     return;
   }
 
@@ -44,6 +46,7 @@ export function CbCollectionLib(collectionName: CollectionName) {
         reject(errMsg);
       }
       let col = ClearBlade.Collection({ collectionName });
+      // @ts-ignore - bad Clark
       col.create(opts.item, function(err, res) {
         if (err) {
           reject(res);
@@ -70,12 +73,22 @@ export function CbCollectionLib(collectionName: CollectionName) {
         logger.publishLog(GC.LOG_LEVEL.ERROR, errMsg);
         reject(errMsg);
       }
+      // @ts-ignore - bad Clark
       col.update(opts.query, opts.changes, function(err, res) {
         if (err) {
-          logger.publishLog(GC.LOG_LEVEL.ERROR, "ERROR: with update ", err, res, opts);
+          logger.publishLog(
+            GC.LOG_LEVEL.ERROR,
+            "ERROR: with update ",
+            err,
+            res,
+            opts
+          );
           reject(res);
         } else {
-          logger.publishLog(GC.LOG_LEVEL.DEBUG, "DEBUG: Updated " + collectionName);
+          logger.publishLog(
+            GC.LOG_LEVEL.DEBUG,
+            "DEBUG: Updated " + collectionName
+          );
           resolve(res);
         }
       });
@@ -88,7 +101,11 @@ export function CbCollectionLib(collectionName: CollectionName) {
    * @returns {Promise}
    */
   function cbFetchPromise(opts: CollectionFetchOptions) {
-    let promise = new Promise<CbServer.CollectionFetchData>(function(resolve, reject) {
+    // @ts-ignore - bad Clark
+    let promise = new Promise<CbServer.CollectionFetchData>(function(
+      resolve,
+      reject
+    ) {
       let col = ClearBlade.Collection({ collectionName: collectionName });
       let query = opts.query;
       if (!query) {
@@ -96,12 +113,16 @@ export function CbCollectionLib(collectionName: CollectionName) {
         logger.publishLog(GC.LOG_LEVEL.ERROR, errMsg);
         reject(errMsg);
       }
+      // @ts-ignore - bad Clark
       col.fetch(query, function(err, res) {
         if (err) {
           logger.publishLog(GC.LOG_LEVEL.ERROR, "ERROR: with fetch " + res);
           reject(res);
         } else {
-          logger.publishLog(GC.LOG_LEVEL.DEBUG, "DEBUG: Fetched Success: " + collectionName);
+          logger.publishLog(
+            GC.LOG_LEVEL.DEBUG,
+            "DEBUG: Fetched Success: " + collectionName
+          );
           resolve(res);
         }
       });

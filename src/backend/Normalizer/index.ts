@@ -1,7 +1,7 @@
 import { Logger } from "../logger";
 import { GC } from "../global-config";
 import { Assets } from "../collection-schema/assets";
-import "../promise-polyfill/index.js"
+import "../promise-polyfill/index.js";
 // @ts-ignore
 var ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
 // @ts-ignore
@@ -43,24 +43,28 @@ export function normalizer(config: NormalizerConfig) {
   let publishConfig = config.normalizerPubConfig || GC.NORMALIZER_PUB_CONFIG;
 
   const TOPIC = topics[0];
+  // @ts-ignore - bad Clark
   const SERVICE_INSTANCE_ID = req.service_instance_id;
+  // @ts-ignore - bad Clark
   let messaging = ClearBlade.Messaging();
   var logger = Logger();
 
-  logger.publishLog(GC.LOG_LEVEL.DEBUG ,"Normalizer SERVICE_INSTANCE_ID:: " + SERVICE_INSTANCE_ID);
+  logger.publishLog(
+    GC.LOG_LEVEL.DEBUG,
+    "Normalizer SERVICE_INSTANCE_ID:: " + SERVICE_INSTANCE_ID
+  );
 
-  
-  let subscribePromises = []
-  for(let i=0, l=topics.length; i<l;i++){
+  let subscribePromises = [];
+  for (let i = 0, l = topics.length; i < l; i++) {
     subscribePromises.push(subscriber(topics[i]));
   }
   resp.success("Hello in Normalizer");
   Promise.all(subscribePromises)
-  .then(WaitLoop)
-  .catch(failureCb);
+    .then(WaitLoop)
+    .catch(failureCb);
 
   //@ts-ignore
-    Promise.runQueue();
+  Promise.runQueue();
 
   function WaitLoop() {
     logger.publishLog(
@@ -70,6 +74,7 @@ export function normalizer(config: NormalizerConfig) {
     );
 
     while (true) {
+      // @ts-ignore - bad Clark
       messaging.waitForMessage([TOPIC], HandleMessage);
     }
   }
@@ -94,27 +99,33 @@ export function normalizer(config: NormalizerConfig) {
   }
 }
 
-export function subscriber(topic: string):Promise<unknown>{
+export function subscriber(topic: string): Promise<unknown> {
+  // @ts-ignore - bad Clark
   let messaging = ClearBlade.Messaging();
-  var promise = new Promise(function(resolve, reject){
+  var promise = new Promise(function(resolve, reject) {
+    // @ts-ignore - bad Clark
     messaging.subscribe(topic, function(err, data) {
       if (err) {
-        reject("Error with subscribing"+data);
-      } else{
+        reject("Error with subscribing" + data);
+      } else {
         resolve(data);
       }
     });
-  })
+  });
   return promise;
 }
 
-export function bulkPublisher(assets: Array<Assets>, normalizerPubConfig:NormalizerPublishConfig=GC.NORMALIZER_PUB_CONFIG){
+export function bulkPublisher(
+  assets: Array<Assets>,
+  normalizerPubConfig: NormalizerPublishConfig = GC.NORMALIZER_PUB_CONFIG
+) {
   Object.keys(normalizerPubConfig).forEach(function(key) {
     publisher(assets, normalizerPubConfig[key]);
   });
 }
 
 export function publisher(assets: Array<Assets>, pubConfig: PublishConfig) {
+  // @ts-ignore - bad Clark
   let messaging = ClearBlade.Messaging();
   for (let i = 0, l = assets.length; i < l; i++) {
     const assetID = assets[i]["id"];
@@ -128,4 +139,3 @@ export function publisher(assets: Array<Assets>, pubConfig: PublishConfig) {
     messaging.publish(topic, JSON.stringify(pubData));
   }
 }
-
