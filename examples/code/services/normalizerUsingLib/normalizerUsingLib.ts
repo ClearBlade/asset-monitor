@@ -1,83 +1,77 @@
 import {
-  normalizer,
-  MessageParser
-} from "asset-monitor/lib/backend/normalizer";
+  bulkPublisher,
+} from "@clearblade/asset-monitor/lib/backend/normalizer";
 import {
   normalizeData,
   isNormalizedDataValid
-} from "asset-monitor/lib/backend/util";
-import { Logger } from "asset-monitor/lib/backend/logger";
-import { GC } from "asset-monitor/lib/backend/global-config";
+} from "@clearblade/asset-monitor/lib/backend/util";
+import { Logger } from "@clearblade/asset-monitor/lib/backend/logger";
+import {
+  GC,
+  NormalizerDeviceMap
+} from "@clearblade/asset-monitor/lib/backend/global-config";
 
 // @ts-ignore
 var ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
 // @ts-ignore
 var log: { (s: any): void } = global.log;
 
-function normalizerUsingLibSS(req: CbServer.BasicReq, resp: CbServer.Resp) {
+let DEVICE_TO_CB_CONFIG: NormalizerDeviceMap = {
+  location_x: "locationCoordinate.x",
+  location_y: "locationCoordinate.y",
+  location_z: "locationCoordinate.z",
+  location_unit: "locationCoordinate.unit",
+  location_type: "INDOOR/GPS",
+  geo_latitude: "geoCoordinate.latitude",
+  geo_longitude: "geoCoordinate.longitude",
+  geo_altitude: "",
+  geo_unit: "geoCoordinate.unit",
+  last_updated: "lastSeen",
+  last_location_updated: "lastSeen",
+  id: "deviceId",
+  type: "type"
+};
+
+export function normalizerUsingLib(
+  req: CbServer.BasicReq,
+  resp: CbServer.Resp
+) {
+  ClearBlade.init({ request: req });
+  // These are parameters passed into the code service
   const SERVICE_INSTANCE_ID = req.service_instance_id;
   log("SERVICE_INSTANCE_ID:: " + SERVICE_INSTANCE_ID);
-  let topics = ["$share/mygroup/cmx_device"];
-  ClearBlade.init({ request: req });
+  let params = req.params;
   let logger = Logger();
+  let incomingData = params.body;
 
-  let messageParser: MessageParser = function(err, msg, topic) {
-    try {
-      var incomingData = JSON.parse(msg);
-    } catch (e) {
-      logger.publishLog(
-        GC.LOG_LEVEL.ERROR,
-        SERVICE_INSTANCE_ID,
-        "Failed while parsing: ",
-        e
-      );
-      return [];
-    }
-    var normalizedData = [];
-    switch (topic) {
-      case "$share/mygroup/cmx_device":
-        normalizedData = normalizeData(
-          incomingData,
-          GC.CUSTOM_CONFIGS.CMX_TO_CB_CONFIG
-        );
-        break;
-      case "$share/mygroup/jims_railcart":
-        // normalizedData = NormalizeData(
-        //   incomingData,
-        //   GC.CUSTOM_CONFIGS.RAILCART_TO_CB_CONFIG
-        // );
-        break;
-    }
+  var normalizedData = (normalizedData = normalizeData(
+    incomingData,
+    DEVICE_TO_CB_CONFIG
+  ));
 
-    if (!isNormalizedDataValid(normalizedData)) {
-      let errMsg = "Normalized Data is invalid";
-      logger.publishLog(
-        GC.LOG_LEVEL.ERROR,
-        "ERROR: ",
-        SERVICE_INSTANCE_ID,
-        ": ",
-        errMsg,
-        "Normalized Message",
-        normalizedData
-      );
-      resp.error(errMsg);
-    }
-    return normalizedData;
-  };
+  if (!isNormalizedDataValid(normalizedData)) {
+    let errMsg = "Normalized Data is invalid";
+    logger.publishLog(
+      GC.LOG_LEVEL.ERROR,
+      "ERROR: ",
+      SERVICE_INSTANCE_ID,
+      ": ",
+      errMsg,
+      "Normalized Message",
+      normalizedData
+    );
+    resp.error(errMsg);
+  }
 
-  // Add default publish config
-  let publishConfig = {
-    locationTopic: GC.NORMALIZER_PUB_CONFIG.locationConfig
-  };
+  //DEV_TODO: An example showing on how to publish on all the default topics
+  bulkPublisher(normalizedData);
 
-  normalizer({
-    req,
-    resp,
-    messageParser,
-    topics,
-    normalizerPubConfig: publishConfig
-  });
+  //DEV_TODO: (optional) user can publish this data to custom topics as well.
+  //NOTE: If LOT of intense tasks are being performed in this code-service,
+  //please increase the execution timeout for the service
+
+  resp.success("Success");
 }
 
 //@ts-ignore
-global.normalizerUsingLibSS = normalizerUsingLibSS;
+global.normalizerUsingLib = normalizerUsingLib;

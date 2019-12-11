@@ -1,12 +1,12 @@
 import { Assets } from "../collection-schema/assets";
-import { CustomConfig } from "../global-config";
+import { NormalizerDeviceMap } from "../global-config";
 
 export interface FlattenedObject {
   [key: string]: string | number | boolean | Array<any>;
 }
 export function normalizeData(
   incomingData: any,
-  normalizerConfig: Assets
+  normalizerConfig: NormalizerDeviceMap
 ): Array<Assets> {
   let dataToNormalize: Array<Object> = [];
   if (typeof incomingData === "object") {
@@ -22,7 +22,7 @@ export function normalizeData(
 }
 export function cbifyData(
   input: Assets,
-  normalizerConfig: CustomConfig
+  normalizerConfig: NormalizerDeviceMap
 ): Assets {
   var cbfiedData: Assets = {};
   Object.keys(normalizerConfig).forEach(function(value) {
@@ -41,7 +41,7 @@ export function cbifyData(
 
 export function cbifyAll(
   input: Array<FlattenedObject>,
-  normalizerConfig: Assets
+  normalizerConfig: NormalizerDeviceMap
 ): Array<Assets> {
   let cbfiedData: Array<Assets> = [];
   for (let i = 0, l = input.length; i < l; i++) {

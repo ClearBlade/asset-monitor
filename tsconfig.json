@@ -61,10 +61,18 @@
       "module": "commonjs",
       "declaration": true,
       "outDir": "./lib/backend",
-      "strict": true
+      "strict": true,
+      "allowJs": true,
+              
     },
     "include": [
-      "src/backend/normalizer"
+      "src/backend/normalizer",
+      "src/backend/collection-schema",
+      "src/backend/global-config",
+      "src/backend/collection-lib",
+      "src/backend/logger",
+      "src/backend/util",
+      "src/backend/promise-polyfill"
     ],
     "exclude": [
       "node_modules",

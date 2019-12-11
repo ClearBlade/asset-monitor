@@ -1,53 +1,48 @@
-import { Util } from "../../../util/backend/Util";
-import { normalizer, MessageParser } from "../../../util/backend/Normalizer";
-import { GC } from "../../../util/backend/GlobalConfig";
-import { Logger } from "../../../util/backend/Logger";
+import { normalizer, MessageParser } from "../../../../lib/backend/normalizer";
+import { GC } from "../../../../lib/backend/global-config";
+import {
+  normalizeData,
+  isNormalizedDataValid
+} from "../../../../lib/backend/util";
 
 // @ts-ignore
 var ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
 // @ts-ignore
 var log: { (s: any): void } = global.log;
 
-var util = Util();
-
 function normalizerUsingLibSS(req: CbServer.BasicReq, resp: CbServer.Resp) {
   const SERVICE_INSTANCE_ID = req.service_instance_id;
   log("SERVICE_INSTANCE_ID:: " + SERVICE_INSTANCE_ID);
   let topics = ["$share/mygroup/cmx_device"];
   ClearBlade.init({ request: req });
-  let logger = Logger();
 
   let messageParser: MessageParser = function(err, msg, topic) {
-    
+    if(err){
+      return Promise.reject([]);
+    }
     try {
       var incomingData = JSON.parse(msg);
     } catch (e) {
-      logger.publishLog(GC.LOG_LEVEL.ERROR, SERVICE_INSTANCE_ID, "Failed while parsing: ",e);
-      return [];
+      return Promise.reject("Failed while parsing"+e);
     }
     var normalizedData = [];
     switch (topic) {
       case "$share/mygroup/cmx_device":
-        normalizedData = util.NormalizeData(
-          incomingData,
-          GC.CUSTOM_CONFIGS.CMX_TO_CB_CONFIG
-        );
+        normalizedData = normalizeData(incomingData, GC.CUSTOM_CONFIGS.CMX_TO_CB_CONFIG);
         break;
       case "$share/mygroup/jims_railcart":
-        // normalizedData = util.NormalizeData(
+        // normalizedData = normalizeData(
         //   incomingData,
         //   GC.CUSTOM_CONFIGS.RAILCART_TO_CB_CONFIG
         // );
         break;
     }
-    
 
-    if (!util.IsNormalizedDataValid(normalizedData)) {
+    if (!isNormalizedDataValid(normalizedData)) {
       let errMsg = "Normalized Data is invalid";
-      logger.publishLog(GC.LOG_LEVEL.ERROR, "ERROR: ", SERVICE_INSTANCE_ID, ": ", errMsg, "Normalized Message", normalizedData);
-      resp.error(errMsg);
+      return Promise.reject(errMsg);
     }
-    return normalizedData;
+    return Promise.resolve(normalizedData);
   };
 
   // Add default publish config
@@ -56,7 +51,6 @@ function normalizerUsingLibSS(req: CbServer.BasicReq, resp: CbServer.Resp) {
   };
   
   normalizer({ req, resp, messageParser, topics, normalizerPubConfig: publishConfig });
-
 }
 
 //@ts-ignore

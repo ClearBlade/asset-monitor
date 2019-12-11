@@ -1,7 +1,7 @@
 import { Logger } from "../logger";
 import { GC } from "../global-config";
 import { Assets } from "../collection-schema/assets";
-
+import "../promise-polyfill/index.js"
 // @ts-ignore
 var ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
 // @ts-ignore
@@ -10,7 +10,7 @@ export type MessageParser = (
   err: boolean,
   msg: any,
   topic: string
-) => Array<Assets>; // parses message and returns normalized format
+) => Promise<Array<Assets>>; // parses message and returns normalized format
 
 export interface NormalizerPublishConfig {
   [key: string]: PublishConfig;
@@ -44,23 +44,25 @@ export function normalizer(config: NormalizerConfig) {
 
   const TOPIC = topics[0];
   const SERVICE_INSTANCE_ID = req.service_instance_id;
-  log("SERVICE_INSTANCE_ID:: " + SERVICE_INSTANCE_ID);
-
   let messaging = ClearBlade.Messaging();
   var logger = Logger();
 
-  messaging.subscribe(TOPIC, WaitLoop);
-  function WaitLoop(err: boolean, data: Object) {
-    if (err) {
-      logger.publishLog(
-        GC.LOG_LEVEL.ERROR,
-        "Subscribe failed for: ",
-        SERVICE_INSTANCE_ID,
-        ": ",
-        data
-      );
-      resp.error(data);
-    }
+  logger.publishLog(GC.LOG_LEVEL.DEBUG ,"Normalizer SERVICE_INSTANCE_ID:: " + SERVICE_INSTANCE_ID);
+
+  
+  let subscribePromises = []
+  for(let i=0, l=topics.length; i<l;i++){
+    subscribePromises.push(subscriber(topics[i]));
+  }
+  resp.success("Hello in Normalizer");
+  Promise.all(subscribePromises)
+  .then(WaitLoop)
+  .catch(failureCb);
+
+  //@ts-ignore
+    Promise.runQueue();
+
+  function WaitLoop() {
     logger.publishLog(
       GC.LOG_LEVEL.SUCCESS,
       SERVICE_INSTANCE_ID,
@@ -73,9 +75,37 @@ export function normalizer(config: NormalizerConfig) {
   }
 
   function HandleMessage(err: boolean, msg: string, topic: string) {
-    let assets = messageParser(err, msg, topic);
-    bulkPublisher(assets, publishConfig);
+    //promisifying
+    messageParser(err, msg, topic)
+      .then(function(assets) {
+        bulkPublisher(assets, publishConfig);
+      })
+      .catch(failureCb);
+    //maybe TODO: give a callback
   }
+
+  function failureCb(reason: any) {
+    logger.publishLog(
+      GC.LOG_LEVEL.ERROR,
+      SERVICE_INSTANCE_ID,
+      ": Failed ",
+      reason
+    );
+  }
+}
+
+export function subscriber(topic: string):Promise<unknown>{
+  let messaging = ClearBlade.Messaging();
+  var promise = new Promise(function(resolve, reject){
+    messaging.subscribe(topic, function(err, data) {
+      if (err) {
+        reject("Error with subscribing"+data);
+      } else{
+        resolve(data);
+      }
+    });
+  })
+  return promise;
 }
 
 export function bulkPublisher(assets: Array<Assets>, normalizerPubConfig:NormalizerPublishConfig=GC.NORMALIZER_PUB_CONFIG){
@@ -98,3 +128,4 @@ export function publisher(assets: Array<Assets>, pubConfig: PublishConfig) {
     messaging.publish(topic, JSON.stringify(pubData));
   }
 }
+
