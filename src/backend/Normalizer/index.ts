@@ -86,6 +86,8 @@ export function normalizer(config: NormalizerConfig) {
         bulkPublisher(assets, publishConfig);
       })
       .catch(failureCb);
+    // @ts-ignore
+    Promise.runQueue();
     //maybe TODO: give a callback
   }
 
