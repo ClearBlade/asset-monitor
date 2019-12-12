@@ -58,7 +58,7 @@ export function normalizer(config: NormalizerConfig) {
   for (let i = 0, l = topics.length; i < l; i++) {
     subscribePromises.push(subscriber(topics[i]));
   }
-  resp.success("Hello in Normalizer");
+
   Promise.all(subscribePromises)
     .then(WaitLoop)
     .catch(failureCb);
