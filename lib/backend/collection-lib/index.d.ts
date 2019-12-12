@@ -1,6 +1,6 @@
 /// <reference types="clearbladejs-server" />
 import { CollectionName } from "../global-config";
-import "../promise-polyfill";
+import "../../static/promise-polyfill";
 interface CollectionUpdateOptions {
     query: CbServer.QueryObj;
     changes: Object;

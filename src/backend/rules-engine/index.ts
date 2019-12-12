@@ -1,9 +1,9 @@
-import "./promise-polyfill"
-import "core-js/features/map"
-import { Engine } from 'json-rules-engine'
+import "../../static/promise-polyfill";
+import "core-js/features/map";
+import { Engine } from "json-rules-engine";
 
 class RulesEngine {
-  engine: Engine
+  engine: Engine;
   constructor() {
     Number.parseFloat = parseFloat;
     this.engine = new Engine();
@@ -19,16 +19,18 @@ class RulesEngine {
 
   run(facts) {
     let resp = "";
-    this.engine.run(facts)
-      .then(results => {
-        resp = results
-      }, (err) => {
-        resp = err.message
-      });
+    this.engine.run(facts).then(
+      results => {
+        resp = results;
+      },
+      err => {
+        resp = err.message;
+      }
+    );
     Promise.runQueue();
     return resp;
   }
 }
 
 // @ts-ignore
-global.RulesEngine = RulesEngine
+global.RulesEngine = RulesEngine;

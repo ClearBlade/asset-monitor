@@ -1,4 +1,3 @@
-"use strict";
 /*
  *  Minimal ES2015+ Promise polyfill
  *
@@ -27,6 +26,7 @@
  *
  *  See also: https://github.com/stefanpenner/es6-promise#readme
  */
+
 (function () {
     if (typeof Promise !== "undefined") {
         return;
@@ -38,6 +38,7 @@
     // useful because resolve/reject functions are memory heavy.  These
     // optimizations are enabled by default; set to false to disable.
     var allowOptimization = true;
+
     // Job queue to simulate ES2015 job queues, linked list, 'next' reference.
     // While ES2015 doesn't guarantee the relative order of jobs in different
     // job queues, within a certain queue strict FIFO is required.  See ES5.1
@@ -45,7 +46,8 @@
     // "The PendingJob records from a single Job Queue are always initiated in
     // FIFO order. This specification does not define the order in which
     // multiple Job Queues are serviced."
-    var queueHead = null, queueTail = null;
+    var queueHead = null,
+        queueTail = null;
     function enqueueJob(job) {
         // Avoid inheriting conflicting properties if caller already didn't
         // ensure it.
@@ -55,8 +57,7 @@
             queueTail.next = job;
             compact(queueTail);
             queueTail = job;
-        }
-        else {
+        } else {
             queueHead = job;
             queueTail = job;
         }
@@ -74,6 +75,7 @@
     function queueEmpty() {
         return !queueHead;
     }
+
     // Helper to define/modify properties more compactly.
     function def(obj, key, val, attrs) {
         if (attrs === void 0) {
@@ -86,13 +88,17 @@
             configurable: attrs.indexOf("c") >= 0
         });
     }
+
     // Helper for Duktape specific object compaction.
-    var compact = (typeof Duktape === "object" && Duktape.compact) ||
+    var compact =
+        (typeof Duktape === "object" && Duktape.compact) ||
         function (v) {
             return v;
         };
+
     // Shared no-op function.
     var nop = function nop() { };
+
     // Promise detection (plain or subclassed Promise), in spec has
     // [[PromiseState]] internal slot which isn't affected by Proxy
     // behaviors etc.
@@ -106,6 +112,7 @@
             throw new TypeError("Promise required");
         }
     }
+
     // Raw HostPromiseRejectionTracker call.  This operation should "never"
     // fail but that's in practice unachievable due to possible out-of-memory
     // on any operation (including invocation of the callback).  Higher level
@@ -113,8 +120,7 @@
     function safeCallUnhandledRejection(event) {
         try {
             cons.unhandledRejection(event);
-        }
-        catch (e) {
+        } catch (e) {
             //console.log('Promise.unhandledRejection failed:', e);
         }
     }
@@ -129,8 +135,7 @@
                 });
                 def(p, "unhandled", 1);
                 cons.potentiallyUnhandled.push(p);
-            }
-            else if (operation === "handle") {
+            } else if (operation === "handle") {
                 safeCallUnhandledRejection({
                     promise: p,
                     event: "rawHandle",
@@ -140,8 +145,7 @@
                     // Unhandled, already notified, need handled notification.
                     def(p, "unhandled", 3);
                     cons.potentiallyUnhandled.push(p);
-                }
-                else {
+                } else {
                     // Handled but not yet notified -> no action needed.
                     // XXX: If this.unhandled was 1, we'd like to remove
                     // the Promise from cons.potentiallyUnhandled list.
@@ -151,11 +155,11 @@
                     delete p.unhandled;
                 }
             }
-        }
-        catch (e) {
+        } catch (e) {
             //console.log('HostPromiseRejectionTracker failed:', e);
         }
     }
+
     // Raw fulfill/reject operations, assume resolution processing done.
     // The specification algorithms RejectPromise() and FulfillPromise()
     // assert that the Promise is pending so the initial check in these
@@ -210,6 +214,7 @@
             rejectionTracker(p, "reject");
         }
     }
+
     // Create a new resolve/reject pair for a Promise.  Multiple pairs are
     // needed in thenable handling, with all but the most recent pair being
     // neutralized ('alreadyResolved').  Because Promises are resolved only
@@ -221,9 +226,8 @@
         // In ES2015 the resolve/reject functions have a shared 'state' object
         // with a [[AlreadyResolved]] slot.  Here we use an in-scope variable.
         var alreadyResolved = false;
-        var reject = function reject(err) {
-            var _newTarget = this && this instanceof reject ? this.constructor : void 0;
-            if (_newTarget) {
+        var reject = function (err) {
+            if (new.target) {
                 throw new TypeError("reject is not constructable");
             }
             if (alreadyResolved) {
@@ -236,9 +240,8 @@
             doReject(p, err);
         };
         // reject.prototype = null; // drop .prototype object
-        var resolve = function resolve(val) {
-            var _newTarget = this && this instanceof resolve ? this.constructor : void 0;
-            if (_newTarget) {
+        var resolve = function (val) {
+            if (new.target) {
                 throw new TypeError("resolve is not constructable");
             }
             if (alreadyResolved) {
@@ -266,8 +269,7 @@
                             then: then,
                             target: p
                         });
-                    }
-                    else {
+                    } else {
                         return enqueueJob({
                             thenable: val,
                             then: then,
@@ -278,14 +280,14 @@
                     // old resolve/reject is neutralized, only new pair is live
                 }
                 return doFulfill(p, val);
-            }
-            catch (e) {
+            } catch (e) {
                 return doReject(p, e);
             }
         };
         // resolve.prototype = null; // drop .prototype object
         return { resolve: resolve, reject: reject };
     }
+
     // Job queue simulation.
     function runQueueEntry() {
         // XXX: In optimized cases, creating both resolution functions is
@@ -304,21 +306,17 @@
             try {
                 if (tmp) {
                     void job.then.call(job.thenable, tmp.resolve, tmp.reject);
-                }
-                else {
+                } else {
                     void job.then.call(job.thenable, job.resolve, job.reject);
                 }
-            }
-            catch (e) {
+            } catch (e) {
                 if (tmp) {
                     tmp.reject.call(void 0, e);
-                }
-                else {
+                } else {
                     job.reject.call(void 0, e);
                 }
             }
-        }
-        else {
+        } else {
             // PromiseReactionJob
             try {
                 if (job.handler === void 0) {
@@ -328,38 +326,32 @@
                     tmp = job.rejected ? tmp.reject : tmp.resolve;
                     tmp.call(void 0, job.value);
                     return true;
-                }
-                else if (job.handler === "Identity") {
+                } else if (job.handler === "Identity") {
                     res = job.value;
-                }
-                else if (job.handler === "Thrower") {
+                } else if (job.handler === "Thrower") {
                     throw job.value;
-                }
-                else {
+                } else {
                     res = job.handler.call(void 0, job.value);
                 }
                 if (job.target) {
                     createResolutionFunctions(job.target).resolve.call(void 0, res);
-                }
-                else {
+                } else {
                     job.resolve.call(void 0, res);
                 }
-            }
-            catch (e) {
+            } catch (e) {
                 if (job.target) {
                     createResolutionFunctions(job.target).reject.call(void 0, e);
-                }
-                else {
+                } else {
                     job.reject.call(void 0, e);
                 }
             }
         }
         return true;
     }
+
     // %Promise% constructor.
     var cons = function Promise(executor) {
-        var _newTarget = this && this instanceof Promise ? this.constructor : void 0;
-        if (!_newTarget) {
+        if (!new.target) {
             throw new TypeError("Promise must be called as a constructor");
         }
         if (typeof executor !== "function") {
@@ -376,24 +368,26 @@
         var t = createResolutionFunctions(this);
         try {
             void executor(t.resolve, t.reject);
-        }
-        catch (e) {
+        } catch (e) {
             t.reject(e);
         }
     };
     var proto = cons.prototype;
     def(cons, "prototype", proto, "");
     def(cons, "potentiallyUnhandled", [], "");
+
     // %Promise%.resolve().
     // XXX: direct handling
     function resolve(val) {
         if (isPromise(val) && val.constructor === this) {
             return val;
         }
+
         return new Promise(function (resolve, reject) {
             resolve(val);
         });
     }
+
     // %Promise%.reject()
     // XXX: direct handling
     function reject(val) {
@@ -401,6 +395,7 @@
             reject(val);
         });
     }
+
     // %Promise%.all().
     function all(list) {
         if (!Array.isArray(list)) {
@@ -439,6 +434,7 @@
         }
         return p;
     }
+
     // %Promise%.race().
     function race(list) {
         if (!Array.isArray(list)) {
@@ -462,14 +458,14 @@
                 // and (2) the onFulfilled/onRejected functions would just
                 // directly forward the result from 't' to 'p'.
                 optimizedThen(t, p);
-            }
-            else {
+            } else {
                 // Generic case, the result Promise of .then() is ignored.
                 void func.call(t, resolveFn, rejectFn);
             }
         });
         return p;
     }
+
     // %PromisePrototype%.then(), also used for .catch().
     function then(onFulfilled, onRejected) {
         // No subclassing support here now, no NewPromiseCapability() handling.
@@ -486,6 +482,7 @@
         if (typeof onRejected !== "function") {
             onRejected = "Thrower";
         }
+
         if (this.state === void 0) {
             // pending
             if (optimized) {
@@ -497,8 +494,7 @@
                     handler: onRejected,
                     target: p
                 });
-            }
-            else {
+            } else {
                 this.fulfillReactions.push({
                     handler: onFulfilled,
                     resolve: resolveFn,
@@ -510,8 +506,7 @@
                     reject: rejectFn
                 });
             }
-        }
-        else if (this.state) {
+        } else if (this.state) {
             // fulfilled
             if (optimized) {
                 enqueueJob({
@@ -519,8 +514,7 @@
                     target: p,
                     value: this.value
                 });
-            }
-            else {
+            } else {
                 enqueueJob({
                     handler: onFulfilled,
                     resolve: resolveFn,
@@ -528,8 +522,7 @@
                     value: this.value
                 });
             }
-        }
-        else {
+        } else {
             // rejected
             if (!this.isHandled) {
                 rejectionTracker(this, "handle");
@@ -540,8 +533,7 @@
                     target: p,
                     value: this.value
                 });
-            }
-            else {
+            } else {
                 enqueueJob({
                     handler: onRejected,
                     resolve: resolveFn,
@@ -553,6 +545,7 @@
         this.isHandled = true;
         return p;
     }
+
     // Optimized .then() where a specific source Promise just forwards its
     // result to a target Promise unless its already settled.
     function optimizedThen(source, target) {
@@ -564,15 +557,13 @@
             source.rejectReactions.push({
                 target: target
             });
-        }
-        else if (source.state) {
+        } else if (source.state) {
             // fulfilled
             enqueueJob({
                 target: target,
                 value: source.value
             });
-        }
-        else {
+        } else {
             // rejected
             if (!source.isHandled) {
                 rejectionTracker(source, "handle");
@@ -585,11 +576,13 @@
         }
         source.isHandled = true;
     }
+
     // %PromisePrototype%.catch.
     var _catch = function (onRejected) {
         return this.then.call(this, void 0, onRejected);
     };
     def(_catch, "name", "catch", "c");
+
     // %Promise%.try(), https://github.com/tc39/proposal-promise-try,
     // simple polyfill-style implementation.
     var _try = function (func) {
@@ -599,6 +592,7 @@
         });
     };
     def(_try, "name", "try", "c");
+
     // Emit higher level Node.js/WHATWG like 'reject' and 'handle' events,
     // filtering out some cases where a rejected Promise is initially unhandled
     // but is handled within the same "tick" (for a relatively murky definition
@@ -607,27 +601,32 @@
     // https://www.ecma-international.org/ecma-262/8.0/#sec-host-promise-rejection-tracker
     function checkUnhandledRejections() {
         var idx;
+
         // The unhandledRejection() callbacks may have queued more Promises,
         // settled existing Promises on the list, etc.  Keep going until
         // the list is empty.  Null out entries to allow early GC when the
         // Promises are no longer reachable.  Callbacks may also queue more
         // ordinary Promise jobs; they are also handled to completion within
         // the tick.
+
         // XXX: It might be more natural to handle the notification callbacks
         // via the job queue.  This might be a bit simpler, but would change
         // the Promise job vs. unhandledRejection callback ordering a bit.
         // For example, Node.js emits 'handle' events before the related
         // catch callbacks are called, while the polyfill in its current
         // state does not.
+
         for (idx = 0; idx < cons.potentiallyUnhandled.length; idx++) {
             var p = cons.potentiallyUnhandled[idx];
             cons.potentiallyUnhandled[idx] = null;
+
             // For consistency with hook calls from HostPromiseRejectionTracker
             // errors from user callback are silently eaten.  If a process exit
             // is desirable, user callback may call a custom native binding to
             // do that ("process.exit(1)" or similar).
             //
             // Use a custom object argument convention for flexibility.
+
             if (p.unhandled === 1) {
                 safeCallUnhandledRejection({
                     promise: p,
@@ -635,8 +634,7 @@
                     reason: p.value
                 });
                 def(p, "unhandled", 2);
-            }
-            else if (p.unhandled === 3) {
+            } else if (p.unhandled === 3) {
                 safeCallUnhandledRejection({
                     promise: p,
                     event: "handle",
@@ -645,9 +643,12 @@
                 delete p.unhandled;
             }
         }
+
         cons.potentiallyUnhandled.length = 0;
+
         return idx > 0; // true if we processed entries
     }
+
     // Define visible objects and properties.
     (function () {
         def(this, "Promise", cons);
@@ -662,6 +663,7 @@
         if (haveSymbols) {
             def(proto, Symbol.toStringTag, "Promise", "c");
         }
+
         // Custom API to drive the "job queue".  We only want to exit when
         // there are no more Promise jobs or unhandledRejection() callbacks,
         // i.e. no more work to do.  Note that an unhandledRejection()
@@ -673,6 +675,7 @@
             } while (!(queueEmpty() && cons.potentiallyUnhandled.length === 0));
         });
         def(cons, "unhandledRejection", nop);
+
         compact(this);
         compact(cons);
         compact(proto);

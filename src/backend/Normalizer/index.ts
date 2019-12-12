@@ -1,7 +1,7 @@
 import { Logger } from "../logger";
 import { GC } from "../global-config";
 import { Assets } from "../collection-schema/assets";
-import "../promise-polyfill/index.js";
+import "../../static/promise-polyfill/index.js";
 // @ts-ignore
 var ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
 // @ts-ignore
