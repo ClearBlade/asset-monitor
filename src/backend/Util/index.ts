@@ -9,10 +9,10 @@ export function normalizeData(
   normalizerConfig: NormalizerDeviceMap
 ): Array<Assets> {
   let dataToNormalize: Array<Object> = [];
-  if (typeof incomingData === "object") {
-    dataToNormalize.push(incomingData);
-  } else if (incomingData instanceof Array) {
+  if (incomingData instanceof Array) {
     dataToNormalize = incomingData;
+  } else if (typeof incomingData === "object") {
+    dataToNormalize.push(incomingData);
   } else {
     return [];
   }
