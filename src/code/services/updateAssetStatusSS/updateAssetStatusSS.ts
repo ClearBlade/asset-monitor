@@ -77,7 +77,7 @@ export function updateAssetStatusSS(req: CbServer.BasicReq, resp: CbServer.Resp)
 
   function MergeAsset(assetID: string, msg: Object): Promise<unknown> {
     let assetsCol = CbCollectionLib(CollectionName.ASSETS);
-    let assetFetchQuery = ClearBlade.Query({ collectionName: CollectionName.ASSET_TYPES }).equalTo("id", assetID);
+    let assetFetchQuery = ClearBlade.Query({ collectionName: CollectionName.ASSETS }).equalTo("id", assetID);
     let promise = assetsCol.cbFetchPromise({ query: assetFetchQuery }).then(function(data){
       if (data.DATA.length <= 0) {
           logger.publishLog(GC.LOG_LEVEL.ERROR, SERVICE_INSTANCE_ID, " No asset type found for id ", assetID, " and type ", assetID);

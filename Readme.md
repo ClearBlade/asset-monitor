@@ -97,3 +97,8 @@ let DEVICE_TO_CB_CONFIG: NormalizerDeviceMap = {
 let assets:Array<Assets> = normalizeData(incomingData, DEVICE_TO_CB_CONFIG);
 
 ```
+
+
+## How to update the Repo
+
+Make changes to the src/ folder and then run `npm run build`. Update package version accordingly. Commit and Push. 
