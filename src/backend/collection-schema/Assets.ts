@@ -6,10 +6,8 @@ export interface ThreeDCoord {
 }
 
 export interface GeoCoord {
-  geo_altitude: number;
-  geo_latitude: number;
-  geo_longitude: number;
-  geo_unit?: string;
+  latitude: number;
+  longitude: number;
 }
 
 export interface Assets
