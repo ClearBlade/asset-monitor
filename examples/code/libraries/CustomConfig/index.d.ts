@@ -23,10 +23,8 @@ export declare const customConfig: {
         "location_z": string;
         "location_unit": string;
         "location_type": string;
-        "geo_latitude": string;
-        "geo_longitude": string;
-        "geo_altitude": string;
-        "geo_unit": string;
+        "latitude": string;
+        "longitude": string;
         "last_updated": string;
         "last_location_updated": string;
         "id": string;

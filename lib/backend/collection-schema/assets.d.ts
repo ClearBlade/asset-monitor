@@ -5,10 +5,8 @@ export interface ThreeDCoord {
     location_unit?: string;
 }
 export interface GeoCoord {
-    geo_altitude: number;
-    geo_latitude: number;
-    geo_longitude: number;
-    geo_unit?: string;
+    latitude: number;
+    longitude: number;
 }
 export interface Assets extends Partial<ThreeDCoord>, Partial<GeoCoord>, CbServer.CollectionSchema {
     custom_data?: string | Object;
