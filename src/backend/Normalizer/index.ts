@@ -80,6 +80,13 @@ export function normalizer(config: NormalizerConfig) {
   }
 
   function HandleMessage(err: boolean, msg: string, topic: string) {
+    if (err) {
+      resp.error(
+        `HandleMessage error inside Normalizer. Service was probably killed while waiting for messages. ${JSON.stringify(
+          { err, msg, topic }
+        )}`
+      );
+    }
     //promisifying
     messageParser(err, msg, topic)
       .then(function(assets) {
