@@ -1,6 +1,15 @@
 import { Duration } from "./types";
 
-let cache = {};
+type Caches = {
+    [x in string]: Cache
+}
+
+interface Cache {
+    duration?: Duration;
+    activeTimerID?: string;
+}
+
+let cache: Caches = {};
 
 export function AddDuration(ruleName: string, ruleID: string, fact: string, duration: Duration): void {
     let key: string = ruleName + ruleID + fact;

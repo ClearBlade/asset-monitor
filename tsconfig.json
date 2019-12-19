@@ -69,7 +69,8 @@
     "src/backend/global-config",
     "src/backend/collection-lib",
     "src/backend/logger",
-    "src/backend/util"
+    "src/backend/util",
+    "src/backend/rulesengine"
   ],
   "exclude": ["node_modules", "**/__tests__/*"]
 }
