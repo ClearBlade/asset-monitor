@@ -5,6 +5,7 @@ declare global {
         interface Global {
             ClearBlade: CbServer.ClearBladeInt;
             log: (arg: string) => void;
+            Promise: Function & { runQueue: () => void };
         }
     }
 }
