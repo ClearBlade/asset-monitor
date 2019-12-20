@@ -72,5 +72,5 @@
     "src/backend/util",
     "src/backend/rulesengine"
   ],
-  "exclude": ["node_modules", "**/__tests__/*"]
+  "exclude": ["node_modules", "**/__tests__/*", "**/__mocks__/*"]
 }

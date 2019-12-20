@@ -8,7 +8,7 @@ interface CollectionUpdateOptions {
 interface CollectionCreateOptions {
     item: Object | Array<Object>;
 }
-interface CollectionFetchOptions {
+export interface CollectionFetchOptions {
     query: CbServer.QueryObj;
 }
 export declare function CbCollectionLib(collectionName: CollectionName): {

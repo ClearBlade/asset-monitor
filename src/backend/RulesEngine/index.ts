@@ -35,7 +35,7 @@ export class RulesEngine {
     this.engine.addRule(rule);
   }
 
-  convertRule(ruleData: Rules): Rule {
+  convertRule(ruleData: Rules): Promise<Rule> {
     let name: string = ruleData.label;
     let conditions: AllConditions = JSON.parse(ruleData.conditions);
     let timeframe;
@@ -66,8 +66,15 @@ export class RulesEngine {
       name: name,
       id: ruleData["id"]
     };
-    ParseAndConvertConditions(ruleInfo, rule.conditions, conditions);
-    return rule;
+    const promise = ParseAndConvertConditions(ruleInfo, rule.conditions, conditions).then((convertedConditions: AllRulesEngineConditions) => {
+      return {
+        ...rule,
+        conditions: convertedConditions
+      }
+    });
+    // @ts-ignore
+    Promise.runQueue();
+    return promise;
   }
 
   run(facts: Record<string, any>) {
