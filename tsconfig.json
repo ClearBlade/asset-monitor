@@ -74,7 +74,8 @@
         "src/backend/util",
         "src/backend/rulesengine",
         "src/backend/asset-history",
-        "src/backend/asset-location"
+        "src/backend/asset-location",
+        "src/backend/asset-status"
     ],
     "exclude": ["node_modules", "**/__tests__/*"]
 }
