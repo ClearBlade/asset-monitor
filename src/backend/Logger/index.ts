@@ -1,13 +1,9 @@
 import { GC, LogLevels } from '../global-config';
 
-// @ts-ignore
 const ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
 
-// @ts-ignore
-const log: { (s: any): void } = global.log;
-
 interface Loggable {
-    publishLog(logLevel: LogLevels, ...message: any[]): void;
+    publishLog(logLevel: LogLevels, ...message: unknown[]): void;
 }
 
 /**
@@ -16,9 +12,8 @@ interface Loggable {
  */
 export function Logger(): Loggable {
     // pass the loglevel and the message: any type is allowed
-    // @ts-ignore - bad Clark
     const messaging = ClearBlade.Messaging();
-    function publishLog(logLevel: LogLevels, ...messages: any[]) {
+    function publishLog(logLevel: LogLevels, ...messages: unknown[]): void {
         let pubMsg = ' ';
         if (messages.length > 0) {
             pubMsg = `${messages.map(a => (typeof a === 'object' ? JSON.stringify(a) : a)).join(' ')}`;
@@ -41,14 +36,14 @@ export function Logger(): Loggable {
         }
     }
 
-    function prettyLog(...args: any[]) {
-        if (args.length > 0) {
-            return `${args.map(a => (typeof a === 'object' ? JSON.stringify(a) : a)).join(' ')}`;
-        }
-        return '';
-    }
-
     return {
         publishLog,
     };
+}
+
+export function prettyLog(...args: unknown[]): string {
+    if (args.length > 0) {
+        return `${args.map(a => (typeof a === 'object' ? JSON.stringify(a) : a)).join(' ')}`;
+    }
+    return '';
 }
