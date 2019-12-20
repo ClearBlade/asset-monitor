@@ -8,18 +8,18 @@ global.Promise.runQueue = (): void => {
 
 global.ClearBlade = {
     // add any utilized ClearBlade methods, ts-ignores are required due to partial implementations
-    init: arg => undefined,
-    Collection: function(arg: { collectionName?: string }) {
+    init: (): void => undefined,
+    Collection: function(): object {
         return {};
     },
-    Query: function() {
+    Query: function(): { equalTo: () => void } {
         return {
-            equalTo: (column, val) => undefined,
+            equalTo: (): void => undefined,
         };
     },
-    Messaging: (options, callback) => ({
-        publish: (topic, payload) => {},
-        subscribe: (topic, callback) => {},
-        waitForMessage: (topics, wfmCallback) => {},
+    Messaging: (): { publish: () => void; subscribe: () => void; waitForMessage: () => void } => ({
+        publish: (): void => undefined,
+        subscribe: (): void => undefined,
+        waitForMessage: (): void => undefined,
     }),
 };
