@@ -1,3 +1,3 @@
-import { Params } from "./types";
-import "../../static/promise-polyfill";
+import { Params } from './types';
+import '../../static/promise-polyfill';
 export declare function FireEventsAndActions(params: Params): void;

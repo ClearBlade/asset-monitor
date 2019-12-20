@@ -1,19 +1,20 @@
 /// <reference types="clearbladejs-server" />
-import { CollectionName } from "../global-config";
-import "../../static/promise-polyfill";
+import { CollectionName } from '../global-config';
+import '../../static/promise-polyfill';
 interface CollectionUpdateOptions {
     query: CbServer.QueryObj;
-    changes: Record<string, any>;
+    changes: Record<string, unknown>;
 }
 interface CollectionCreateOptions {
-    item: Record<string, any> | Array<Record<string, any>>;
+    item: Record<string, unknown> | Array<Record<string, unknown>>;
 }
 interface CollectionFetchOptions {
     query: CbServer.QueryObj;
 }
-export declare function CbCollectionLib(collectionName: CollectionName): {
-    cbCreatePromise: (opts: CollectionCreateOptions) => Promise<unknown>;
-    cbUpdatePromise: (opts: CollectionUpdateOptions) => Promise<unknown>;
-    cbFetchPromise: (opts: CollectionFetchOptions) => Promise<any>;
-} | undefined;
+interface CbCollectionLib {
+    cbCreatePromise: (opts: CollectionCreateOptions) => Promise<CbServer.CollectionSchema[]>;
+    cbUpdatePromise: (opts: CollectionUpdateOptions) => Promise<'success'>;
+    cbFetchPromise: (opts: CollectionFetchOptions) => Promise<CbServer.CollectionFetchData>;
+}
+export declare function CbCollectionLib(collectionName: CollectionName): CbCollectionLib;
 export {};

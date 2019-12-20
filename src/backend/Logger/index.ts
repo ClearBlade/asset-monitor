@@ -1,7 +1,5 @@
 import { GC, LogLevels } from '../global-config';
 
-const ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
-
 interface Loggable {
     publishLog(logLevel: LogLevels, ...message: unknown[]): void;
 }

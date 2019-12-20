@@ -10,12 +10,12 @@ export interface GeoCoord {
     longitude: number;
 }
 
-export interface Assets extends Partial<ThreeDCoord>, Partial<GeoCoord>, CbServer.CollectionSchema {
+export interface Asset extends Partial<ThreeDCoord>, Partial<GeoCoord> {
     custom_data?: string | object;
     custom_id_1?: string;
     custom_id_2?: string;
     description?: string;
-    id: string;
+    id?: string;
     image?: string;
     label?: string;
     last_location_updated?: string;
@@ -24,3 +24,5 @@ export interface Assets extends Partial<ThreeDCoord>, Partial<GeoCoord>, CbServe
     parent?: string;
     type?: string;
 }
+
+export type AssetsSchema = Asset & CbServer.CollectionSchema;

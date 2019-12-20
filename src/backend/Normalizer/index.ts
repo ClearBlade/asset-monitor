@@ -1,9 +1,8 @@
 import { Logger } from '../Logger';
 import { GC } from '../global-config';
-import { Assets } from '../collection-schema/Assets';
+import { Asset } from '../collection-schema/Assets';
 import '../../static/promise-polyfill/index.js';
-const ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
-export type MessageParser = (err: boolean, msg: string, topic: string) => Promise<Array<Assets>>; // parses message and returns normalized format
+export type MessageParser = (err: boolean, msg: string, topic: string) => Promise<Array<Asset>>; // parses message and returns normalized format
 
 export interface NormalizerPublishConfig {
     [key: string]: PublishConfig;
@@ -38,11 +37,11 @@ export function subscriber(topic: string): Promise<unknown> {
     return promise;
 }
 
-export function publisher(assets: Array<Assets>, pubConfig: PublishConfig): void {
+export function publisher(assets: Array<Asset>, pubConfig: PublishConfig): void {
     const messaging = ClearBlade.Messaging();
     for (let i = 0, l = assets.length; i < l; i++) {
         const assetID = assets[i].id;
-        const topic = pubConfig.topicFn(assetID);
+        const topic = pubConfig.topicFn(assetID as string);
         const pubData = {};
         pubConfig.keysToPublish.forEach(function(value) {
             pubData[value] = assets[i][value];
@@ -52,7 +51,7 @@ export function publisher(assets: Array<Assets>, pubConfig: PublishConfig): void
 }
 
 export function bulkPublisher(
-    assets: Array<Assets>,
+    assets: Array<Asset>,
     normalizerPubConfig: NormalizerPublishConfig = GC.NORMALIZER_PUB_CONFIG,
 ): void {
     Object.keys(normalizerPubConfig).forEach(function(key) {

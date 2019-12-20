@@ -1,12 +1,12 @@
-import { Assets } from '../collection-schema/Assets';
+import { Asset } from '../collection-schema/Assets';
 import { NormalizerDeviceMap } from '../global-config';
 
 export interface FlattenedObject {
     [key: string]: string | number | boolean | Array<unknown>;
 }
 
-export function cbifyData(input: Assets, normalizerConfig: NormalizerDeviceMap): Assets {
-    const cbfiedData: Assets = {};
+export function cbifyData(input: Asset, normalizerConfig: NormalizerDeviceMap): Asset {
+    const cbfiedData: Asset = {};
     Object.keys(normalizerConfig).forEach(function(value) {
         cbfiedData[value] = input[normalizerConfig[value]];
         delete input[normalizerConfig[value]];
@@ -25,8 +25,8 @@ export function cbifyData(input: Assets, normalizerConfig: NormalizerDeviceMap):
     return cbfiedData;
 }
 
-export function cbifyAll(input: Array<FlattenedObject>, normalizerConfig: NormalizerDeviceMap): Array<Assets> {
-    const cbfiedData: Array<Assets> = [];
+export function cbifyAll(input: Array<FlattenedObject>, normalizerConfig: NormalizerDeviceMap): Array<Asset> {
+    const cbfiedData: Array<Asset> = [];
     for (let i = 0, l = input.length; i < l; i++) {
         cbfiedData.push(cbifyData(input[i], normalizerConfig));
     }
@@ -65,7 +65,10 @@ export function flattenObjects(objArr: Array<Record<string, unknown>>): Array<Fl
     return flattenedData;
 }
 
-export function normalizeData(incomingData: unknown, normalizerConfig: NormalizerDeviceMap): Array<Assets> {
+export function normalizeData(
+    incomingData: Array<Record<string, unknown>> | Record<string, unknown>,
+    normalizerConfig: NormalizerDeviceMap,
+): Array<Asset> {
     let dataToNormalize: Array<Record<string, unknown>> = [];
     if (incomingData instanceof Array) {
         dataToNormalize = incomingData;
@@ -108,7 +111,7 @@ export function isEmpty(str: string): boolean {
     return !str || 0 === str.length;
 }
 
-export function isNormalizedDataValid(normalizedData: Array<Assets>): boolean {
+export function isNormalizedDataValid(normalizedData: Array<Asset>): boolean {
     if (!(normalizedData instanceof Array) || normalizedData.length == 0) {
         return false;
     }

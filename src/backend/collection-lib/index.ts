@@ -2,8 +2,6 @@ import { CollectionName, GC } from '../global-config';
 import '../../static/promise-polyfill';
 import { Logger } from '../Logger';
 
-const ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
-
 interface CollectionUpdateOptions {
     query: CbServer.QueryObj;
     changes: Record<string, unknown>;
@@ -117,5 +115,3 @@ export function CbCollectionLib(collectionName: CollectionName): CbCollectionLib
         cbFetchPromise,
     };
 }
-
-global.CbCollectionLib = CbCollectionLib;

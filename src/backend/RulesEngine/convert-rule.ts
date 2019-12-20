@@ -15,7 +15,7 @@ import {
 import { AddDuration } from './duration';
 import { CbCollectionLib } from '../collection-lib';
 import { CollectionName } from '../global-config';
-import { Assets } from '../collection-schema/assets';
+import { Asset } from '../collection-schema/assets';
 import { Areas } from '../collection-schema/areas';
 import '../../static/promise-polyfill';
 
@@ -255,7 +255,7 @@ function createConditionsForAttribute(
     }
 }
 
-function getAllAssetsForType(assetType: string): Assets[] {
+function getAllAssetsForType(assetType: string): Asset[] {
     const assetsCollection = CbCollectionLib(CollectionName.ASSETS);
     const assetsCollectionQuery = ClearBlade.Query({ collectionName: CollectionName.ASSETS });
     assetsCollectionQuery.equalTo('type', assetType);

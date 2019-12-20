@@ -1,4 +1,4 @@
-import { NormalizerPublishConfig } from "../Normalizer";
+import { NormalizerPublishConfig } from '../Normalizer';
 export interface LogLevel {
     [key: string]: LogLevels;
 }
@@ -44,5 +44,5 @@ export interface GlobalConfig {
     UPDATE_ASSET_LOCATION_CONFIG: UpdateAssetLocationConfig;
     UPDATE_ASSET_STATUS_CONFIG: UpdateAssetStatusConfig;
 }
-export declare function CreateConfig(config: GlobalConfig["CUSTOM_CONFIGS"]): GlobalConfig;
+export declare function CreateConfig(config: GlobalConfig['CUSTOM_CONFIGS']): GlobalConfig;
 export declare const GC: GlobalConfig;
