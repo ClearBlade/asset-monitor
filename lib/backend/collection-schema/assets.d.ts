@@ -1,4 +1,3 @@
-/// <reference types="clearbladejs-server" />
 export interface ThreeDCoord {
     location_x: number;
     location_y: number;

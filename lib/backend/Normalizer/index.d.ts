@@ -1,4 +1,3 @@
-/// <reference types="clearbladejs-server" />
 import { Asset } from '../collection-schema/Assets';
 import '../../static/promise-polyfill/index.js';
 export declare type MessageParser = (err: boolean, msg: string, topic: string) => Promise<Array<Asset>>;

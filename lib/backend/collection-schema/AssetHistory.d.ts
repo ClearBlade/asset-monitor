@@ -1,4 +1,3 @@
-/// <reference types="clearbladejs-server" />
 export interface AssetHistory extends CbServer.CollectionSchema {
     change_date?: string;
     location_change?: boolean;

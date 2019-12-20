@@ -1,4 +1,3 @@
-/// <reference types="clearbladejs-server" />
 import { CollectionName } from '../global-config';
 import '../../static/promise-polyfill';
 interface CollectionUpdateOptions {

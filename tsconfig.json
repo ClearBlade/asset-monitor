@@ -63,7 +63,7 @@
         "outDir": "./lib/backend",
         "strict": true
     },
-    "files": ["src/global.d.ts"],
+    "files": ["src/global.d.ts", "src/clearbladejs-server.d.ts"],
     "include": [
         "src/backend/normalizer",
         "src/backend/collection-schema",
