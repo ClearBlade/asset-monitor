@@ -1,6 +1,6 @@
 import "../../static/promise-polyfill";
 import "core-js/features/map";
-import { Engine } from "json-rules-engine";
+import { Engine, Event, RuleProperties } from "json-rules-engine";
 import {
   AllConditions,
   Rule,
@@ -14,6 +14,10 @@ import { ParseAndConvertConditions } from "./convert-rule";
 import { DoesTimeframeMatchRule } from "./timeframe";
 import { FireEventsAndActions } from "./events";
 import { ProcessDurationIfExists } from "./duration";
+import { Rules } from "../collection-schema/Rules";
+
+// @ts-ignore
+var log: { (s: any): void } = global.log;
 
 export class RulesEngine {
   engine: Engine;
@@ -27,14 +31,14 @@ export class RulesEngine {
     this.data = {};
   }
 
-  addRule(rule): void {
+  addRule(rule: RuleProperties): void {
     this.engine.addRule(rule);
   }
 
-  convertRule(ruleData: object): Rule {
+  convertRule(ruleData: Rules): Rule {
     let name: string = ruleData.label;
     let conditions: AllConditions = JSON.parse(ruleData.conditions);
-    let timeframe: TimeFrame = undefined;
+    let timeframe;
     let actionIDs: Array<string> = [];
     if (ruleData.timeframe !== "") {
       timeframe = JSON.parse(ruleData.timeframe);
@@ -66,23 +70,20 @@ export class RulesEngine {
     return rule;
   }
 
-  run(facts) {
-    let resp = "";
+  run(facts: Record<string, any>) {
     this.engine.run(facts).then(
-      results => {
-        resp = results;
+      (results) => {
         processRuleResults(results.events[0], facts);
+        return results;
       },
-      err => {
-        resp = err.message;
-      }
+      (err) => err.message
     );
+    // @ts-ignore
     Promise.runQueue();
-    return resp;
   }
 }
 
-function processRuleResults(event, facts): void {
+function processRuleResults(event: Event, facts: Record<string, any>): void {
   if (event === undefined) {
     // rule failed
     log("Rule failed");

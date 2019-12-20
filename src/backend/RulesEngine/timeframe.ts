@@ -1,5 +1,8 @@
 import { TimeFrame, TimeFrameTypes, DaysOfTheWeek } from "./types";
 
+// @ts-ignore
+var log: { (s: any): void } = global.log;
+
 export function DoesTimeframeMatchRule(timeframe: TimeFrame): boolean {
     let today: Date = new Date();
     let todaysDay: string = DaysOfTheWeek[today.getDay()];
