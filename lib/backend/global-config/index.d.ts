@@ -1,4 +1,4 @@
-import { NormalizerPublishConfig } from "../normalizer";
+import { NormalizerPublishConfig } from '../Normalizer';
 export interface LogLevel {
     [key: string]: LogLevels;
 }
@@ -22,12 +22,9 @@ export declare enum AssetStatusUpdateMethod {
     OVERWRITE = "overwrite",
     MERGE = "merge"
 }
-export interface IKeyForLocationUpdate extends Array<string> {
-}
-export interface IKeyForStatusUpdate extends Array<string> {
-}
-export interface AssetHistoryConfig extends Array<string> {
-}
+export declare type IKeyForLocationUpdate = Array<string>;
+export declare type IKeyForStatusUpdate = Array<string>;
+export declare type AssetHistoryConfig = Array<string>;
 export interface UpdateAssetLocationConfig {
     keysToUpdate: IKeyForLocationUpdate;
     createNewAssetifMissing: boolean;
@@ -47,5 +44,5 @@ export interface GlobalConfig {
     UPDATE_ASSET_LOCATION_CONFIG: UpdateAssetLocationConfig;
     UPDATE_ASSET_STATUS_CONFIG: UpdateAssetStatusConfig;
 }
-export declare function CreateConfig(config: GlobalConfig["CUSTOM_CONFIGS"]): GlobalConfig;
+export declare function CreateConfig(config: GlobalConfig['CUSTOM_CONFIGS']): GlobalConfig;
 export declare const GC: GlobalConfig;

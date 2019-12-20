@@ -1,5 +1,5 @@
 export interface Areas extends CbServer.CollectionSchema {
-    custom_data: string | Object;
+    custom_data: string | Record<string, unknown>;
     description: string;
     id: string;
     image: string;

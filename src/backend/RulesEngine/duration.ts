@@ -1,25 +1,24 @@
-import { Duration } from "./types";
+import { Duration } from './types';
 
 type Caches = {
-    [x in string]: Cache
-}
+    [x in string]: Cache;
+};
 
 interface Cache {
     duration?: Duration;
     activeTimerID?: string;
 }
 
-let cache: Caches = {};
+const cache: Caches = {};
 
 export function AddDuration(ruleName: string, ruleID: string, fact: string, duration: Duration): void {
-    let key: string = ruleName + ruleID + fact;
+    const key: string = ruleName + ruleID + fact;
     cache[key] = {
-        "duration": duration,
-        "activeTimerID": "" 
+        duration: duration,
+        activeTimerID: '',
     };
 }
 
 export function ProcessDurationIfExists(ruleName: string, ruleID: string, fact: string): boolean {
     return false;
 }
-

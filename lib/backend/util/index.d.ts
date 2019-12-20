@@ -1,15 +1,15 @@
-import { Assets } from "../collection-schema/assets";
-import { NormalizerDeviceMap } from "../global-config";
+import { Asset } from '../collection-schema/Assets';
+import { NormalizerDeviceMap } from '../global-config';
 export interface FlattenedObject {
-    [key: string]: string | number | boolean | Array<any>;
+    [key: string]: string | number | boolean | Array<unknown>;
 }
-export declare function normalizeData(incomingData: any, normalizerConfig: NormalizerDeviceMap): Array<Assets>;
-export declare function cbifyData(input: Assets, normalizerConfig: NormalizerDeviceMap): Assets;
-export declare function cbifyAll(input: Array<FlattenedObject>, normalizerConfig: NormalizerDeviceMap): Array<Assets>;
-export declare function flattenObjects(objArr: Array<Object>): Array<FlattenedObject>;
-export declare function flattenJSON(data: Object): FlattenedObject;
+export declare function cbifyData(input: Asset, normalizerConfig: NormalizerDeviceMap): Asset;
+export declare function cbifyAll(input: Array<FlattenedObject>, normalizerConfig: NormalizerDeviceMap): Array<Asset>;
+export declare function flattenJSON(data: Record<string, unknown>): FlattenedObject;
+export declare function flattenObjects(objArr: Array<Record<string, unknown>>): Array<FlattenedObject>;
+export declare function normalizeData(incomingData: Array<Record<string, unknown>> | Record<string, unknown>, normalizerConfig: NormalizerDeviceMap): Array<Asset>;
 export declare function cbFormatMacAddress(macAddr: string): string;
-export declare let Topics: {
+export declare const Topics: {
     AssetLocation: (ASSETID: string) => string;
     RulesAssetLocation: (ASSETID: string) => string;
     DBUpdateAssetLocation: (ASSETID: string) => string;
@@ -21,5 +21,5 @@ export declare let Topics: {
     ListenAllAssetsStatus: () => string;
 };
 export declare function getAssetIdFromTopic(topic: string): string;
-export declare function isNormalizedDataValid(normalizedData: Array<Assets>): boolean;
-export declare function isEmpty(str: any): boolean;
+export declare function isEmpty(str: string): boolean;
+export declare function isNormalizedDataValid(normalizedData: Array<Asset>): boolean;

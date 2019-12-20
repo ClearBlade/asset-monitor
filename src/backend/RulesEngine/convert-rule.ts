@@ -10,8 +10,8 @@ import {
     EntityTypes,
     GetOperatorAndValue,
     Relationship,
-    RuleInfo
-  } from './types'
+    RuleInfo,
+} from './types';
 import { AddDuration } from './duration';
 import "../../static/promise-polyfill";
 import { getAllAreasForType, getAllAssetsForType } from './async';
@@ -36,7 +36,7 @@ export function ParseAndConvertConditions(ruleInfo: RuleInfo, rule: AllRulesEngi
       Promise.runQueue();
       return promise;
     }
-  }
+}
 
   function convertANDCondition(ruleInfo: RuleInfo, rule: AllRulesEngineConditions, condition: Condition | AllConditions): Promise<AllRulesEngineConditions> {
     if(condition.hasOwnProperty('entity')) { // We have a condition
@@ -52,7 +52,7 @@ export function ParseAndConvertConditions(ruleInfo: RuleInfo, rule: AllRulesEngi
       Promise.runQueue();
       return promise;
     }
-  }
+}
 
   function convertORCondition(ruleInfo: RuleInfo, rule: AllRulesEngineConditions, condition: Condition | AllConditions): Promise<AllRulesEngineConditions> {
     if(condition.hasOwnProperty('entity')) { // We have a condition
@@ -71,7 +71,7 @@ export function ParseAndConvertConditions(ruleInfo: RuleInfo, rule: AllRulesEngi
       Promise.runQueue();
       return promise;
     }
-  }
+}
 
   function addANDConditions(ruleInfo: RuleInfo, rule: AllRulesEngineConditions, condition: Condition): Promise<AllRulesEngineConditions> {
     const promise = addSpecificEntityCondition(condition as Condition, rule).then((rule) => {
@@ -127,7 +127,7 @@ export function ParseAndConvertConditions(ruleInfo: RuleInfo, rule: AllRulesEngi
       Promise.runQueue();
       return promise;
     }
-  }
+}
 
   function createConditionsForEntity(rule: AllRulesEngineConditions, entity: Entity): Promise<boolean> {
     let promise;
@@ -173,7 +173,7 @@ export function ParseAndConvertConditions(ruleInfo: RuleInfo, rule: AllRulesEngi
       default:
         return new Promise((res) => res(false));
     }
-  }
+}
 
   function createConditionsForAttribute(ruleInfo: RuleInfo, rule: AllRulesEngineConditions, relationship: Relationship): Promise<boolean> {
     let promise;
