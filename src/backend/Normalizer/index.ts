@@ -3,9 +3,9 @@ import { GC } from "../global-config";
 import { Assets } from "../collection-schema/Assets";
 import "../../static/promise-polyfill/index.js";
 // @ts-ignore
-var ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
+const ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
 // @ts-ignore
-var log: { (s: any): void } = global.log;
+const log: { (s: any): void } = global.log;
 export type MessageParser = (
   err: boolean,
   msg: any,
@@ -24,7 +24,7 @@ interface NormalizerConfig {
   topics: Array<string>;
 }
 
-interface IKeysToPublish extends Array<string> {}
+type IKeysToPublish = Array<string>
 
 export interface PublishConfig {
   topicFn: (assetID: string) => string;
@@ -36,25 +36,25 @@ export const api = {
   publisher
 };
 export function normalizer(config: NormalizerConfig) {
-  let resp = config.resp;
-  let req = config.req;
-  let messageParser = config.messageParser;
-  let topics = config.topics;
-  let publishConfig = config.normalizerPubConfig || GC.NORMALIZER_PUB_CONFIG;
+  const resp = config.resp;
+  const req = config.req;
+  const messageParser = config.messageParser;
+  const topics = config.topics;
+  const publishConfig = config.normalizerPubConfig || GC.NORMALIZER_PUB_CONFIG;
 
   const TOPIC = topics[0];
   // @ts-ignore - bad Clark
   const SERVICE_INSTANCE_ID = req.service_instance_id;
   // @ts-ignore - bad Clark
-  let messaging = ClearBlade.Messaging();
-  var logger = Logger();
+  const messaging = ClearBlade.Messaging();
+  const logger = Logger();
 
   logger.publishLog(
     GC.LOG_LEVEL.DEBUG,
     "Normalizer SERVICE_INSTANCE_ID:: " + SERVICE_INSTANCE_ID
   );
 
-  let subscribePromises = [];
+  const subscribePromises = [];
   for (let i = 0, l = topics.length; i < l; i++) {
     subscribePromises.push(subscriber(topics[i]));
   }
@@ -110,8 +110,8 @@ export function normalizer(config: NormalizerConfig) {
 
 export function subscriber(topic: string): Promise<unknown> {
   // @ts-ignore - bad Clark
-  let messaging = ClearBlade.Messaging();
-  var promise = new Promise(function(resolve, reject) {
+  const messaging = ClearBlade.Messaging();
+  const promise = new Promise(function(resolve, reject) {
     // @ts-ignore - bad Clark
     messaging.subscribe(topic, function(err, data) {
       if (err) {
@@ -135,12 +135,12 @@ export function bulkPublisher(
 
 export function publisher(assets: Array<Assets>, pubConfig: PublishConfig) {
   // @ts-ignore - bad Clark
-  let messaging = ClearBlade.Messaging();
+  const messaging = ClearBlade.Messaging();
   for (let i = 0, l = assets.length; i < l; i++) {
     const assetID = assets[i]["id"];
     //@ts-ignore
     const topic = pubConfig.topicFn(assetID);
-    let pubData = {};
+    const pubData = {};
     pubConfig.keysToPublish.forEach(function(value) {
       //@ts-ignore
       pubData[value] = assets[i][value];

@@ -1,6 +1,6 @@
 // @ts-ignore
 export interface Areas extends CbServer.CollectionSchema {
-  custom_data: string | Object;
+  custom_data: string | Record<string, any>;
   description: string;
   id: string;
   image: string;

@@ -9,7 +9,8 @@
     "prebuild": "del lib/",
     "build": "tsc",
     "postbuild": "cpy 'static/promise-polyfill/**' ../lib/ --cwd=src/ --parents",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix"
   },
   "pre-commit": [
     "lint",

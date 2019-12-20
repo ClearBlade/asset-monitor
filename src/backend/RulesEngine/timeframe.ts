@@ -1,15 +1,15 @@
 import { TimeFrame, TimeFrameTypes, DaysOfTheWeek } from "./types";
 
 // @ts-ignore
-var log: { (s: any): void } = global.log;
+const log: { (s: any): void } = global.log;
 
 export function DoesTimeframeMatchRule(timeframe: TimeFrame): boolean {
-    let today: Date = new Date();
-    let todaysDay: string = DaysOfTheWeek[today.getDay()];
+    const today: Date = new Date();
+    const todaysDay: string = DaysOfTheWeek[today.getDay()];
     switch(timeframe.type) {
         case TimeFrameTypes.REPEATEACHWEEK:
         case TimeFrameTypes.REPEATBYDAY:
-            for(let idx in timeframe.days) {
+            for(const idx in timeframe.days) {
                 if(timeframe.days[idx] === todaysDay) {
                     return checkForValidTimeframe(today, timeframe);
                 }
@@ -22,10 +22,10 @@ export function DoesTimeframeMatchRule(timeframe: TimeFrame): boolean {
 }
 
 function checkForValidTimeframe(today: Date, timeframe: TimeFrame): boolean {
-    let startTime: string = timeframe.startTime;
-    let endTime: string = timeframe.endTime;
-    let startTimeSplit: Array<string> = startTime.split(":");
-    let endTimeSplit: Array<string> = endTime.split(":");
+    const startTime: string = timeframe.startTime;
+    const endTime: string = timeframe.endTime;
+    const startTimeSplit: Array<string> = startTime.split(":");
+    const endTimeSplit: Array<string> = endTime.split(":");
     if(startTimeSplit.length != 2) {
         log("Invalid start time set for timeframe " + JSON.stringify(timeframe));
         return false;

@@ -22,12 +22,9 @@ export declare enum AssetStatusUpdateMethod {
     OVERWRITE = "overwrite",
     MERGE = "merge"
 }
-export interface IKeyForLocationUpdate extends Array<string> {
-}
-export interface IKeyForStatusUpdate extends Array<string> {
-}
-export interface AssetHistoryConfig extends Array<string> {
-}
+export declare type IKeyForLocationUpdate = Array<string>;
+export declare type IKeyForStatusUpdate = Array<string>;
+export declare type AssetHistoryConfig = Array<string>;
 export interface UpdateAssetLocationConfig {
     keysToUpdate: IKeyForLocationUpdate;
     createNewAssetifMissing: boolean;

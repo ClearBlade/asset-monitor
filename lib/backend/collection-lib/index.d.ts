@@ -3,10 +3,10 @@ import { CollectionName } from "../global-config";
 import "../../static/promise-polyfill";
 interface CollectionUpdateOptions {
     query: CbServer.QueryObj;
-    changes: Object;
+    changes: Record<string, any>;
 }
 interface CollectionCreateOptions {
-    item: Object | Array<Object>;
+    item: Record<string, any> | Array<Record<string, any>>;
 }
 interface CollectionFetchOptions {
     query: CbServer.QueryObj;

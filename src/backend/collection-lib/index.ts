@@ -3,15 +3,15 @@ import "../../static/promise-polyfill";
 import { Logger } from "../Logger";
 
 // @ts-ignore
-var ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
+const ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
 
 interface CollectionUpdateOptions {
   query: CbServer.QueryObj;
-  changes: Object;
+  changes: Record<string, any>;
 }
 
 interface CollectionCreateOptions {
-  item: Object | Array<Object>;
+  item: Record<string, any> | Array<Record<string, any>>;
 }
 
 interface CollectionFetchOptions {
@@ -19,7 +19,7 @@ interface CollectionFetchOptions {
 }
 
 export function CbCollectionLib(collectionName: CollectionName) {
-  let logger = Logger();
+  const logger = Logger();
   if (!collectionName) {
     logger.publishLog(
       GC.LOG_LEVEL.ERROR,
@@ -39,13 +39,13 @@ export function CbCollectionLib(collectionName: CollectionName) {
    * @returns {Promise}
    */
   function cbCreatePromise(opts: CollectionCreateOptions) {
-    let promise = new Promise(function(resolve, reject) {
+    const promise = new Promise(function(resolve, reject) {
       if (!opts || !opts.item) {
-        let errMsg = "ERROR trying to create without an item " + opts;
+        const errMsg = "ERROR trying to create without an item " + opts;
         logger.publishLog(GC.LOG_LEVEL.DEBUG, errMsg);
         reject(errMsg);
       }
-      let col = ClearBlade.Collection({ collectionName });
+      const col = ClearBlade.Collection({ collectionName });
       // @ts-ignore - bad Clark
       col.create(opts.item, function(err, res) {
         if (err) {
@@ -65,11 +65,11 @@ export function CbCollectionLib(collectionName: CollectionName) {
    * @returns {Promise}
    */
   function cbUpdatePromise(opts: CollectionUpdateOptions) {
-    let promise = new Promise(function(resolve, reject) {
-      let col = ClearBlade.Collection({ collectionName });
+    const promise = new Promise(function(resolve, reject) {
+      const col = ClearBlade.Collection({ collectionName });
 
       if (!opts || !opts.query || !opts.changes) {
-        let errMsg = "ERROR: query or changes object is missing";
+        const errMsg = "ERROR: query or changes object is missing";
         logger.publishLog(GC.LOG_LEVEL.ERROR, errMsg);
         reject(errMsg);
       }
@@ -102,14 +102,14 @@ export function CbCollectionLib(collectionName: CollectionName) {
    */
   function cbFetchPromise(opts: CollectionFetchOptions) {
     // @ts-ignore - bad Clark
-    let promise = new Promise<CbServer.CollectionFetchData>(function(
+    const promise = new Promise<CbServer.CollectionFetchData>(function(
       resolve,
       reject
     ) {
-      let col = ClearBlade.Collection({ collectionName: collectionName });
-      let query = opts.query;
+      const col = ClearBlade.Collection({ collectionName: collectionName });
+      const query = opts.query;
       if (!query) {
-        let errMsg = "ERROR: query is missing";
+        const errMsg = "ERROR: query is missing";
         logger.publishLog(GC.LOG_LEVEL.ERROR, errMsg);
         reject(errMsg);
       }

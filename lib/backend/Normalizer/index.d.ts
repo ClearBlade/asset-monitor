@@ -12,8 +12,7 @@ interface NormalizerConfig {
     messageParser: MessageParser;
     topics: Array<string>;
 }
-interface IKeysToPublish extends Array<string> {
-}
+declare type IKeysToPublish = Array<string>;
 export interface PublishConfig {
     topicFn: (assetID: string) => string;
     keysToPublish: IKeysToPublish;

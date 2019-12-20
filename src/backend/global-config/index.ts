@@ -29,11 +29,11 @@ export enum AssetStatusUpdateMethod {
   MERGE = "merge"
 }
 
-export interface IKeyForLocationUpdate extends Array<string> {}
+export type IKeyForLocationUpdate = Array<string>
 
-export interface IKeyForStatusUpdate extends Array<string> {}
+export type IKeyForStatusUpdate = Array<string>
 
-export interface AssetHistoryConfig extends Array<string> {}
+export type AssetHistoryConfig = Array<string>
 
 export interface UpdateAssetLocationConfig {
   keysToUpdate: IKeyForLocationUpdate;
@@ -57,7 +57,7 @@ export interface GlobalConfig {
   UPDATE_ASSET_STATUS_CONFIG: UpdateAssetStatusConfig;
 }
 
-let globalConfig: GlobalConfig = {
+const globalConfig: GlobalConfig = {
   LOG_LEVEL: {
     INFO: LogLevels.INFO,
     DEBUG: LogLevels.DEBUG,

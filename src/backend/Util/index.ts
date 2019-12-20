@@ -8,7 +8,7 @@ export function normalizeData(
   incomingData: any,
   normalizerConfig: NormalizerDeviceMap
 ): Array<Assets> {
-  let dataToNormalize: Array<Object> = [];
+  let dataToNormalize: Array<Record<string, any>> = [];
   if (incomingData instanceof Array) {
     dataToNormalize = incomingData;
   } else if (typeof incomingData === "object") {
@@ -16,15 +16,15 @@ export function normalizeData(
   } else {
     return [];
   }
-  var flattenedData: Array<FlattenedObject> = flattenObjects(dataToNormalize);
-  var cbifiedData = cbifyAll(flattenedData, normalizerConfig);
+  const flattenedData: Array<FlattenedObject> = flattenObjects(dataToNormalize);
+  const cbifiedData = cbifyAll(flattenedData, normalizerConfig);
   return cbifiedData;
 }
 export function cbifyData(
   input: Assets,
   normalizerConfig: NormalizerDeviceMap
 ): Assets {
-  var cbfiedData: Assets = {};
+  const cbfiedData: Assets = {};
   Object.keys(normalizerConfig).forEach(function(value) {
     //@ts-ignore
     cbfiedData[value] = input[normalizerConfig[value]];
@@ -34,7 +34,7 @@ export function cbifyData(
   cbfiedData.custom_data = {};
 
   //Process the custom_data structure
-  if (!!normalizerConfig.custom_data) {
+  if (normalizerConfig.custom_data) {
     Object.keys(normalizerConfig.custom_data).forEach(function(value) {
       if (cbfiedData.custom_data) {
         (cbfiedData.custom_data as { [key: string]: string })[value] =
@@ -50,23 +50,23 @@ export function cbifyAll(
   input: Array<FlattenedObject>,
   normalizerConfig: NormalizerDeviceMap
 ): Array<Assets> {
-  let cbfiedData: Array<Assets> = [];
+  const cbfiedData: Array<Assets> = [];
   for (let i = 0, l = input.length; i < l; i++) {
     cbfiedData.push(cbifyData(input[i], normalizerConfig));
   }
   return cbfiedData;
 }
 
-export function flattenObjects(objArr: Array<Object>): Array<FlattenedObject> {
-  let flattenedData: Array<FlattenedObject> = [];
+export function flattenObjects(objArr: Array<Record<string, any>>): Array<FlattenedObject> {
+  const flattenedData: Array<FlattenedObject> = [];
   for (let i = 0, l = objArr.length; i < l; i++) {
     flattenedData.push(flattenJSON(objArr[i]));
   }
   return flattenedData;
 }
 
-export function flattenJSON(data: Object): FlattenedObject {
-  let result = {};
+export function flattenJSON(data: Record<string, any>): FlattenedObject {
+  const result = {};
 
   function recurse(cur: any, prop: string) {
     if (Object(cur) !== cur) {
@@ -80,8 +80,8 @@ export function flattenJSON(data: Object): FlattenedObject {
         result[prop] = [];
       }
     } else {
-      var isEmpty = true;
-      for (var p in cur) {
+      let isEmpty = true;
+      for (const p in cur) {
         isEmpty = false;
         recurse(cur[p], prop ? prop + "." + p : p);
       }
@@ -99,7 +99,7 @@ export function cbFormatMacAddress(macAddr: string): string {
   return macAddr.replace(/:/gi, "-").toUpperCase();
 }
 
-export let Topics = {
+export const Topics = {
   AssetLocation: (ASSETID: string) => `_monitor/_asset/${ASSETID}/location`,
   RulesAssetLocation: (ASSETID: string) =>
     `_rules/_monitor/_asset/${ASSETID}/location`,
@@ -117,7 +117,7 @@ export let Topics = {
 };
 
 export function getAssetIdFromTopic(topic: string): string {
-  let splitTopic = topic.split("/");
+  const splitTopic = topic.split("/");
   if (splitTopic.length != 7) {
     return "";
   }

@@ -9,10 +9,10 @@ interface Cache {
     activeTimerID?: string;
 }
 
-let cache: Caches = {};
+const cache: Caches = {};
 
 export function AddDuration(ruleName: string, ruleID: string, fact: string, duration: Duration): void {
-    let key: string = ruleName + ruleID + fact;
+    const key: string = ruleName + ruleID + fact;
     cache[key] = {
         "duration": duration,
         "activeTimerID": "" 

@@ -6,7 +6,7 @@ import { string } from "prop-types";
 export enum TimeFrameTypes {
     REPEATEACHWEEK = "repeatEachWeek",
     REPEATBYDAY = "repeatByDay"
-};
+}
 
 export enum Days {
     SUNDAY = "sunday",
@@ -16,14 +16,14 @@ export enum Days {
     THURSDAY = "thursday",
     FRIDAY = "friday",
     SATURDAY = "saturday"
-};
+}
 
 export interface TimeFrame {
     type: TimeFrameTypes;
     startTime: string;
     endTime: string;
     days: Array<Days>;
-};
+}
 
 export const DaysOfTheWeek: Array<string> = [Days.SUNDAY, Days.MONDAY, Days.TUESDAY, Days.WEDNESDAY, Days.THURSDAY, Days.FRIDAY, Days.SATURDAY];
 
@@ -35,12 +35,12 @@ export enum DurationUnits {
     MINUTES = "m",
     HOURS = "h",
     DAYS = "d"
-};
+}
 
 export interface Duration {
     value: number;
     unit: DurationUnits;
-};
+}
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Special Case Operators (true/false/inside/outside)
@@ -70,7 +70,7 @@ export function GetOperatorAndValue(op: string, val: string | number | boolean):
 export enum ConditionalOperators {
     AND = "and",
     OR = "or"
-};
+}
 
 export enum EntityTypes {
     ASSET = "assets",
@@ -78,12 +78,12 @@ export enum EntityTypes {
     AREA = "areas",
     AREA_TYPE = "area_types",
     STATE = "state"
-};
+}
 
 export interface Entity {
     id: string;
     entity_type: EntityTypes;
-};
+}
 
 export interface Relationship {
     attribute: string;
@@ -91,12 +91,12 @@ export interface Relationship {
     operator: string;
     value: boolean | string | number;
     duration: Duration;
-};
+}
 
 export interface Condition {
     entity: Entity;
     relationship: Relationship;
-};
+}
 
 export type AllConditions = {
     [x in ConditionalOperators]: Array<Condition | AllConditions>;
@@ -108,7 +108,7 @@ export type AllConditions = {
 export enum RulesEngineConditionalOperators {
     AND = "all",
     OR = "any"
-};
+}
 
 export interface RulesEngineEvent {
     type: string;
@@ -119,7 +119,7 @@ export interface RulesEngineCondition {
     fact: string;
     operator: string;
     value: boolean | number | string;
-};
+}
 
 export type AllRulesEngineConditions = {
     [x in RulesEngineConditionalOperators]: Array<RulesEngineCondition | AllRulesEngineConditions>;
@@ -133,15 +133,15 @@ export interface Params {
     timeframe?: TimeFrame;
     ruleID: string;
     ruleName: string;
-};
+}
 
 export interface Rule {
     name: string;
     conditions: AllRulesEngineConditions;
     event: RulesEngineEvent;
-};
+}
 
 export interface RuleInfo {
     name: string;
     id: string;
-};
+}

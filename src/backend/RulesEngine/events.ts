@@ -5,9 +5,9 @@ import { Actions, ActionTypes } from '../collection-schema/Actions';
 import "../../static/promise-polyfill";
 
 // @ts-ignore
-var ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
+const ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
 // @ts-ignore
-var log: { (s: any): void } = global.log;
+const log: { (s: any): void } = global.log;
 
 export function FireEventsAndActions(params: Params) {
     processEvents(params);
@@ -19,9 +19,9 @@ function processEvents(params: Params) {
 }
 
 function processActions(params: Params) {
-    let actionTypeIDs: Array<string> = params.actionIDs;
-    for(let idx in actionTypeIDs) {
-        let action: Actions = getActionByID(actionTypeIDs[idx]);
+    const actionTypeIDs: Array<string> = params.actionIDs;
+    for(const idx in actionTypeIDs) {
+        const action: Actions = getActionByID(actionTypeIDs[idx]);
         log("Action is " + JSON.stringify(action));
         performAction(action);
     }

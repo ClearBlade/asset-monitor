@@ -17,14 +17,14 @@ import { ProcessDurationIfExists } from "./duration";
 import { Rules } from "../collection-schema/Rules";
 
 // @ts-ignore
-var log: { (s: any): void } = global.log;
+const log: { (s: any): void } = global.log;
 
 export class RulesEngine {
   engine: Engine;
   data: object;
   constructor() {
     Number.parseFloat = parseFloat;
-    let options = {
+    const options = {
       allowUndefinedFacts: true
     };
     this.engine = new Engine([], options);
@@ -36,8 +36,8 @@ export class RulesEngine {
   }
 
   convertRule(ruleData: Rules): Rule {
-    let name: string = ruleData.label;
-    let conditions: AllConditions = JSON.parse(ruleData.conditions);
+    const name: string = ruleData.label;
+    const conditions: AllConditions = JSON.parse(ruleData.conditions);
     let timeframe;
     let actionIDs: Array<string> = [];
     if (ruleData.timeframe !== "") {
@@ -46,7 +46,7 @@ export class RulesEngine {
     if (ruleData["action_ids"] !== "") {
       actionIDs = JSON.parse(ruleData["action_ids"]);
     }
-    let rule: Rule = {
+    const rule: Rule = {
       name: name,
       conditions: {} as AllRulesEngineConditions,
       event: {
@@ -62,7 +62,7 @@ export class RulesEngine {
         }
       } as RulesEngineEvent
     };
-    let ruleInfo: RuleInfo = {
+    const ruleInfo: RuleInfo = {
       name: name,
       id: ruleData["id"]
     };
@@ -89,7 +89,7 @@ function processRuleResults(event: Event, facts: Record<string, any>): void {
     log("Rule failed");
     return;
   }
-  let params: Params = event.params as Params;
+  const params: Params = event.params as Params;
   if (params.timeframe !== undefined) {
     if (!DoesTimeframeMatchRule(params.timeframe)) {
       log(

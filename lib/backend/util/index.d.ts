@@ -6,10 +6,10 @@ export interface FlattenedObject {
 export declare function normalizeData(incomingData: any, normalizerConfig: NormalizerDeviceMap): Array<Assets>;
 export declare function cbifyData(input: Assets, normalizerConfig: NormalizerDeviceMap): Assets;
 export declare function cbifyAll(input: Array<FlattenedObject>, normalizerConfig: NormalizerDeviceMap): Array<Assets>;
-export declare function flattenObjects(objArr: Array<Object>): Array<FlattenedObject>;
-export declare function flattenJSON(data: Object): FlattenedObject;
+export declare function flattenObjects(objArr: Array<Record<string, any>>): Array<FlattenedObject>;
+export declare function flattenJSON(data: Record<string, any>): FlattenedObject;
 export declare function cbFormatMacAddress(macAddr: string): string;
-export declare let Topics: {
+export declare const Topics: {
     AssetLocation: (ASSETID: string) => string;
     RulesAssetLocation: (ASSETID: string) => string;
     DBUpdateAssetLocation: (ASSETID: string) => string;
