@@ -15,7 +15,7 @@ export interface Assets
     Partial<GeoCoord>,
     // @ts-ignore - bad Clark
     CbServer.CollectionSchema {
-  custom_data?: string | Object;
+  custom_data?: string | object;
   custom_id_1?: string;
   custom_id_2?: string;
   description?: string;
