@@ -1,21 +1,21 @@
-import { string } from "prop-types";
+import { string } from 'prop-types';
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Time Frames
 
 export enum TimeFrameTypes {
-    REPEATEACHWEEK = "repeatEachWeek",
-    REPEATBYDAY = "repeatByDay"
+    REPEATEACHWEEK = 'repeatEachWeek',
+    REPEATBYDAY = 'repeatByDay',
 }
 
 export enum Days {
-    SUNDAY = "sunday",
-    MONDAY = "monday",
-    TUESDAY = "tuesday",
-    WEDNESDAY = "wednesday",
-    THURSDAY = "thursday",
-    FRIDAY = "friday",
-    SATURDAY = "saturday"
+    SUNDAY = 'sunday',
+    MONDAY = 'monday',
+    TUESDAY = 'tuesday',
+    WEDNESDAY = 'wednesday',
+    THURSDAY = 'thursday',
+    FRIDAY = 'friday',
+    SATURDAY = 'saturday',
 }
 
 export interface TimeFrame {
@@ -25,16 +25,24 @@ export interface TimeFrame {
     days: Array<Days>;
 }
 
-export const DaysOfTheWeek: Array<string> = [Days.SUNDAY, Days.MONDAY, Days.TUESDAY, Days.WEDNESDAY, Days.THURSDAY, Days.FRIDAY, Days.SATURDAY];
+export const DaysOfTheWeek: Array<string> = [
+    Days.SUNDAY,
+    Days.MONDAY,
+    Days.TUESDAY,
+    Days.WEDNESDAY,
+    Days.THURSDAY,
+    Days.FRIDAY,
+    Days.SATURDAY,
+];
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Duration
 
 export enum DurationUnits {
-    SECONDS = "s",
-    MINUTES = "m",
-    HOURS = "h",
-    DAYS = "d"
+    SECONDS = 's',
+    MINUTES = 'm',
+    HOURS = 'h',
+    DAYS = 'd',
 }
 
 export interface Duration {
@@ -45,7 +53,6 @@ export interface Duration {
 /////////////////////////////////////////////////////////////////////////////////////
 // Special Case Operators (true/false/inside/outside)
 
-
 export interface OperatorAndValue {
     operator: string;
     value: string | number | boolean;
@@ -53,31 +60,30 @@ export interface OperatorAndValue {
 
 export function GetOperatorAndValue(op: string, val: string | number | boolean): OperatorAndValue {
     switch (op) {
-      case "true":
-      case "false":
-      case "inside":
-      case "outside":
-        return {operator: "equal", value: op};
-      default:
-        return {operator: op, value: val};
+        case 'true':
+        case 'false':
+        case 'inside':
+        case 'outside':
+            return { operator: 'equal', value: op };
+        default:
+            return { operator: op, value: val };
     }
-  }
-
+}
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Conditions (ClearBlade conditions format)
 
 export enum ConditionalOperators {
-    AND = "and",
-    OR = "or"
+    AND = 'and',
+    OR = 'or',
 }
 
 export enum EntityTypes {
-    ASSET = "assets",
-    ASSET_TYPE = "asset_types",
-    AREA = "areas",
-    AREA_TYPE = "area_types",
-    STATE = "state"
+    ASSET = 'assets',
+    ASSET_TYPE = 'asset_types',
+    AREA = 'areas',
+    AREA_TYPE = 'area_types',
+    STATE = 'state',
 }
 
 export interface Entity {
@@ -106,8 +112,8 @@ export type AllConditions = {
 // Rules Engine Condition Format (json-rules-engine format)
 
 export enum RulesEngineConditionalOperators {
-    AND = "all",
-    OR = "any"
+    AND = 'all',
+    OR = 'any',
 }
 
 export interface RulesEngineEvent {
