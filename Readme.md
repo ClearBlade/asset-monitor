@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/ClearBlade/asset-monitor.svg?branch=master)](https://travis-ci.com/ClearBlade/asset-monitor)
+
 # Overview
 
 This npm module is a boilerplate for Asset Monitoring Solution when developing solutions on ClearBlade Platform. This package has been designed to abstract the internal working of the Asset Monitoring Solution. An API is exposed to the Solutions Developer to add the custom logic for it, described in the later sections. 

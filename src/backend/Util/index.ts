@@ -1,4 +1,4 @@
-import { Assets } from "../collection-schema/assets";
+import { Assets } from "../collection-schema/Assets";
 import { NormalizerDeviceMap } from "../global-config";
 
 export interface FlattenedObject {
@@ -31,11 +31,18 @@ export function cbifyData(
     //@ts-ignore
     delete input[normalizerConfig[value]];
   });
-  cbfiedData["custom_data"] = {};
-  Object.keys(input).forEach(function(value) {
-    //@ts-ignore
-    cbfiedData["custom_data"][value] = input[value];
-  });
+  cbfiedData.custom_data = {};
+
+  //Process the custom_data structure
+  if (!!normalizerConfig.custom_data) {
+    Object.keys(normalizerConfig.custom_data).forEach(function(value) {
+      if (cbfiedData.custom_data) {
+        (cbfiedData.custom_data as { [key: string]: string })[value] =
+          // @ts-ignore
+          input[normalizerConfig.custom_data[value]];
+      }
+    });
+  }
   return cbfiedData;
 }
 

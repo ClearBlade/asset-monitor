@@ -1,5 +1,5 @@
 /// <reference types="clearbladejs-server" />
-import { Assets } from "../collection-schema/assets";
+import { Assets } from "../collection-schema/Assets";
 import "../../static/promise-polyfill/index.js";
 export declare type MessageParser = (err: boolean, msg: any, topic: string) => Promise<Array<Assets>>;
 export interface NormalizerPublishConfig {

@@ -1,4 +1,4 @@
-import { Assets } from "../collection-schema/assets";
+import { Assets } from "../collection-schema/Assets";
 import { NormalizerDeviceMap } from "../global-config";
 export interface FlattenedObject {
     [key: string]: string | number | boolean | Array<any>;

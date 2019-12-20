@@ -9,7 +9,7 @@ export interface GeoCoord {
     longitude: number;
 }
 export interface Assets extends Partial<ThreeDCoord>, Partial<GeoCoord>, CbServer.CollectionSchema {
-    custom_data?: string | Object;
+    custom_data?: string | object;
     custom_id_1?: string;
     custom_id_2?: string;
     description?: string;

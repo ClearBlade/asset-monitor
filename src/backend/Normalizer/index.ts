@@ -1,6 +1,6 @@
-import { Logger } from "../logger";
+import { Logger } from "../Logger";
 import { GC } from "../global-config";
-import { Assets } from "../collection-schema/assets";
+import { Assets } from "../collection-schema/Assets";
 import "../../static/promise-polyfill/index.js";
 // @ts-ignore
 var ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
@@ -80,6 +80,13 @@ export function normalizer(config: NormalizerConfig) {
   }
 
   function HandleMessage(err: boolean, msg: string, topic: string) {
+    if (err) {
+      resp.error(
+        `HandleMessage error inside Normalizer. Service was probably killed while waiting for messages. ${JSON.stringify(
+          { err, msg, topic }
+        )}`
+      );
+    }
     //promisifying
     messageParser(err, msg, topic)
       .then(function(assets) {
