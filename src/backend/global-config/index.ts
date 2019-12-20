@@ -1,50 +1,47 @@
-import { Topics } from "../util";
-import { NormalizerPublishConfig } from "../normalizer";
+import { NormalizerPublishConfig } from "../Normalizer";
+import { Topics } from "../Util";
 
 export interface LogLevel {
-    [key: string]: LogLevels
+  [key: string]: LogLevels;
 }
 
-export interface NormalizerDeviceMap{
-  [index:string]:string;
-};
+export interface NormalizerDeviceMap {
+  [index: string]: string;
+}
 
 export enum LogLevels {
-    INFO = "info",
-    DEBUG = "debug",
-    ERROR = "error",
-    SUCCESS = "success"
+  INFO = "info",
+  DEBUG = "debug",
+  ERROR = "error",
+  SUCCESS = "success"
 }
 
 export enum CollectionName {
-    ASSETS = "assets",
-    ASSET_HISTORY = "asset_history",
-    ASSET_TYPES = "asset_types"
+  ASSETS = "assets",
+  ASSET_HISTORY = "asset_history",
+  ASSET_TYPES = "asset_types"
 }
 
-export enum AssetStatusUpdateMethod{
+export enum AssetStatusUpdateMethod {
   OVERWRITE = "overwrite",
   MERGE = "merge"
 }
 
-export interface IKeyForLocationUpdate extends Array<string> {} 
+export interface IKeyForLocationUpdate extends Array<string> {}
 
-export interface IKeyForStatusUpdate extends Array<string> {} 
-
-
+export interface IKeyForStatusUpdate extends Array<string> {}
 
 export interface AssetHistoryConfig extends Array<string> {}
 
 export interface UpdateAssetLocationConfig {
   keysToUpdate: IKeyForLocationUpdate;
-  createNewAssetifMissing:boolean;
+  createNewAssetifMissing: boolean;
 }
 
 export interface UpdateAssetStatusConfig {
-  keysToUpdate:IKeyForStatusUpdate;
-  updateMethod:AssetStatusUpdateMethod;
+  keysToUpdate: IKeyForStatusUpdate;
+  updateMethod: AssetStatusUpdateMethod;
 }
-
 
 export interface GlobalConfig {
   LOG_LEVEL: LogLevel;
@@ -55,10 +52,8 @@ export interface GlobalConfig {
   ASSET_HISTORY_CONFIG: AssetHistoryConfig;
   NORMALIZER_PUB_CONFIG: NormalizerPublishConfig;
   UPDATE_ASSET_LOCATION_CONFIG: UpdateAssetLocationConfig;
-  UPDATE_ASSET_STATUS_CONFIG:UpdateAssetStatusConfig;
+  UPDATE_ASSET_STATUS_CONFIG: UpdateAssetStatusConfig;
 }
-
-
 
 let globalConfig: GlobalConfig = {
   LOG_LEVEL: {
@@ -123,13 +118,12 @@ let globalConfig: GlobalConfig = {
   UPDATE_ASSET_STATUS_CONFIG: {
     keysToUpdate: ["custom_data"],
     updateMethod: AssetStatusUpdateMethod.MERGE
-  },
-
+  }
 };
 
 export function CreateConfig(config: GlobalConfig["CUSTOM_CONFIGS"]) {
-         globalConfig.CUSTOM_CONFIGS = config;
-         return globalConfig;
+  globalConfig.CUSTOM_CONFIGS = config;
+  return globalConfig;
 }
 
 //globalConfig = CreateConfig(customConfig);

@@ -1,4 +1,4 @@
-import { NormalizerPublishConfig } from "../normalizer";
+import { NormalizerPublishConfig } from "../Normalizer";
 export interface LogLevel {
     [key: string]: LogLevels;
 }
