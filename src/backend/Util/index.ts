@@ -32,10 +32,14 @@ export function cbifyData(
     delete input[normalizerConfig[value]];
   });
   cbfiedData["custom_data"] = {};
-  Object.keys(input).forEach(function(value) {
-    //@ts-ignore
-    cbfiedData["custom_data"][value] = input[value];
-  });
+  
+  //Process the custom_data structure
+  if (!!normalizerConfig.custom_data) {
+    Object.keys(normalizerConfig.custom_data).forEach(function (value) {
+      //@ts-ignore
+      cbfiedData["custom_data"][value] = input[normalizerConfig.custom_data[value]];
+    });
+  }
   return cbfiedData;
 }
 
