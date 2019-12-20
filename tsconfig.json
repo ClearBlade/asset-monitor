@@ -61,7 +61,8 @@
         "module": "commonjs",
         "declaration": true,
         "outDir": "./lib/backend",
-        "strict": true
+        "strict": true,
+        "forceConsistentCasingInFileNames": true
     },
     "files": ["src/global.d.ts", "src/clearbladejs-server.d.ts"],
     "include": [
@@ -71,7 +72,8 @@
         "src/backend/collection-lib",
         "src/backend/logger",
         "src/backend/util",
-        "src/backend/rulesengine"
+        "src/backend/rulesengine",
+        "src/backend/asset-history"
     ],
     "exclude": ["node_modules", "**/__tests__/*"]
 }

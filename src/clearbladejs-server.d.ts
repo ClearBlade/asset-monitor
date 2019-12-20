@@ -302,7 +302,7 @@ declare namespace CbServer {
         ): void;
         getCurrentTopics(callback: CbCallback): void;
         publish(topic: string, payload: string | ArrayBuffer): void;
-        subscribe(topic: string, callback: CbCallback): void;
+        subscribe(topic: string, callback: CbCallback<string | null>): void;
         waitForMessage(topics: Array<string>, wfmCallback: WaitForMessageCallback): void;
     }
 
