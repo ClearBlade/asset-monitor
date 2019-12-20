@@ -15,9 +15,8 @@ export interface Assets extends Partial<ThreeDCoord>, Partial<GeoCoord>, CbServe
     custom_id_1?: string;
     custom_id_2?: string;
     description?: string;
-    id?: string;
+    id: string;
     image?: string;
-    item_id?: string;
     label?: string;
     last_location_updated?: string;
     last_updated?: string;

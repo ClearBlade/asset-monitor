@@ -11,7 +11,7 @@ export function cbifyData(input: Assets, normalizerConfig: NormalizerDeviceMap):
         cbfiedData[value] = input[normalizerConfig[value]];
         delete input[normalizerConfig[value]];
     });
-    cbfiedData.custom_data = {};
+    cbfiedData['custom_data'] = {};
 
     //Process the custom_data structure
     if (normalizerConfig.custom_data) {
