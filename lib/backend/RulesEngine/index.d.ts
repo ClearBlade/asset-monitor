@@ -8,6 +8,6 @@ export declare class RulesEngine {
     data: object;
     constructor();
     addRule(rule: RuleProperties): void;
-    convertRule(ruleData: Rules): Rule;
+    convertRule(ruleData: Rules): Promise<Rule>;
     run(facts: Record<string, any>): void;
 }
