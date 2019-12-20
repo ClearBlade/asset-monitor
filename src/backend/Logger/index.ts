@@ -15,11 +15,11 @@ interface Loggable {
  * Type: Module
  * Description: A library that contains a function which, when called, returns an object with a public API.
  */
-export function Logger(): Loggable {
+export function Logger(config: { name: string }): Loggable {
     // pass the loglevel and the message: any type is allowed
     const messaging = ClearBlade.Messaging();
     function publishLog(logLevel: LogLevels, ...messages: unknown[]): void {
-        const pubMsg = prettyLog(messages);
+        const pubMsg = prettyLog([config.name, ...messages]);
 
         switch (logLevel) {
             case GC.LOG_LEVEL.INFO:

@@ -71,7 +71,7 @@ export function normalizer(config: NormalizerConfig): void {
     const TOPIC = topics[0];
     const SERVICE_INSTANCE_ID = req.service_instance_id;
     const messaging = ClearBlade.Messaging();
-    const logger = Logger();
+    const logger = Logger({ name: 'Normalizer' });
 
     logger.publishLog(GC.LOG_LEVEL.DEBUG, 'Normalizer SERVICE_INSTANCE_ID:: ' + SERVICE_INSTANCE_ID);
 

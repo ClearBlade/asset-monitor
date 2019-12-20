@@ -22,7 +22,7 @@ interface CbCollectionLib {
 }
 
 export function CbCollectionLib(collectionName: CollectionName): CbCollectionLib {
-    const logger = Logger();
+    const logger = Logger({ name: 'CbCollectionLib' });
     if (!collectionName) {
         const errMsg = 'Remember to pass collection name while using the library :(';
         logger.publishLog(GC.LOG_LEVEL.ERROR, errMsg);

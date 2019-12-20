@@ -13,12 +13,12 @@ export function updateAssetStatusSS(config: UpdateAssetStatusConfig): void {
     ClearBlade.init({ request: config.req });
 
     const TOPIC = '$share/AssetStatusGroup/' + Topics.DBUpdateAssetStatus('+');
-    const logger = Logger();
+    const logger = Logger({ name: 'updateAssetStatusSS' });
 
     const messaging = ClearBlade.Messaging();
 
     function failureCb(reason: unknown): void {
-        logger.publishLog(GC.LOG_LEVEL.ERROR, 'updateAssetStatusSS - Failed ', reason);
+        logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed ', reason);
     }
 
     function MergeAsset(assetID: string, msg: Record<string, any>): Promise<unknown> {
@@ -26,11 +26,11 @@ export function updateAssetStatusSS(config: UpdateAssetStatusConfig): void {
         const assetFetchQuery = ClearBlade.Query({ collectionName: CollectionName.ASSETS }).equalTo('id', assetID);
         const promise = assetsCol.cbFetchPromise({ query: assetFetchQuery }).then(function(data) {
             if (data.DATA.length <= 0) {
-                logger.publishLog(GC.LOG_LEVEL.ERROR, 'updateAssetStatusSS - No asset found for id ', assetID);
+                logger.publishLog(GC.LOG_LEVEL.ERROR, 'No asset found for id ', assetID);
                 return Promise.reject(' No asset found for id ' + assetID);
             }
             if (data.DATA.length > 1) {
-                logger.publishLog(GC.LOG_LEVEL.ERROR, 'updateAssetStatusSS - Multiple Assets found for id ', assetID);
+                logger.publishLog(GC.LOG_LEVEL.ERROR, 'Multiple Assets found for id ', assetID);
                 return Promise.reject(' Multiple Assets found for id ' + assetID);
             }
 
@@ -39,7 +39,7 @@ export function updateAssetStatusSS(config: UpdateAssetStatusConfig): void {
             try {
                 customData = JSON.parse(dataStr);
             } catch (e) {
-                logger.publishLog(GC.LOG_LEVEL.ERROR, 'updateAssetStatusSS - Failed while parsing: ', e);
+                logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed while parsing: ', e);
                 return Promise.reject('Failed while parsing: ' + e);
             }
             const incomingCustomData = msg['custom_data'];
@@ -61,15 +61,7 @@ export function updateAssetStatusSS(config: UpdateAssetStatusConfig): void {
 
     function handleMessage(err: boolean, msg: string, topic: string): void {
         if (err) {
-            logger.publishLog(
-                GC.LOG_LEVEL.ERROR,
-                'updateAssetStatusSS - Failed to wait for message: ',
-                err,
-                ' ',
-                msg,
-                '  ',
-                topic,
-            );
+            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed to wait for message: ', err, ' ', msg, '  ', topic);
             config.resp.error('Failed to wait for message: ' + err + ' ' + msg + '    ' + topic);
         }
 
@@ -77,13 +69,13 @@ export function updateAssetStatusSS(config: UpdateAssetStatusConfig): void {
         try {
             jsonMessage = JSON.parse(msg);
         } catch (e) {
-            logger.publishLog(GC.LOG_LEVEL.ERROR, 'updateAssetStatusSS - Failed while parsing: ', e);
+            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed while parsing: ', e);
             return;
         }
 
         const assetID = getAssetIdFromTopic(topic);
         if (!assetID) {
-            logger.publishLog(GC.LOG_LEVEL.ERROR, 'updateAssetStatusSS - Invalid topic received: ', topic);
+            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Invalid topic received: ', topic);
             config.resp.error('Invalid topic received: ' + topic);
         }
 
@@ -94,10 +86,10 @@ export function updateAssetStatusSS(config: UpdateAssetStatusConfig): void {
 
     function WaitLoop(err: boolean, data: string | null): void {
         if (err) {
-            logger.publishLog(GC.LOG_LEVEL.ERROR, 'updateAssetStatusSS - Subscribe failed ', data);
+            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Subscribe failed ', data);
             config.resp.error(data);
         }
-        logger.publishLog(GC.LOG_LEVEL.SUCCESS, 'updateAssetStatusSS - Subscribed to Shared Topic. Starting Loop.');
+        logger.publishLog(GC.LOG_LEVEL.SUCCESS, 'Subscribed to Shared Topic. Starting Loop.');
 
         // eslint-disable-next-line no-constant-condition
         while (true) {

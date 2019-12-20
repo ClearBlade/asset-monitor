@@ -7,5 +7,7 @@ interface Loggable {
  * Type: Module
  * Description: A library that contains a function which, when called, returns an object with a public API.
  */
-export declare function Logger(): Loggable;
+export declare function Logger(config: {
+    name: string;
+}): Loggable;
 export {};

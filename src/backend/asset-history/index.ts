@@ -16,14 +16,14 @@ export function createAssetHistorySS(config: CreateAssetHistoryConfig): void {
 
     ClearBlade.init({ request: config.req });
     const messaging = ClearBlade.Messaging();
-    const logger = Logger();
+    const logger = Logger({ name: 'createAssetHistorySS' });
 
     function successCb(value: unknown): void {
-        logger.publishLog(GC.LOG_LEVEL.SUCCESS, 'createAssetHistorySS - AssetHistory Creation Succeeded ', value);
+        logger.publishLog(GC.LOG_LEVEL.SUCCESS, 'AssetHistory Creation Succeeded ', value);
     }
 
     function failureCb(reason: unknown): void {
-        logger.publishLog(GC.LOG_LEVEL.ERROR, 'createAssetHistorySS - Failed ', reason);
+        logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed ', reason);
     }
 
     function getEmptyAssetHistoryObject(): AssetHistory {
@@ -62,7 +62,7 @@ export function createAssetHistorySS(config: CreateAssetHistoryConfig): void {
         const customData = parsedMsg['custom_data'];
 
         if (!customData) {
-            logger.publishLog(GC.LOG_LEVEL.DEBUG, 'createAssetHistorySS - Custom Data Missing: ', customData);
+            logger.publishLog(GC.LOG_LEVEL.DEBUG, 'Custom Data Missing: ', customData);
             return [];
         }
 
@@ -85,15 +85,7 @@ export function createAssetHistorySS(config: CreateAssetHistoryConfig): void {
 
     function HandleMessage(err: boolean, msg: string, topic: string): void {
         if (err) {
-            logger.publishLog(
-                GC.LOG_LEVEL.ERROR,
-                'createAssetHistorySS - Failed to wait for message: ',
-                err,
-                ' ',
-                msg,
-                '  ',
-                topic,
-            );
+            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed to wait for message: ', err, ' ', msg, '  ', topic);
             config.resp.error('Failed to wait for message: ' + err + ' ' + msg + '    ' + topic);
         }
 
@@ -101,20 +93,20 @@ export function createAssetHistorySS(config: CreateAssetHistoryConfig): void {
         try {
             parsedMsg = JSON.parse(msg);
         } catch (e) {
-            logger.publishLog(GC.LOG_LEVEL.ERROR, 'createAssetHistorySS - Failed parse the message: ', e);
+            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed parse the message: ', e);
             return;
         }
         let assetHistoryItems: Array<AssetHistory> = [];
         const assetID = getAssetIdFromTopic(topic);
         if (!assetID) {
-            logger.publishLog(GC.LOG_LEVEL.ERROR, 'createAssetHistorySS - Invalid topic received: ' + topic);
+            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Invalid topic received: ' + topic);
         }
 
         const standardHistoryData = createStandardHistoryData(assetID, parsedMsg);
         assetHistoryItems = assetHistoryItems.concat(standardHistoryData);
         assetHistoryItems = assetHistoryItems.concat(createCustomHistoryData(assetID, parsedMsg));
 
-        logger.publishLog(GC.LOG_LEVEL.DEBUG, 'createAssetHistorySS - HistoryData ', assetHistoryItems);
+        logger.publishLog(GC.LOG_LEVEL.DEBUG, 'HistoryData ', assetHistoryItems);
         const assetHistoyCol = CbCollectionLib(CollectionName.ASSET_HISTORY);
         assetHistoyCol.cbCreatePromise({ item: assetHistoryItems }).then(successCb, failureCb);
 
@@ -123,16 +115,10 @@ export function createAssetHistorySS(config: CreateAssetHistoryConfig): void {
 
     function WaitLoop(err: boolean, data: string | null): void {
         if (err) {
-            logger.publishLog(
-                GC.LOG_LEVEL.ERROR,
-                'createAssetHistorySS - Subscribe failed for: ',
-                SERVICE_INSTANCE_ID,
-                ': ',
-                data,
-            );
+            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Subscribe failed for: ', SERVICE_INSTANCE_ID, ': ', data);
             config.resp.error(data);
         }
-        logger.publishLog(GC.LOG_LEVEL.SUCCESS, 'createAssetHistorySS - Subscribed to Shared Topic. Starting Loop.');
+        logger.publishLog(GC.LOG_LEVEL.SUCCESS, 'Subscribed to Shared Topic. Starting Loop.');
 
         // eslint-disable-next-line no-constant-condition
         while (true) {
