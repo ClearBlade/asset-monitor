@@ -8,7 +8,11 @@ export interface FlattenedObject {
 export function cbifyData(input: Asset, normalizerConfig: NormalizerDeviceMap): Asset {
     const cbfiedData: Asset = {};
     Object.keys(normalizerConfig).forEach(function(value) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
         cbfiedData[value] = input[normalizerConfig[value]];
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
         delete input[normalizerConfig[value]];
     });
     cbfiedData['custom_data'] = {};
@@ -18,6 +22,8 @@ export function cbifyData(input: Asset, normalizerConfig: NormalizerDeviceMap): 
         Object.keys(normalizerConfig.custom_data).forEach(function(value) {
             if (cbfiedData.custom_data) {
                 (cbfiedData.custom_data as { [key: string]: string })[value] =
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+                    // @ts-ignore
                     input[normalizerConfig.custom_data[value]];
             }
         });
@@ -38,6 +44,8 @@ export function flattenJSON(data: Record<string, unknown>): FlattenedObject {
 
     function recurse(cur: Record<string, unknown>, prop: string): void {
         if (Object(cur) !== cur) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+            // @ts-ignore
             result[prop] = cur;
         } else if (Array.isArray(cur)) {
             for (let i = 0, l = cur.length; i < l; i++) recurse(cur[i], prop ? prop + '.' + i : '' + i);
@@ -48,8 +56,12 @@ export function flattenJSON(data: Record<string, unknown>): FlattenedObject {
             let isEmpty = true;
             for (const p in cur) {
                 isEmpty = false;
+                // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+                // @ts-ignore
                 recurse(cur[p], prop ? prop + '.' + p : p);
             }
+            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+            // @ts-ignore
             if (isEmpty) result[prop] = {};
         }
     }

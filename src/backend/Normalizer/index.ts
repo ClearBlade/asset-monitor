@@ -42,8 +42,10 @@ export function publisher(assets: Array<Asset>, pubConfig: PublishConfig): void 
     for (let i = 0, l = assets.length; i < l; i++) {
         const assetID = assets[i].id;
         const topic = pubConfig.topicFn(assetID as string);
-        const pubData = {};
+        const pubData: Asset = {};
         pubConfig.keysToPublish.forEach(function(value) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+            // @ts-ignore
             pubData[value] = assets[i][value];
         });
         messaging.publish(topic, JSON.stringify(pubData));
