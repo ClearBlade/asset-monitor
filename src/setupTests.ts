@@ -3,6 +3,9 @@
 global.log = (arg: string) => console.log(arg);
 
 // @ts-ignore
+global.Promise.runQueue = () => '';
+
+// @ts-ignore
 global.ClearBlade = {
   // add any utilized ClearBlade methods, ts-ignores are required due to partial implementations
   init: arg => undefined,

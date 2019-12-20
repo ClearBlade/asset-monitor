@@ -13,6 +13,11 @@ import {
     RuleInfo
   } from './types'
 import { AddDuration } from './duration';
+import { CbCollectionLib } from '../collection-lib';
+import { CollectionName } from '../global-config';
+import { Assets } from '../collection-schema/assets';
+import { Areas } from '../collection-schema/areas';
+import "../../static/promise-polyfill";
 
 // @ts-ignore
 var ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
@@ -128,11 +133,11 @@ export function ParseAndConvertConditions(ruleInfo: RuleInfo, rule: AllRulesEngi
           return false;
         }
         rule[RulesEngineConditionalOperators.OR] = []
-        for(let asset in Object.keys(assets)) {
+        for(let i = 0; i < assets.length; i++) {
           let entityCondition: RulesEngineCondition = {
             fact: "id",
             operator: "equal",
-            value: assets[asset].id
+            value: assets[i].id as string
           };
           rule[RulesEngineConditionalOperators.OR].push(entityCondition);
         }
@@ -143,11 +148,11 @@ export function ParseAndConvertConditions(ruleInfo: RuleInfo, rule: AllRulesEngi
           return false;
         }
         rule[RulesEngineConditionalOperators.OR] = []
-        for(let area in Object.keys(areas)) {
+        for(let i = 0; i < areas.length; i++) {
           let entityCondition: RulesEngineCondition = {
             fact: "id",
             operator: "equal",
-            value: areas[area].id
+            value: areas[i].id
           };
           rule[RulesEngineConditionalOperators.OR].push(entityCondition);
         }
@@ -166,10 +171,10 @@ export function ParseAndConvertConditions(ruleInfo: RuleInfo, rule: AllRulesEngi
         }
         rule[RulesEngineConditionalOperators.OR] = []
         let rval: OperatorAndValue = GetOperatorAndValue(relationship.operator, relationship.value)
-        for(let asset in Object.keys(assets)) {
-          AddDuration(ruleInfo.id, ruleInfo.id, assets[asset].id, relationship.duration);
+        for(let i = 0; i < assets.length; i++) {
+          AddDuration(ruleInfo.id, ruleInfo.id, assets[i].id as string, relationship.duration);
           let attributeCondition: RulesEngineCondition = {
-            fact: assets[asset].id,
+            fact: assets[i].id as string,
             operator: rval.operator,
             value: rval.value
           };
@@ -183,10 +188,10 @@ export function ParseAndConvertConditions(ruleInfo: RuleInfo, rule: AllRulesEngi
         }
         rule[RulesEngineConditionalOperators.OR] = []
         let rval2: OperatorAndValue = GetOperatorAndValue(relationship.operator, relationship.value)
-        for(let area in Object.keys(areas)) {
-          AddDuration(ruleInfo.id, ruleInfo.id, areas[area].id, relationship.duration);
+        for(let i = 0; i < areas.length; i++) {
+          AddDuration(ruleInfo.id, ruleInfo.id, areas[i].id, relationship.duration);
           let attributeCondition: RulesEngineCondition = {
-            fact: areas[area].id,
+            fact: areas[i].id,
             operator: rval2.operator,
             value: rval2.value
           };
@@ -198,32 +203,32 @@ export function ParseAndConvertConditions(ruleInfo: RuleInfo, rule: AllRulesEngi
     }
   }
 
-  function getAllAssetsForType(assetType: string): any[] {
-    let rval = [];
-    let collection = ClearBlade.Collection({collectionName: "assets"});
-    let query = ClearBlade.Query();
-    query.equalTo("type", assetType);
-    collection.fetch(query, function(err, data) {
-      if(err) {
-        log("Error getting all assets for asset_type " + assetType + ": " + JSON.stringify(data));
-      } else {
-        rval = data.DATA;
-      }
-    });
-    return rval;
+  function getAllAssetsForType(assetType: string): Assets[] {
+    const assetsCollection = CbCollectionLib(CollectionName.ASSETS);
+    const assetsCollectionQuery = ClearBlade.Query({ collectionName: CollectionName.ASSETS });
+    assetsCollectionQuery.equalTo('type', assetType);
+
+    if (assetsCollection) {
+      assetsCollection.cbFetchPromise({query: assetsCollectionQuery}).then((data) => {
+        return Array.isArray(data.DATA) ? data.DATA : [];
+      })
+      // @ts-ignore
+      Promise.runQueue();
+    }
+    return [];
   }
 
-  function getAllAreasForType(areaType: string): any[] {
-    let rval = [];
-    let collection = ClearBlade.Collection({collectionName: "areas"});
-    let query = ClearBlade.Query();
-    query.equalTo("type", areaType);
-    collection.fetch(query, function(err, data) {
-      if(err) {
-        log("Error getting all areas for area_type " + areaType + ": " + JSON.stringify(data));
-      } else {
-        rval = data.DATA;
-      }
-    });
-    return rval;
+  function getAllAreasForType(areaType: string): Areas[] {
+    const areasCollection = CbCollectionLib(CollectionName.AREAS);
+    const areasCollectionQuery = ClearBlade.Query({ collectionName: CollectionName.AREAS });
+    areasCollectionQuery.equalTo("type", areaType);
+
+    if (areasCollection) {
+      areasCollection.cbFetchPromise({query: areasCollectionQuery}).then((data) => {
+        return Array.isArray(data.DATA) ? data.DATA : [];
+      })
+      // @ts-ignore
+      Promise.runQueue();
+    }
+    return [];
   }

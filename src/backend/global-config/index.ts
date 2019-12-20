@@ -17,9 +17,11 @@ export enum LogLevels {
 }
 
 export enum CollectionName {
-  ASSETS = "assets",
-  ASSET_HISTORY = "asset_history",
-  ASSET_TYPES = "asset_types"
+    ASSETS = "assets",
+    ASSET_HISTORY = "asset_history",
+    ASSET_TYPES = "asset_types",
+    AREAS = "areas",
+    ACTIONS = "actions"
 }
 
 export enum AssetStatusUpdateMethod {
