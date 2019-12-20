@@ -17,11 +17,11 @@ export enum LogLevels {
 }
 
 export enum CollectionName {
-    ASSETS = "assets",
-    ASSET_HISTORY = "asset_history",
-    ASSET_TYPES = "asset_types",
-    AREAS = "areas",
-    ACTIONS = "actions"
+  ASSETS = "assets",
+  ASSET_HISTORY = "asset_history",
+  ASSET_TYPES = "asset_types",
+  AREAS = "areas",
+  ACTIONS = "actions"
 }
 
 export enum AssetStatusUpdateMethod {
@@ -29,11 +29,11 @@ export enum AssetStatusUpdateMethod {
   MERGE = "merge"
 }
 
-export type IKeyForLocationUpdate = Array<string>
+export type IKeyForLocationUpdate = Array<string>;
 
-export type IKeyForStatusUpdate = Array<string>
+export type IKeyForStatusUpdate = Array<string>;
 
-export type AssetHistoryConfig = Array<string>
+export type AssetHistoryConfig = Array<string>;
 
 export interface UpdateAssetLocationConfig {
   keysToUpdate: IKeyForLocationUpdate;
@@ -123,7 +123,9 @@ const globalConfig: GlobalConfig = {
   }
 };
 
-export function CreateConfig(config: GlobalConfig["CUSTOM_CONFIGS"]) {
+export function CreateConfig(
+  config: GlobalConfig["CUSTOM_CONFIGS"]
+): GlobalConfig {
   globalConfig.CUSTOM_CONFIGS = config;
   return globalConfig;
 }
