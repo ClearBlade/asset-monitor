@@ -1,6 +1,3 @@
-import { string } from 'prop-types';
-
-/////////////////////////////////////////////////////////////////////////////////////
 // Time Frames
 
 export enum TimeFrameTypes {
@@ -35,7 +32,6 @@ export const DaysOfTheWeek: Array<string> = [
     Days.SATURDAY,
 ];
 
-/////////////////////////////////////////////////////////////////////////////////////
 // Duration
 
 export enum DurationUnits {
@@ -50,7 +46,6 @@ export interface Duration {
     unit: DurationUnits;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////
 // Special Case Operators (true/false/inside/outside)
 
 export interface OperatorAndValue {
@@ -70,7 +65,6 @@ export function GetOperatorAndValue(op: string, val: string | number | boolean):
     }
 }
 
-/////////////////////////////////////////////////////////////////////////////////////
 // Conditions (ClearBlade conditions format)
 
 export enum ConditionalOperators {
@@ -105,10 +99,9 @@ export interface Condition {
 }
 
 export type AllConditions = {
-    [x in ConditionalOperators]: Array<Condition | AllConditions>;
+    [x in ConditionalOperators]?: Array<Condition | AllConditions>;
 };
 
-/////////////////////////////////////////////////////////////////////////////////////
 // Rules Engine Condition Format (json-rules-engine format)
 
 export enum RulesEngineConditionalOperators {

@@ -60,7 +60,7 @@ export interface Condition {
     relationship: Relationship;
 }
 export declare type AllConditions = {
-    [x in ConditionalOperators]: Array<Condition | AllConditions>;
+    [x in ConditionalOperators]?: Array<Condition | AllConditions>;
 };
 export declare enum RulesEngineConditionalOperators {
     AND = "all",

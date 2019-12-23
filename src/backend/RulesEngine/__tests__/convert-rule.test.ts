@@ -1,70 +1,75 @@
-jest.mock("../async");
-import { AllRulesEngineConditions, Rule } from "../types";
+jest.mock('../async');
+import { AllRulesEngineConditions, Rule, EntityTypes, DurationUnits } from '../types';
 import { ParseAndConvertConditions } from '../convert-rule';
 
 const ruleInfo = {
     id: name,
-    name
-}
+    name,
+};
 
-let rule: Rule = {
+const rule: Rule = {
     name: name,
     conditions: {} as AllRulesEngineConditions,
     event: {
         type: name,
         params: {
             eventTypeID: 'test',
-            actionIDs: ["test"],
+            actionIDs: ['test'],
             priority: 1,
             severity: 1,
             ruleID: 'id',
-            ruleName: name
-        }
-    }
+            ruleName: name,
+        },
+    },
 };
 
-describe("convert rules", function(){
-    it("convertRuleTest", function(){
+describe('convert rules', function() {
+    it('convertRuleTest', function() {
         const conditions = {
-            "and": [
+            and: [
                 {
-                    "entity": {
-                        "id": "train",
-                        "entity_type": "asset_types"
+                    entity: {
+                        id: 'train',
+                        entity_type: EntityTypes.ASSET_TYPE,
                     },
-                    "relationship": {
-                        "operator": "greaterThan",
-                        "attribute": "speed",
-                        "attribute_type": "state",
-                        "value": 50,
-                        "duration": {
-                            "value": 10,
-                            "unit": "s"
-                        }
-                    }
-                }
-            ]
+                    relationship: {
+                        operator: 'greaterThan',
+                        attribute: 'speed',
+                        attribute_type: EntityTypes.STATE,
+                        value: 50,
+                        duration: {
+                            value: 10,
+                            unit: DurationUnits.SECONDS,
+                        },
+                    },
+                },
+            ],
         };
 
-        //@ts-ignore - Adam
-        ParseAndConvertConditions(ruleInfo, rule.conditions, conditions).then((convertedRule) => {
+        ParseAndConvertConditions(ruleInfo, rule.conditions, conditions).then(convertedRule => {
             expect(convertedRule).toEqual({
-                "all":[{
-                    "any":[{
-                        "fact":"id",
-                        "operator":"equal",
-                        "value":"testAsset1"
-                    },{
-                        "fact":"id",
-                        "operator":"equal",
-                        "value":"testAsset2"
-                    }]
-                },{
-                    "fact":"speed",
-                    "operator":"greaterThan",
-                    "value":50
-                }]
+                all: [
+                    {
+                        any: [
+                            {
+                                fact: 'id',
+                                operator: 'equal',
+                                value: 'testAsset1',
+                            },
+                            {
+                                fact: 'id',
+                                operator: 'equal',
+                                value: 'testAsset2',
+                            },
+                        ],
+                    },
+                    {
+                        fact: 'speed',
+                        operator: 'greaterThan',
+                        value: 50,
+                    },
+                ],
             });
         });
-    })
-})
+    });
+});
