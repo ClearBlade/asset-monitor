@@ -7,6 +7,10 @@ export function prettyLog(...args: unknown[]): string {
     return '';
 }
 
+export function createPrettyLogWithName(config: { name: string }, ...messages: unknown[]): string {
+    return prettyLog(config.name, ...messages);
+}
+
 interface Loggable {
     publishLog(logLevel: LogLevels, ...message: unknown[]): void;
 }
@@ -19,7 +23,7 @@ export function Logger(config: { name: string }): Loggable {
     // pass the loglevel and the message: any type is allowed
     const messaging = ClearBlade.Messaging();
     function publishLog(logLevel: LogLevels, ...messages: unknown[]): void {
-        const pubMsg = prettyLog([config.name, ...messages]);
+        const pubMsg = createPrettyLogWithName(config, messages);
 
         switch (logLevel) {
             case GC.LOG_LEVEL.INFO:
