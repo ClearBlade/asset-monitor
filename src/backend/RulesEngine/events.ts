@@ -4,25 +4,8 @@ import { CollectionName } from '../global-config';
 import { Actions, ActionTypes } from '../collection-schema/Actions';
 import '../../static/promise-polyfill';
 
-// @ts-ignore
-const ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
-// @ts-ignore
-const log: { (s: any): void } = global.log;
-
-export function FireEventsAndActions(params: Params) {
-    processEvents(params);
-    processActions(params);
-}
-
-function processEvents(params: Params) {}
-
-function processActions(params: Params) {
-    const actionTypeIDs: Array<string> = params.actionIDs;
-    for (const idx in actionTypeIDs) {
-        const action: Actions = getActionByID(actionTypeIDs[idx]);
-        log('Action is ' + JSON.stringify(action));
-        performAction(action);
-    }
+function processEvents(params: Params): void {
+    console.log(params);
 }
 
 function getActionByID(actionID: string): Actions {
@@ -34,19 +17,35 @@ function getActionByID(actionID: string): Actions {
         actionsCollection.cbFetchPromise({ query: actionsCollectionQuery }).then(data => {
             return Array.isArray(data.DATA) && data.DATA[0] ? data.DATA[0] : {};
         });
-        // @ts-ignore
         Promise.runQueue();
     }
     return {};
 }
 
-function performAction(action: Actions) {
+function performAction(action: Actions): void {
     switch (action.type) {
         case ActionTypes.SEND_SMS:
-        // send sms
+            // send sms
+            break;
         case ActionTypes.SEND_EMAIL:
-        // send email
+            // send email
+            break;
         case ActionTypes.PUBLISH_MESSAGE:
-        // publish message
+            // publish message
+            break;
     }
+}
+
+function processActions(params: Params): void {
+    const actionTypeIDs: Array<string> = params.actionIDs;
+    for (const idx in actionTypeIDs) {
+        const action: Actions = getActionByID(actionTypeIDs[idx]);
+        // log('Action is ' + JSON.stringify(action));
+        performAction(action);
+    }
+}
+
+export function FireEventsAndActions(params: Params): void {
+    processEvents(params);
+    processActions(params);
 }

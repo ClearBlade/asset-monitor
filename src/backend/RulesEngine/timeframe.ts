@@ -1,7 +1,28 @@
 import { TimeFrame, TimeFrameTypes, DaysOfTheWeek } from './types';
 
-// @ts-ignore
-const log: { (s: any): void } = global.log;
+function checkForValidTimeframe(today: Date, timeframe: TimeFrame): boolean {
+    const startTime: string = timeframe.startTime;
+    const endTime: string = timeframe.endTime;
+    const startTimeSplit: Array<string> = startTime.split(':');
+    const endTimeSplit: Array<string> = endTime.split(':');
+    if (startTimeSplit.length != 2) {
+        // log('Invalid start time set for timeframe ' + JSON.stringify(timeframe));
+        return false;
+    }
+    if (endTimeSplit.length != 2) {
+        // log('Invalid end time set for timeframe ' + JSON.stringify(timeframe));
+        return false;
+    }
+    if (today.getHours() < parseInt(startTimeSplit[0]) || today.getHours() > parseInt(endTimeSplit[0])) {
+        // log('Hours dont match ' + today.getHours());
+        return false;
+    }
+    if (today.getMinutes() < parseInt(startTimeSplit[1]) || today.getMinutes() > parseInt(endTimeSplit[1])) {
+        // log('Minutes dont match ' + today.getMinutes());
+        return false;
+    }
+    return true;
+}
 
 export function DoesTimeframeMatchRule(timeframe: TimeFrame): boolean {
     const today: Date = new Date();
@@ -14,33 +35,9 @@ export function DoesTimeframeMatchRule(timeframe: TimeFrame): boolean {
                     return checkForValidTimeframe(today, timeframe);
                 }
             }
-            log('Days dont match with rule: ' + todaysDay);
+            // log('Days dont match with rule: ' + todaysDay);
             return false;
         default:
             return true;
     }
-}
-
-function checkForValidTimeframe(today: Date, timeframe: TimeFrame): boolean {
-    const startTime: string = timeframe.startTime;
-    const endTime: string = timeframe.endTime;
-    const startTimeSplit: Array<string> = startTime.split(':');
-    const endTimeSplit: Array<string> = endTime.split(':');
-    if (startTimeSplit.length != 2) {
-        log('Invalid start time set for timeframe ' + JSON.stringify(timeframe));
-        return false;
-    }
-    if (endTimeSplit.length != 2) {
-        log('Invalid end time set for timeframe ' + JSON.stringify(timeframe));
-        return false;
-    }
-    if (today.getHours() < parseInt(startTimeSplit[0]) || today.getHours() > parseInt(endTimeSplit[0])) {
-        log('Hours dont match ' + today.getHours());
-        return false;
-    }
-    if (today.getMinutes() < parseInt(startTimeSplit[1]) || today.getMinutes() > parseInt(endTimeSplit[1])) {
-        log('Minutes dont match ' + today.getMinutes());
-        return false;
-    }
-    return true;
 }
