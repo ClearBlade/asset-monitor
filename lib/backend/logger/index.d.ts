@@ -1,5 +1,8 @@
 import { LogLevels } from '../global-config';
 export declare function prettyLog(...args: unknown[]): string;
+export declare function createPrettyLogWithName(config: {
+    name: string;
+}, ...messages: unknown[]): string;
 interface Loggable {
     publishLog(logLevel: LogLevels, ...message: unknown[]): void;
 }
