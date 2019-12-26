@@ -57,9 +57,14 @@ describe('Convert Rules', function() {
             expect(convertedRule).toEqual(parsedConditions.ASSET_TYPE_TO_STATE_OR);
         });
     });
-    it('converts nested asset type to state', function() {
-        return ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.NESTED_ASSET_TYPE_TO_STATE).then(convertedRule => {
-            expect(convertedRule).toEqual(parsedConditions.NESTED_ASSET_TYPE_TO_STATE);
+    it('converts nested asset type to state AND', function() {
+        return ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.NESTED_ASSET_TYPE_TO_STATE_AND).then(convertedRule => {
+            expect(convertedRule).toEqual(parsedConditions.NESTED_ASSET_TYPE_TO_STATE_AND);
+        });
+    });
+    it('converts nested asset type to state OR', function() {
+        return ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.NESTED_ASSET_TYPE_TO_STATE_OR).then(convertedRule => {
+            expect(convertedRule).toEqual(parsedConditions.NESTED_ASSET_TYPE_TO_STATE_OR);
         });
     });
 });
@@ -217,7 +222,63 @@ const conditions = {
             }
         ]
     },
-    NESTED_ASSET_TYPE_TO_STATE: {
+    NESTED_ASSET_TYPE_TO_STATE_AND: {
+        and: [
+            { 
+                or: [
+                    {
+                        entity: {
+                            id: 'train',
+                            entity_type: EntityTypes.ASSET_TYPE,
+                        },
+                        relationship: {
+                            operator: 'equal',
+                            attribute: 'speed',
+                            attribute_type: EntityTypes.STATE,
+                            value: 50,
+                            duration: {
+                                value: 10,
+                                unit: DurationUnits.SECONDS,
+                            },
+                        },
+                    },
+                    {
+                        entity: {
+                            id: 'train',
+                            entity_type: EntityTypes.ASSET_TYPE,
+                        },
+                        relationship: {
+                            operator: 'equal',
+                            attribute: 'speed',
+                            attribute_type: EntityTypes.STATE,
+                            value: 60,
+                            duration: {
+                                value: 20,
+                                unit: DurationUnits.SECONDS,
+                            },
+                        },
+                    }
+                ]
+            },
+            {
+                entity: {
+                    id: 'train',
+                    entity_type: EntityTypes.ASSET_TYPE,
+                },
+                relationship: {
+                    operator: 'equal',
+                    attribute: 'speed',
+                    attribute_type: EntityTypes.STATE,
+                    value: 70,
+                    duration: {
+                        value: 30,
+                        unit: DurationUnits.SECONDS,
+                    },
+                },
+            },
+        ],
+    },
+    NESTED_ASSET_TYPE_TO_STATE_OR: {
         or: [
             { 
                 and: [
@@ -450,7 +511,83 @@ const parsedConditions = {
             }
         ]
     },
-    NESTED_ASSET_TYPE_TO_STATE: {
+    NESTED_ASSET_TYPE_TO_STATE_AND: {
+        "all": [
+            {
+                "any": [
+                    {
+                        "all": [
+                            {
+                                "any": [
+                                    { 
+                                        "fact": "id",
+                                        "operator": "equal",
+                                        "value": "testAsset1"
+                                    },{
+                                        "fact": "id",
+                                        "operator": "equal",
+                                        "value": "testAsset2"
+                                    }
+                                ]
+                            },
+                            {
+                                "fact": "speed",
+                                "operator": "equal",
+                                "value": 50
+                            },
+                        ]
+                    },
+                    {
+                        "all": [
+                            {
+                                "any": [
+                                    { 
+                                        "fact": "id",
+                                        "operator": "equal",
+                                        "value": "testAsset1"
+                                    },
+                                    {
+                                        "fact": "id",
+                                        "operator": "equal",
+                                        "value": "testAsset2"
+                                    }
+                                ]
+                            },
+                            {
+                                "fact": "speed",
+                                "operator": "equal",
+                                "value": 60
+                            }
+                        ]
+                    }     
+                ]
+            },
+            {
+                "all": [
+                    {
+                        "any": [
+                            { 
+                                "fact": "id",
+                                "operator": "equal",
+                                "value": "testAsset1"
+                            },
+                            {
+                                "fact": "id",
+                                "operator": "equal",
+                                "value": "testAsset2"
+                            }
+                        ]
+                    },
+                    {
+                        "fact": "speed",
+                        "operator": "equal",
+                        "value": 70
+                    }
+                ]
+            }
+        ]
+    },
+    NESTED_ASSET_TYPE_TO_STATE_OR: {
         "any": [
             {
                 "all": [
