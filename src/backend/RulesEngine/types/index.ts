@@ -22,7 +22,7 @@ export interface TimeFrame {
     days: Array<Days>;
 }
 
-export const DaysOfTheWeek: Array<string> = [
+export const DaysOfTheWeek: Array<Days> = [
     Days.SUNDAY,
     Days.MONDAY,
     Days.TUESDAY,
