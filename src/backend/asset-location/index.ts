@@ -20,14 +20,14 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
 
     ClearBlade.init({ request: config.req });
     const messaging = ClearBlade.Messaging();
-    const logger = Logger();
+    const logger = Logger({ name: 'updateAssetLocationSS' });
 
     function successCb(value: unknown): void {
-        logger.publishLog(GC.LOG_LEVEL.SUCCESS, 'updateAssetLocationSS - Succeeded ', value);
+        logger.publishLog(GC.LOG_LEVEL.SUCCESS, 'Succeeded ', value);
     }
 
     function failureCb(reason: unknown): void {
-        logger.publishLog(GC.LOG_LEVEL.ERROR, 'updateAssetLocationSS - Failed ', reason);
+        logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed ', reason);
     }
 
     function updateAssetLocation(assetsOpts: UpdateAssetLocationOptions): Promise<unknown> {
@@ -35,7 +35,7 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
         const incomingMsg = assetsOpts.incomingMsg;
         const assetsCol = CbCollectionLib(CollectionName.ASSETS);
 
-        logger.publishLog(GC.LOG_LEVEL.DEBUG, 'DEBUG: ', 'updateAssetLocationSS - In Update Asset Location');
+        logger.publishLog(GC.LOG_LEVEL.DEBUG, 'DEBUG: ', 'In Update Asset Location');
         if (!currentState.item_id) {
             return Promise.reject('Item Id is missing');
         }
@@ -62,7 +62,7 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
     }
 
     function createAsset(assetID: string, assetData: Asset): Promise<unknown> {
-        logger.publishLog(GC.LOG_LEVEL.DEBUG, 'DEBUG: ', 'updateAssetLocationSS - in Create Asset');
+        logger.publishLog(GC.LOG_LEVEL.DEBUG, 'DEBUG: ', 'in Create Asset');
 
         const assetsCol = CbCollectionLib(CollectionName.ASSETS);
         const newAsset = assetData;
@@ -85,15 +85,7 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
 
     function HandleMessage(err: boolean, msg: string, topic: string): void {
         if (err) {
-            logger.publishLog(
-                GC.LOG_LEVEL.ERROR,
-                'updateAssetLocationSS -  Failed to wait for message: ',
-                err,
-                ' ',
-                msg,
-                '  ',
-                topic,
-            );
+            logger.publishLog(GC.LOG_LEVEL.ERROR, ' Failed to wait for message: ', err, ' ', msg, '  ', topic);
             config.resp.error('Failed to wait for message: ' + err + ' ' + msg + '    ' + topic);
         }
 
@@ -101,7 +93,7 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
         try {
             incomingMsg = JSON.parse(msg);
         } catch (e) {
-            logger.publishLog(GC.LOG_LEVEL.ERROR, 'updateAssetLocationSS - Failed parse the message: ', e);
+            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed parse the message: ', e);
             // service can exit here if we add resp.error(""), right now it fails silently by just publishing on error topic
             return;
         }
@@ -109,7 +101,7 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
         const assetID = getAssetIdFromTopic(topic);
 
         if (!assetID) {
-            logger.publishLog(GC.LOG_LEVEL.ERROR, 'updateAssetLocationSS - Invalid topic received: ', topic);
+            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Invalid topic received: ', topic);
             return;
         }
 
@@ -124,23 +116,18 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
                     updateAssetLocation({ fetchedData, incomingMsg }).then(successCb, failureCb);
                 } else if (data.DATA.length === 0) {
                     createAsset(assetID, incomingMsg).then(successCb, failureCb);
-                    logger.publishLog(
-                        GC.LOG_LEVEL.ERROR,
-                        'ERROR: ',
-                        "updateAssetLocationSS -  Asset doesn't exist so, ignoring: ",
-                        data,
-                    );
+                    logger.publishLog(GC.LOG_LEVEL.ERROR, 'ERROR: ', " Asset doesn't exist so, ignoring: ", data);
                 } else {
                     logger.publishLog(
                         GC.LOG_LEVEL.ERROR,
                         'ERROR: ',
-                        'updateAssetLocationSS -  Multiple Assets with same assetId exists: ',
+                        ' Multiple Assets with same assetId exists: ',
                         data,
                     );
                 }
             })
             .catch(function(reason) {
-                logger.publishLog(GC.LOG_LEVEL.ERROR, 'updateAssetLocationSS - Failed to fetch: ', reason);
+                logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed to fetch: ', reason);
                 config.resp.error('Failed to fetch asset: ' + reason);
             });
 
@@ -149,16 +136,10 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
 
     function WaitLoop(err: boolean, data: string | null): void {
         if (err) {
-            logger.publishLog(
-                GC.LOG_LEVEL.ERROR,
-                'updateAssetLocationSS - Subscribe failed for: ',
-                SERVICE_INSTANCE_ID,
-                ': ',
-                data,
-            );
+            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Subscribe failed for: ', SERVICE_INSTANCE_ID, ': ', data);
             config.resp.error(data);
         }
-        logger.publishLog(GC.LOG_LEVEL.SUCCESS, 'updateAssetLocationSS - Subscribed to Shared Topic. Starting Loop.');
+        logger.publishLog(GC.LOG_LEVEL.SUCCESS, 'Subscribed to Shared Topic. Starting Loop.');
 
         // eslint-disable-next-line no-constant-condition
         while (true) {

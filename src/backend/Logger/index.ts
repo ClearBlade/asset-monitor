@@ -1,5 +1,16 @@
 import { GC, LogLevels } from '../global-config';
 
+export function prettyLog(...args: unknown[]): string {
+    if (args.length > 0) {
+        return `${args.map(a => (typeof a === 'object' ? JSON.stringify(a) : a)).join(' ')}`;
+    }
+    return '';
+}
+
+export function createPrettyLogWithName(config: { name: string }, ...messages: unknown[]): string {
+    return prettyLog(config.name, ...messages);
+}
+
 interface Loggable {
     publishLog(logLevel: LogLevels, ...message: unknown[]): void;
 }
@@ -8,14 +19,11 @@ interface Loggable {
  * Type: Module
  * Description: A library that contains a function which, when called, returns an object with a public API.
  */
-export function Logger(): Loggable {
+export function Logger(config: { name: string }): Loggable {
     // pass the loglevel and the message: any type is allowed
     const messaging = ClearBlade.Messaging();
     function publishLog(logLevel: LogLevels, ...messages: unknown[]): void {
-        let pubMsg = ' ';
-        if (messages.length > 0) {
-            pubMsg = `${messages.map(a => (typeof a === 'object' ? JSON.stringify(a) : a)).join(' ')}`;
-        }
+        const pubMsg = createPrettyLogWithName(config, messages);
 
         switch (logLevel) {
             case GC.LOG_LEVEL.INFO:
@@ -37,11 +45,4 @@ export function Logger(): Loggable {
     return {
         publishLog,
     };
-}
-
-export function prettyLog(...args: unknown[]): string {
-    if (args.length > 0) {
-        return `${args.map(a => (typeof a === 'object' ? JSON.stringify(a) : a)).join(' ')}`;
-    }
-    return '';
 }
