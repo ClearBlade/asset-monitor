@@ -199,19 +199,16 @@ function convertANDCondition(
     rule: AllRulesEngineConditions,
     condition: Condition | AllConditions,
 ): Promise<AllRulesEngineConditions> {
-    console.log('in convert and condition', rule);
     if ((condition as Condition).entity) {
         // We have a condition
         const promise = addANDConditions(ruleInfo, rule, condition as Condition);
         Promise.runQueue();
         return promise;
     } else {
-        // Seems like we have nested conditions        
-        rule[RulesEngineConditionalOperators.AND].push({} as AllRulesEngineConditions);
-        const len: number = rule[RulesEngineConditionalOperators.AND].length;
+        // Seems like we have nested conditions
         const promise = ParseAndConvertConditions(
             ruleInfo,
-            rule[RulesEngineConditionalOperators.AND][len - 1] as AllRulesEngineConditions,
+            {} as AllRulesEngineConditions,
             condition as AllConditions,
         );
         Promise.runQueue();
@@ -224,26 +221,20 @@ function convertORCondition(
     rule: AllRulesEngineConditions,
     condition: Condition | AllConditions,
 ): Promise<AllRulesEngineConditions> {
-    console.log('in convert or condition', rule);
-    rule[RulesEngineConditionalOperators.OR] = [];
     if ((condition as Condition).entity) {
         // We have a condition        
-        rule[RulesEngineConditionalOperators.OR].push({} as AllRulesEngineConditions);
-        const len: number = rule[RulesEngineConditionalOperators.OR].length;
         const promise = addANDConditions(
             ruleInfo,
-            rule[RulesEngineConditionalOperators.OR][len - 1] as AllRulesEngineConditions,
+            {} as AllRulesEngineConditions,
             condition as Condition,
         );
         Promise.runQueue();
         return promise;
     } else {
         // Seems like we have nested conditions        
-        rule[RulesEngineConditionalOperators.OR].push({} as AllRulesEngineConditions);
-        const len: number = rule[RulesEngineConditionalOperators.OR].length;
         const promise = ParseAndConvertConditions(
             ruleInfo,
-            rule[RulesEngineConditionalOperators.OR][len - 1] as AllRulesEngineConditions,
+            {} as AllRulesEngineConditions,
             condition as AllConditions,
         );
         Promise.runQueue();
