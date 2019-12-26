@@ -1,43 +1,66 @@
-import { TimeFrame, TimeFrameTypes, DaysOfTheWeek } from './types';
+import { TimeFrame, TimeFrameTypes, DaysOfTheWeek, Days } from './types';
+import { start } from 'repl';
 
-function checkForValidTimeframe(today: Date, timeframe: TimeFrame): boolean {
-    const startTime: string = timeframe.startTime;
-    const endTime: string = timeframe.endTime;
-    const startTimeSplit: Array<string> = startTime.split(':');
-    const endTimeSplit: Array<string> = endTime.split(':');
-    if (startTimeSplit.length != 2) {
-        // log('Invalid start time set for timeframe ' + JSON.stringify(timeframe));
+function checkForValidTimeframeFormat(timeTuples: Array<number[]>): boolean {
+    timeTuples.forEach((a) => {
+        if (a.length !== 2) {
+            return false;
+        }
+        a.forEach((t, idx) => {
+            if (t === NaN) { // valid number
+                return false;
+            } else if (idx === 0) { // valid hours
+                if (t < 0 || t > 24) {
+                    return false;
+                }
+            } else if (idx === 1) { // valid minutes
+                if (t < 0 || t > 59) {
+                    return false
+                }
+            }
+        })
+    })
+    return true;
+}
+
+function checkRepeatByDay(ruleTime: number[], startTime: number[], endTime: number[]) {
+    if (ruleTime[0] < startTime[0] || ruleTime[0] > endTime[0]) {
         return false;
-    }
-    if (endTimeSplit.length != 2) {
-        // log('Invalid end time set for timeframe ' + JSON.stringify(timeframe));
+    } else if (ruleTime[0] === startTime[0] && ruleTime[1] < startTime[1]) {
         return false;
-    }
-    if (today.getHours() < parseInt(startTimeSplit[0]) || today.getHours() > parseInt(endTimeSplit[0])) {
-        // log('Hours dont match ' + today.getHours());
-        return false;
-    }
-    if (today.getMinutes() < parseInt(startTimeSplit[1]) || today.getMinutes() > parseInt(endTimeSplit[1])) {
-        // log('Minutes dont match ' + today.getMinutes());
+    } else if (ruleTime[0] === endTime[0] && ruleTime[1] > endTime[1]) {
         return false;
     }
     return true;
 }
 
-export function DoesTimeframeMatchRule(timeframe: TimeFrame): boolean {
-    const today: Date = new Date();
-    const todaysDay: string = DaysOfTheWeek[today.getDay()];
-    switch (timeframe.type) {
-        case TimeFrameTypes.REPEATEACHWEEK:
-        case TimeFrameTypes.REPEATBYDAY:
-            for (const idx in timeframe.days) {
-                if (timeframe.days[idx] === todaysDay) {
-                    return checkForValidTimeframe(today, timeframe);
-                }
+function checkRepeatEachWeek(ruleTime: number[], startTime: number[], endTime: number[]) {
+    return true;
+}
+
+export function DoesTimeframeMatchRule(timestamp: string, timeframe: TimeFrame): boolean {
+    const ruleDate: Date = new Date(timestamp);
+    const ruleDay = DaysOfTheWeek[ruleDate.getUTCDay()];
+    const ruleHours = ruleDate.getUTCHours();
+    const ruleMinutes = ruleDate.getUTCMinutes();
+    
+    const startTime: number[] = timeframe.startTime.split(':').map((t) => parseInt(t));
+    const endTime: number[] = timeframe.endTime.split(':').map((t) => parseInt(t));
+    
+    if (checkForValidTimeframeFormat([startTime, endTime])) {
+        if (timeframe.days.indexOf(ruleDay) > -1) {
+            switch (timeframe.type) {
+                case TimeFrameTypes.REPEATEACHWEEK:
+                    return checkRepeatEachWeek([ruleHours, ruleMinutes], startTime, endTime)
+                case TimeFrameTypes.REPEATBYDAY:
+                    return checkRepeatByDay([ruleHours, ruleMinutes], startTime, endTime);
+                default:
+                    return false;
             }
-            // log('Days dont match with rule: ' + todaysDay);
-            return false;
-        default:
-            return true;
+        }
+        // log(`${ruleDay} does not fall within timeframe`);
+        return false
     }
+    // log(`Invalid time format. Start time: ${timeframe.startTime}. End time: ${timeframe.endTime}`);
+    return false;
 }
