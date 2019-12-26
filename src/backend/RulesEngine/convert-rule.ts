@@ -160,12 +160,12 @@ function addANDConditions(
                     (condition as Condition).relationship.operator,
                     (condition as Condition).relationship.value,
                 );
-                AddDuration(
-                    ruleInfo.id,
-                    ruleInfo.id,
-                    (condition as Condition).relationship.attribute,
-                    (condition as Condition).relationship.duration,
-                );
+                // AddDuration(
+                //     ruleInfo.id,
+                //     ruleInfo.id,
+                //     (condition as Condition).relationship.attribute,
+                //     (condition as Condition).relationship.duration,
+                // );
                 const newCondition: RulesEngineCondition = {
                     fact: (condition as Condition).relationship.attribute,
                     operator: rval.operator,
@@ -184,12 +184,12 @@ function addANDConditions(
                         rule[RulesEngineConditionalOperators.AND].push(attributeCondition);
                     }
                     return rule;
-                });
+                })
                 Promise.runQueue();
                 return promise;
             }
         },
-    );
+    )
     Promise.runQueue();
     return promise;
 }
@@ -199,6 +199,7 @@ function convertANDCondition(
     rule: AllRulesEngineConditions,
     condition: Condition | AllConditions,
 ): Promise<AllRulesEngineConditions> {
+    console.log('in convert and condition', rule);
     if ((condition as Condition).entity) {
         // We have a condition
         const promise = addANDConditions(ruleInfo, rule, condition as Condition);
@@ -223,6 +224,7 @@ function convertORCondition(
     rule: AllRulesEngineConditions,
     condition: Condition | AllConditions,
 ): Promise<AllRulesEngineConditions> {
+    console.log('in convert or condition', rule);
     rule[RulesEngineConditionalOperators.OR] = [];
     if ((condition as Condition).entity) {
         // We have a condition        
@@ -255,20 +257,39 @@ export function ParseAndConvertConditions(
     conditions: AllConditions,
 ): Promise<AllRulesEngineConditions> {
     if (conditions.hasOwnProperty(ConditionalOperators.AND)) {
-        // rule[RulesEngineConditionalOperators.AND] = [];
         const subConditions = conditions[ConditionalOperators.AND] as Array<Condition | AllConditions>;
-        const promise = Promise.all(subConditions.map(s => convertANDCondition(ruleInfo, rule, s))).then(() => rule).catch((e) => {
-            console.log('AND ERROR', e)
+        const promise = Promise.all(subConditions.map(s => convertANDCondition(ruleInfo, {...rule}, s))).then((rules) => {
+            if (rules.length > 1) {
+                return {
+                    ...rule,
+                    [RulesEngineConditionalOperators.AND]: [...rules]
+                }
+            } else {
+                return {
+                    ...rules[0]
+                }
+            }
+        }).catch((e) => {
+            console.log('convertANDCondition error', e)
             return rule
         });
         Promise.runQueue();
         return promise;
     } else {
         // is an OR
-        // rule[RulesEngineConditionalOperators.OR] = [];
         const subConditions = conditions[ConditionalOperators.OR] as Array<Condition | AllConditions>;
-        const promise = Promise.all(subConditions.map(s => convertORCondition(ruleInfo, rule, s))).then(() => rule).catch((e) => {
-            console.log('OR ERROR', e)
+        const promise = Promise.all(subConditions.map(s => convertORCondition(ruleInfo, {...rule}, s))).then((rules) => {
+            if (rules.length > 1) {
+                return {
+                    ...rule,
+                    [RulesEngineConditionalOperators.OR]: [...rules]
+                }
+            } else {
+                return {
+                    ...rules[0]
+                }
+            }
+        }).catch((e) => {
             return rule
         });
         Promise.runQueue();

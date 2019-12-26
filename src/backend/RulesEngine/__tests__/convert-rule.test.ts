@@ -28,37 +28,37 @@ const rule: Rule = {
 
 describe('Convert Rules', function() {
     it('converts basic asset type to state', function() {
-        ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.BASIC_ASSET_TYPE_TO_STATE).then(convertedRule => {
+        return ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.BASIC_ASSET_TYPE_TO_STATE).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.BASIC_ASSET_TYPE_TO_STATE);
         });
     });
     it('converts basic area type to state', function() {
-        ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.BASIC_AREA_TYPE_TO_STATE).then(convertedRule => {
+        return ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.BASIC_AREA_TYPE_TO_STATE).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.BASIC_AREA_TYPE_TO_STATE);
         });
     });
     it('converts basic asset to state', function() {
-        ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.BASIC_ASSET_TO_STATE).then(convertedRule => {
+        return ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.BASIC_ASSET_TO_STATE).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.BASIC_ASSET_TO_STATE);
         });
     });
     it('converts basic area to state', function() {
-        ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.BASIC_ASSET_TO_STATE).then(convertedRule => {
+        return ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.BASIC_ASSET_TO_STATE).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.BASIC_ASSET_TO_STATE);
         });
     });
     it('converts asset type to state AND', function() {
-        ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.ASSET_TYPE_TO_STATE_AND).then(convertedRule => {
+        return ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.ASSET_TYPE_TO_STATE_AND).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.ASSET_TYPE_TO_STATE_AND);
         });
     });
     it('converts asset type to state OR', function() {
-        ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.ASSET_TYPE_TO_STATE_OR).then(convertedRule => {
+        return ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.ASSET_TYPE_TO_STATE_OR).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.ASSET_TYPE_TO_STATE_OR);
         });
     });
     it('converts nested asset type to state', function() {
-        ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.NESTED_ASSET_TYPE_TO_STATE).then(convertedRule => {
+        return ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.NESTED_ASSET_TYPE_TO_STATE).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.NESTED_ASSET_TYPE_TO_STATE);
         });
     });
@@ -455,42 +455,50 @@ const parsedConditions = {
             {
                 "all": [
                     {
-                        "any": [
-                            { 
-                                "fact": "id",
-                                "operator": "equal",
-                                "value": "testAsset1"
-                            },{
-                                "fact": "id",
-                                "operator": "equal",
-                                "value": "testAsset2"
-                            }
-                        ]
-                    },
-                    {
-                        "fact": "speed",
-                        "operator": "equal",
-                        "value": 50
-                    },
-                    {
-                        "any": [
-                            { 
-                                "fact": "id",
-                                "operator": "equal",
-                                "value": "testAsset1"
+                        "all": [
+                            {
+                                "any": [
+                                    { 
+                                        "fact": "id",
+                                        "operator": "equal",
+                                        "value": "testAsset1"
+                                    },{
+                                        "fact": "id",
+                                        "operator": "equal",
+                                        "value": "testAsset2"
+                                    }
+                                ]
                             },
                             {
-                                "fact": "id",
+                                "fact": "speed",
                                 "operator": "equal",
-                                "value": "testAsset2"
-                            }
+                                "value": 50
+                            },
                         ]
                     },
                     {
-                        "fact": "speed",
-                        "operator": "equal",
-                        "value": 60
-                    }
+                        "all": [
+                            {
+                                "any": [
+                                    { 
+                                        "fact": "id",
+                                        "operator": "equal",
+                                        "value": "testAsset1"
+                                    },
+                                    {
+                                        "fact": "id",
+                                        "operator": "equal",
+                                        "value": "testAsset2"
+                                    }
+                                ]
+                            },
+                            {
+                                "fact": "speed",
+                                "operator": "equal",
+                                "value": 60
+                            }
+                        ]
+                    }     
                 ]
             },
             {
