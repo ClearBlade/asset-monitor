@@ -47,6 +47,9 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
 
         for (let i = 0; i < GC.UPDATE_ASSET_LOCATION_CONFIG.keysToUpdate.length; i++) {
             const curKey = GC.UPDATE_ASSET_LOCATION_CONFIG.keysToUpdate[i];
+
+            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+            // @ts-ignore
             changes[curKey as keyof Asset] = incomingMsg[curKey as keyof typeof incomingMsg];
         }
 
@@ -58,6 +61,9 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
         //DEV_TODO comment the logs once the entire flow works or
         // just change the LOG_LEVEL to info in the custom_config
         logger.publishLog(GC.LOG_LEVEL.DEBUG, 'DEBUG: logging changes: ', changes);
+
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
         return assetsCol.cbUpdatePromise({ query, changes });
     }
 
@@ -80,6 +86,9 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
             logger.publishLog(GC.LOG_LEVEL.ERROR, 'ERROR: ', SERVICE_INSTANCE_ID, ': Failed to stringify ', e);
             return Promise.reject('Failed to stringify ' + e);
         }
+
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
         return assetsCol.cbCreatePromise({ item: [newAsset] });
     }
 
