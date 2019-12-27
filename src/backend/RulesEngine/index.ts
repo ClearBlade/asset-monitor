@@ -8,7 +8,7 @@ import { FireEventsAndActions } from './events';
 // import { ProcessDurationIfExists } from './duration';
 import { Rules } from '../collection-schema/Rules';
 
-function processRuleResults(event: Event, facts: Record<string, string>): void {
+function processRuleResults(event: Event, facts: Record<string, string>, timestamp: string): void {
     if (event === undefined) {
         // rule failed
         // log('Rule failed');
@@ -17,7 +17,7 @@ function processRuleResults(event: Event, facts: Record<string, string>): void {
     }
     const params = event.params as Params;
     if (params.timeframe !== undefined) {
-        if (!DoesTimeframeMatchRule(params.timestamp, params.timeframe)) {
+        if (!DoesTimeframeMatchRule(timestamp, params.timeframe)) {
             // log('Cannot run rule because timeframe constraints failed: ' + event.type);
             return;
         }
@@ -85,10 +85,10 @@ export class RulesEngine {
         return promise;
     }
 
-    run(facts: Record<string, string>): Promise<EngineResult> {
+    run(facts: Record<string, string>, timestamp: string): Promise<EngineResult> {
         const promise = this.engine.run(facts).then(
             results => {
-                processRuleResults(results.events[0], facts);
+                processRuleResults(results.events[0], facts, timestamp);
                 return results;
             },
             err => err.message,

@@ -9,5 +9,5 @@ export declare class RulesEngine {
     constructor();
     addRule(rule: RuleProperties): void;
     convertRule(ruleData: Rules): Promise<Rule>;
-    run(facts: Record<string, string>): Promise<EngineResult>;
+    run(facts: Record<string, string>, timestamp: string): Promise<EngineResult>;
 }
