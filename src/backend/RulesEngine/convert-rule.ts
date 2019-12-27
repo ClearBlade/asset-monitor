@@ -15,8 +15,8 @@ import {
 import { AddDuration } from './duration';
 import { CbCollectionLib } from '../collection-lib';
 import { CollectionName } from '../global-config';
-import { Asset } from '../collection-schema/assets';
-import { Areas } from '../collection-schema/areas';
+import { Asset } from '../collection-schema/Assets';
+import { Areas } from '../collection-schema/Areas';
 import '../../static/promise-polyfill';
 
 // @ts-ignore
