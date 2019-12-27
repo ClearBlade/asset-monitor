@@ -17,7 +17,7 @@ export interface TimeFrame {
     endTime: string;
     days: Array<Days>;
 }
-export declare const DaysOfTheWeek: Array<string>;
+export declare const DaysOfTheWeek: Array<Days>;
 export declare enum DurationUnits {
     SECONDS = "s",
     MINUTES = "m",
@@ -86,6 +86,7 @@ export interface Params {
     timeframe?: TimeFrame;
     ruleID: string;
     ruleName: string;
+    timestamp: string;
 }
 export interface Rule {
     name: string;

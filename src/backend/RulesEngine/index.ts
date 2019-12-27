@@ -15,9 +15,9 @@ function processRuleResults(event: Event, facts: Record<string, string>): void {
         console.log('facts', facts);
         return;
     }
-    const params: Params = event.params as Params;
+    const params = event.params as Params;
     if (params.timeframe !== undefined) {
-        if (!DoesTimeframeMatchRule(params.timeframe)) {
+        if (!DoesTimeframeMatchRule(params.timestamp, params.timeframe)) {
             // log('Cannot run rule because timeframe constraints failed: ' + event.type);
             return;
         }
