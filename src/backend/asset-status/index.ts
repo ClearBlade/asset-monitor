@@ -10,20 +10,13 @@ interface UpdateAssetStatusConfig {
     settings: UpdateAssetStatusSettings;
 }
 
-function handleServiceSettings(settings: UpdateAssetStatusSettings) {
-    if (!settings) {
-        settings = GC.UPDATE_ASSET_STATUS_SETTINGS;
-    }
-    return settings;
-}
-
 export function updateAssetStatusSS(config: UpdateAssetStatusConfig): void {
     ClearBlade.init({ request: config.req });
 
     const TOPIC = '$share/AssetStatusGroup/' + Topics.DBUpdateAssetStatus('+');
     const logger = Logger({ name: 'updateAssetStatusSS' });
     const messaging = ClearBlade.Messaging();
-    config.settings = handleServiceSettings(config.settings);
+    config.settings = config.settings || GC.UPDATE_ASSET_STATUS_SETTINGS;
 
     function failureCb(reason: unknown): void {
         logger.publishLog(LogLevels.ERROR, 'Failed ', reason);

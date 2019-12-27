@@ -15,13 +15,6 @@ interface UpdateAssetLocationConfig {
     resp: CbServer.Resp;
     settings: UpdateAssetLocationSettings;
 }
-
-function handleServiceSettings(settings: UpdateAssetLocationSettings) {
-    if (!settings) {
-        settings = GC.UPDATE_ASSET_LOCATION_SETTINGS;
-    }
-    return settings;
-}
 export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
     const TOPIC = '$share/UpdateLocationGroup/' + Topics.DBUpdateAssetLocation('+');
     const SERVICE_INSTANCE_ID = config.req.service_instance_id;
@@ -30,7 +23,7 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
     const messaging = ClearBlade.Messaging();
     const logger = Logger({ name: 'updateAssetLocationSS' });
 
-    config.settings = handleServiceSettings(config.settings);
+    config.settings = config.settings || GC.UPDATE_ASSET_LOCATION_SETTINGS;
 
     function successCb(value: unknown): void {
         logger.publishLog(LogLevels.SUCCESS, 'Succeeded ', value);
