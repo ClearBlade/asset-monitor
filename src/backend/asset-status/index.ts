@@ -34,6 +34,8 @@ export function updateAssetStatusSS(config: UpdateAssetStatusConfig): void {
                 return Promise.reject(' Multiple Assets found for id ' + assetID);
             }
 
+            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+            // @ts-ignore
             const dataStr = data.DATA[0]['custom_data'];
             let customData;
             try {
@@ -52,6 +54,8 @@ export function updateAssetStatusSS(config: UpdateAssetStatusConfig): void {
             const statusChanges: Asset = { custom_data: JSON.stringify(customData), last_updated: currDate };
             return assetsCol.cbUpdatePromise({
                 query: assetsQuery,
+                // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+                // @ts-ignore
                 changes: statusChanges,
             });
         });
