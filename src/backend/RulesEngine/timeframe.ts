@@ -23,19 +23,43 @@ function checkForValidTimeframeFormat(timeTuples: Array<number[]>): boolean {
     return true;
 }
 
-function checkRepeatByDay(ruleTime: number[], startTime: number[], endTime: number[]) {
-    if (ruleTime[0] < startTime[0] || ruleTime[0] > endTime[0]) {
+interface TimeframeObj {
+    days: Days[];
+    ruleDay: Days;
+    ruleHours: number;
+    ruleMinutes: number;
+    startTime: number[];
+    endTime: number[];
+}
+
+function checkRepeatByDay(timeframeObj: TimeframeObj): boolean {
+    const { ruleHours, ruleMinutes, startTime, endTime } = timeframeObj;
+    if (ruleHours < startTime[0] || ruleHours > endTime[0]) {
         return false;
-    } else if (ruleTime[0] === startTime[0] && ruleTime[1] < startTime[1]) {
+    } else if (ruleHours === startTime[0] && ruleMinutes < startTime[1]) {
         return false;
-    } else if (ruleTime[0] === endTime[0] && ruleTime[1] > endTime[1]) {
+    } else if (ruleHours === endTime[0] && ruleMinutes > endTime[1]) {
         return false;
     }
     return true;
 }
 
-function checkRepeatEachWeek(ruleTime: number[], startTime: number[], endTime: number[]) {
-    return true;
+function checkRepeatEachWeek(timeframeObj: TimeframeObj): boolean {
+    const { days, ruleDay, ruleHours, ruleMinutes, startTime, endTime } = timeframeObj;
+    if (ruleDay === days[0]) {
+        if (ruleHours < startTime[0]) {
+            return false;
+        } else if (ruleHours === startTime[0] && ruleMinutes < startTime[1]) {
+            return false;
+        }
+    } else if (ruleDay === days[days.length - 1]) {
+        if (ruleHours > endTime[1]) {
+            return false;
+        } else if (ruleHours === endTime[0] && ruleMinutes > endTime[1]) {
+            return false;
+        }
+    }
+    return true
 }
 
 export function DoesTimeframeMatchRule(timestamp: string, timeframe: TimeFrame): boolean {
@@ -43,17 +67,18 @@ export function DoesTimeframeMatchRule(timestamp: string, timeframe: TimeFrame):
     const ruleDay = DaysOfTheWeek[ruleDate.getUTCDay()];
     const ruleHours = ruleDate.getUTCHours();
     const ruleMinutes = ruleDate.getUTCMinutes();
+    const { days } = timeframe;
     
     const startTime: number[] = timeframe.startTime.split(':').map((t) => parseInt(t));
     const endTime: number[] = timeframe.endTime.split(':').map((t) => parseInt(t));
     
     if (checkForValidTimeframeFormat([startTime, endTime])) {
-        if (timeframe.days.indexOf(ruleDay) > -1) {
+        if (days.indexOf(ruleDay) > -1) {
             switch (timeframe.type) {
                 case TimeFrameTypes.REPEATEACHWEEK:
-                    return checkRepeatEachWeek([ruleHours, ruleMinutes], startTime, endTime)
+                    return checkRepeatEachWeek({ days, ruleDay, ruleHours, ruleMinutes, startTime, endTime })
                 case TimeFrameTypes.REPEATBYDAY:
-                    return checkRepeatByDay([ruleHours, ruleMinutes], startTime, endTime);
+                    return checkRepeatByDay({ days, ruleDay, ruleHours, ruleMinutes, startTime, endTime });
                 default:
                     return false;
             }
