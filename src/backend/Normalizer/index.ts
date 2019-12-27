@@ -1,8 +1,10 @@
 import { Logger } from '../Logger';
-import { GC } from '../global-config';
+import { GC, LogLevels } from '../global-config';
 import { Asset } from '../collection-schema/Assets';
 import '../../static/promise-polyfill/index.js';
-export type MessageParser = (err: boolean, msg: string, topic: string) => Promise<Array<Asset>>; // parses message and returns normalized format
+
+export type MessageParser = (err: boolean, msg: string, topic: string) => Promise<Array<Asset>>;
+// parses message and returns normalized format
 
 export interface NormalizerPublishConfig {
     [key: string]: PublishConfig;
@@ -62,31 +64,28 @@ export function bulkPublisher(
 }
 
 export function normalizer(config: NormalizerConfig): void {
-    const resp = config.resp;
-    const req = config.req;
     const messageParser = config.messageParser;
-    const topics = config.topics;
     const publishConfig = config.normalizerPubConfig || GC.NORMALIZER_PUB_CONFIG;
 
-    const TOPIC = topics[0];
-    const SERVICE_INSTANCE_ID = req.service_instance_id;
+    const TOPIC = config.topics[0];
+    const SERVICE_INSTANCE_ID = config.req.service_instance_id;
     const messaging = ClearBlade.Messaging();
     const logger = Logger({ name: 'Normalizer' });
 
-    logger.publishLog(GC.LOG_LEVEL.DEBUG, 'Normalizer SERVICE_INSTANCE_ID:: ' + SERVICE_INSTANCE_ID);
+    logger.publishLog(LogLevels.DEBUG, 'Normalizer SERVICE_INSTANCE_ID:: ' + SERVICE_INSTANCE_ID);
 
-    const subscribePromises = [];
-    for (let i = 0, l = topics.length; i < l; i++) {
-        subscribePromises.push(subscriber(topics[i]));
+    let subscribePromises: Promise<unknown>[] = [];
+    for (let i = 0, l = config.topics.length; i < l; i++) {
+        subscribePromises.push(subscriber(config.topics[i]));
     }
 
     function failureCb(reason: unknown): void {
-        logger.publishLog(GC.LOG_LEVEL.ERROR, SERVICE_INSTANCE_ID, ': Failed ', reason);
+        logger.publishLog(LogLevels.ERROR, SERVICE_INSTANCE_ID, ': Failed ', reason);
     }
 
     function HandleMessage(err: boolean, msg: string, topic: string): void {
         if (err) {
-            resp.error(
+            config.resp.error(
                 `HandleMessage error inside Normalizer. Service was probably killed while waiting for messages. ${JSON.stringify(
                     { err, msg, topic },
                 )}`,
@@ -103,17 +102,15 @@ export function normalizer(config: NormalizerConfig): void {
     }
 
     function WaitLoop(): void {
-        logger.publishLog(GC.LOG_LEVEL.SUCCESS, SERVICE_INSTANCE_ID, ': Subscribed to Shared Topic. Starting Loop.');
-
+        logger.publishLog(LogLevels.SUCCESS, SERVICE_INSTANCE_ID, ': Subscribed to Shared Topics. Starting Loop.');
         // eslint-disable-next-line no-constant-condition
         while (true) {
             messaging.waitForMessage([TOPIC], HandleMessage);
         }
     }
 
-    Promise.all(subscribePromises)
-        .then(WaitLoop)
-        .catch(failureCb);
+    Promise.all(subscribePromises).catch(failureCb);
+    //.then(WaitLoop)
 
     Promise.runQueue();
 }
