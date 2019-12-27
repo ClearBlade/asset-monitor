@@ -103,3 +103,7 @@ export function updateAssetStatusSS(config: UpdateAssetStatusConfig): void {
 
     messaging.subscribe(TOPIC, WaitLoop);
 }
+
+export const api = {
+    default: updateAssetStatusSS,
+};
