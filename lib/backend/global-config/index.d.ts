@@ -30,9 +30,9 @@ export interface UpdateAssetLocationSettings {
     LOG_SETTING: LogLevels;
     CREATE_NEW_ASSET_IF_MISSING: boolean;
 }
-export interface UpdateAssetStatusConfig {
-    keysToUpdate: IKeyForStatusUpdate;
-    updateMethod: AssetStatusUpdateMethod;
+export interface UpdateAssetStatusSettings {
+    LOG_SETTING: LogLevels;
+    UPDATE_METHOD: AssetStatusUpdateMethod;
 }
 export interface GlobalConfig {
     LOG_LEVEL: LogLevel;
@@ -43,7 +43,7 @@ export interface GlobalConfig {
     ASSET_HISTORY_CONFIG: AssetHistoryConfig;
     NORMALIZER_PUB_CONFIG: NormalizerPublishConfig;
     UPDATE_ASSET_LOCATION_SETTINGS: UpdateAssetLocationSettings;
-    UPDATE_ASSET_STATUS_CONFIG: UpdateAssetStatusConfig;
+    UPDATE_ASSET_STATUS_SETTINGS: UpdateAssetStatusSettings;
 }
 export declare function CreateConfig(config: GlobalConfig['CUSTOM_CONFIGS']): GlobalConfig;
 export declare const GC: GlobalConfig;

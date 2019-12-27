@@ -41,11 +41,10 @@ export interface UpdateAssetLocationSettings {
     CREATE_NEW_ASSET_IF_MISSING: boolean;
 }
 
-export interface UpdateAssetStatusConfig {
-    keysToUpdate: IKeyForStatusUpdate;
-    updateMethod: AssetStatusUpdateMethod;
+export interface UpdateAssetStatusSettings {
+    LOG_SETTING: LogLevels;
+    UPDATE_METHOD: AssetStatusUpdateMethod;
 }
-
 export interface GlobalConfig {
     LOG_LEVEL: LogLevel;
     LOG_SETTING: LogLevels;
@@ -55,7 +54,7 @@ export interface GlobalConfig {
     ASSET_HISTORY_CONFIG: AssetHistoryConfig;
     NORMALIZER_PUB_CONFIG: NormalizerPublishConfig;
     UPDATE_ASSET_LOCATION_SETTINGS: UpdateAssetLocationSettings;
-    UPDATE_ASSET_STATUS_CONFIG: UpdateAssetStatusConfig;
+    UPDATE_ASSET_STATUS_SETTINGS: UpdateAssetStatusSettings;
 }
 
 const globalConfig: GlobalConfig = {
@@ -119,9 +118,9 @@ const globalConfig: GlobalConfig = {
         LOG_SETTING: LogLevels.DEBUG,
         CREATE_NEW_ASSET_IF_MISSING: false,
     },
-    UPDATE_ASSET_STATUS_CONFIG: {
-        keysToUpdate: ['custom_data'],
-        updateMethod: AssetStatusUpdateMethod.MERGE,
+    UPDATE_ASSET_STATUS_SETTINGS: {
+        UPDATE_METHOD: AssetStatusUpdateMethod.MERGE,
+        LOG_SETTING: LogLevels.DEBUG,
     },
 };
 
