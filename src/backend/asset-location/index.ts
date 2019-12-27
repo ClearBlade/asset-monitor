@@ -158,3 +158,7 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
 
     messaging.subscribe(TOPIC, WaitLoop);
 }
+
+export const api = {
+    default: updateAssetLocationSS,
+};
