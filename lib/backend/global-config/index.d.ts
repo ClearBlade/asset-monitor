@@ -25,9 +25,10 @@ export declare enum AssetStatusUpdateMethod {
 export declare type IKeyForLocationUpdate = Array<string>;
 export declare type IKeyForStatusUpdate = Array<string>;
 export declare type AssetHistoryConfig = Array<string>;
-export interface UpdateAssetLocationConfig {
-    keysToUpdate: IKeyForLocationUpdate;
-    createNewAssetifMissing: boolean;
+export interface UpdateAssetLocationSettings {
+    KEYS_TO_UPDATE: IKeyForLocationUpdate;
+    LOG_SETTING: LogLevels;
+    CREATE_NEW_ASSET_IF_MISSING: boolean;
 }
 export interface UpdateAssetStatusConfig {
     keysToUpdate: IKeyForStatusUpdate;
@@ -41,7 +42,7 @@ export interface GlobalConfig {
     };
     ASSET_HISTORY_CONFIG: AssetHistoryConfig;
     NORMALIZER_PUB_CONFIG: NormalizerPublishConfig;
-    UPDATE_ASSET_LOCATION_CONFIG: UpdateAssetLocationConfig;
+    UPDATE_ASSET_LOCATION_SETTINGS: UpdateAssetLocationSettings;
     UPDATE_ASSET_STATUS_CONFIG: UpdateAssetStatusConfig;
 }
 export declare function CreateConfig(config: GlobalConfig['CUSTOM_CONFIGS']): GlobalConfig;

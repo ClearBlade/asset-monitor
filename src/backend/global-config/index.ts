@@ -35,9 +35,10 @@ export type IKeyForStatusUpdate = Array<string>;
 
 export type AssetHistoryConfig = Array<string>;
 
-export interface UpdateAssetLocationConfig {
-    keysToUpdate: IKeyForLocationUpdate;
-    createNewAssetifMissing: boolean;
+export interface UpdateAssetLocationSettings {
+    KEYS_TO_UPDATE: IKeyForLocationUpdate;
+    LOG_SETTING: LogLevels;
+    CREATE_NEW_ASSET_IF_MISSING: boolean;
 }
 
 export interface UpdateAssetStatusConfig {
@@ -53,7 +54,7 @@ export interface GlobalConfig {
     };
     ASSET_HISTORY_CONFIG: AssetHistoryConfig;
     NORMALIZER_PUB_CONFIG: NormalizerPublishConfig;
-    UPDATE_ASSET_LOCATION_CONFIG: UpdateAssetLocationConfig;
+    UPDATE_ASSET_LOCATION_SETTINGS: UpdateAssetLocationSettings;
     UPDATE_ASSET_STATUS_CONFIG: UpdateAssetStatusConfig;
 }
 
@@ -103,8 +104,8 @@ const globalConfig: GlobalConfig = {
             ],
         },
     },
-    UPDATE_ASSET_LOCATION_CONFIG: {
-        keysToUpdate: [
+    UPDATE_ASSET_LOCATION_SETTINGS: {
+        KEYS_TO_UPDATE: [
             'location_x',
             'location_y',
             'location_z',
@@ -115,7 +116,8 @@ const globalConfig: GlobalConfig = {
             'last_updated',
             'last_location_updated',
         ],
-        createNewAssetifMissing: false,
+        LOG_SETTING: LogLevels.DEBUG,
+        CREATE_NEW_ASSET_IF_MISSING: false,
     },
     UPDATE_ASSET_STATUS_CONFIG: {
         keysToUpdate: ['last_updated', 'custom_data'],
