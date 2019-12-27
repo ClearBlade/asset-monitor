@@ -8,22 +8,22 @@ import { FireEventsAndActions } from './events';
 // import { ProcessDurationIfExists } from './duration';
 import { Rules } from '../collection-schema/Rules';
 
-function processRuleResults(event: Event, facts: Record<string, string>, timestamp: string): void {
-    if (event === undefined) {
-        // rule failed
-        // log('Rule failed');
-        console.log('facts', facts);
-        return;
-    }
-    const params = event.params as Params;
-    if (params.timeframe !== undefined) {
-        if (!DoesTimeframeMatchRule(timestamp, params.timeframe)) {
-            // log('Cannot run rule because timeframe constraints failed: ' + event.type);
-            return;
+function processRuleResults(events: Event[], facts: Record<string, string | number | boolean>, timestamp: string): void {
+    if (events.length > 0) {
+        for (let i = 0; i < events.length; i++) {
+            const params = events[i].params as Params;
+            if (params.timeframe === undefined || DoesTimeframeMatchRule(timestamp, params.timeframe)) {
+                // log('Cannot run rule because timeframe constraints failed: ' + event.type);
+                FireEventsAndActions(params);
+            }
         }
-    }
-    FireEventsAndActions(params);
+        
     // log('Rule success ' + JSON.stringify(event) + ' and ' + JSON.stringify(facts));
+    }
+    // rule failed
+    // log('Rule failed');
+    console.log('facts', facts);
+    return;
 }
 
 export class RulesEngine {
@@ -42,7 +42,7 @@ export class RulesEngine {
         this.engine.addRule(rule);
     }
 
-    convertRule(ruleData: Rules): Promise<Rule> {
+    async convertRule(ruleData: Rules): Promise<Rule> {
         const name: string = ruleData.label;
         const conditions: AllConditions = JSON.parse(ruleData.conditions);
         let timeframe;
@@ -54,24 +54,24 @@ export class RulesEngine {
             actionIDs = JSON.parse(ruleData['action_ids']);
         }
         const rule: Rule = {
-            name: name,
+            name: ruleData.id,
             conditions: {} as AllRulesEngineConditions,
             event: {
                 type: name,
                 params: {
-                    eventTypeID: ruleData['event_type_id'],
+                    eventTypeID: ruleData.event_type_id,
                     actionIDs: actionIDs,
                     priority: ruleData.priority,
                     severity: ruleData.severity,
                     timeframe: timeframe,
-                    ruleID: ruleData['id'],
+                    ruleID: ruleData.id,
                     ruleName: name,
                 },
             } as RulesEngineEvent,
         };
         const ruleInfo: RuleInfo = {
             name: name,
-            id: ruleData['id'],
+            id: ruleData.id,
         };
         const promise = ParseAndConvertConditions(ruleInfo, rule.conditions, conditions).then(
             (convertedConditions: AllRulesEngineConditions) => {
@@ -85,10 +85,10 @@ export class RulesEngine {
         return promise;
     }
 
-    run(facts: Record<string, string>, timestamp: string): Promise<EngineResult> {
+    async run(facts: Record<string, string | number | boolean>, timestamp: string): Promise<EngineResult> {
         const promise = this.engine.run(facts).then(
             results => {
-                processRuleResults(results.events[0], facts, timestamp);
+                processRuleResults(results.events, facts, timestamp);
                 return results;
             },
             err => err.message,

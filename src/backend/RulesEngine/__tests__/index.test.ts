@@ -1,6 +1,5 @@
 // *** rule unit tests ***
 
-// timeframe.test
 // duration.test
 
 // test for created events with correct data
