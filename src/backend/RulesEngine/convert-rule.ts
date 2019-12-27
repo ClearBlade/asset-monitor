@@ -135,7 +135,6 @@ function createConditionsForAttribute(
   }
 }
 
-<<<<<<< HEAD
 function addConditions(
   ruleId: string,
   condition: Condition,
@@ -179,54 +178,6 @@ function convertCondition(
       Promise.runQueue();
       return promise as Promise<AnyConditions>;
   }
-=======
-function convertANDCondition(
-    ruleInfo: RuleInfo,
-    rule: AllRulesEngineConditions,
-    condition: Condition | AllConditions,
-): Promise<AllRulesEngineConditions> {
-    if ((condition as Condition).entity) {
-        // We have a condition
-        const promise = addANDConditions(ruleInfo, rule, condition as Condition);
-        Promise.runQueue();
-        return promise;
-    } else {
-        // Seems like we have nested conditions
-        const promise = ParseAndConvertConditions(
-            ruleInfo,
-            {} as AllRulesEngineConditions,
-            condition as AllConditions,
-        );
-        Promise.runQueue();
-        return promise;
-    }
-}
-
-function convertORCondition(
-    ruleInfo: RuleInfo,
-    rule: AllRulesEngineConditions,
-    condition: Condition | AllConditions,
-): Promise<AllRulesEngineConditions> {
-    if ((condition as Condition).entity) {
-        // We have a condition        
-        const promise = addANDConditions(
-            ruleInfo,
-            {} as AllRulesEngineConditions,
-            condition as Condition,
-        );
-        Promise.runQueue();
-        return promise;
-    } else {
-        // Seems like we have nested conditions        
-        const promise = ParseAndConvertConditions(
-            ruleInfo,
-            {} as AllRulesEngineConditions,
-            condition as AllConditions,
-        );
-        Promise.runQueue();
-        return promise;
-    }
->>>>>>> add inverted nested test
 }
 
 export function ParseAndConvertConditions(
