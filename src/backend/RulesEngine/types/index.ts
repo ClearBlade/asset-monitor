@@ -132,6 +132,7 @@ export interface Params {
     timeframe?: TimeFrame;
     ruleID: string;
     ruleName: string;
+    timestamp: string;
 }
 
 export interface Rule {
