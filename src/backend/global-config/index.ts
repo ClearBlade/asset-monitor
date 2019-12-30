@@ -35,10 +35,10 @@ export type IKeyForStatusUpdate = Array<string>;
 
 export type AssetHistoryConfig = Array<string>;
 
-export interface UpdateAssetLocationSettings {
-    KEYS_TO_UPDATE: IKeyForLocationUpdate;
-    LOG_SETTING: LogLevels;
-    CREATE_NEW_ASSET_IF_MISSING: boolean;
+export interface UpdateAssetLocationOptions {
+    KEYS_TO_UPDATE?: IKeyForLocationUpdate;
+    LOG_SETTING?: LogLevels;
+    CREATE_NEW_ASSET_IF_MISSING?: boolean;
 }
 
 export interface UpdateAssetStatusSettings {
@@ -53,7 +53,7 @@ export interface GlobalConfig {
     };
     ASSET_HISTORY_CONFIG: AssetHistoryConfig;
     NORMALIZER_PUB_CONFIG: NormalizerPublishConfig;
-    UPDATE_ASSET_LOCATION_SETTINGS: UpdateAssetLocationSettings;
+    UPDATE_ASSET_LOCATION_SETTINGS: UpdateAssetLocationOptions;
     UPDATE_ASSET_STATUS_SETTINGS: UpdateAssetStatusSettings;
 }
 
