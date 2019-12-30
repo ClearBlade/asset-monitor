@@ -30,7 +30,7 @@ export function subscriber(topic: string): Promise<unknown> {
     const promise = new Promise(function(resolve, reject) {
         messaging.subscribe(topic, function(err, data) {
             if (err) {
-                reject('Error with subscribing' + data);
+                reject('Error with subscribing' + JSON.stringify(data));
             } else {
                 resolve(data);
             }
@@ -80,7 +80,7 @@ export function normalizer(config: NormalizerConfig): void {
     }
 
     function failureCb(reason: unknown): void {
-        logger.publishLog(LogLevels.ERROR, SERVICE_INSTANCE_ID, ': Failed ', reason);
+        logger.publishLog(LogLevels.ERROR, SERVICE_INSTANCE_ID, ': Failed ', JSON.stringify(reason));
     }
 
     function HandleMessage(err: boolean, msg: string, topic: string): void {
@@ -109,8 +109,9 @@ export function normalizer(config: NormalizerConfig): void {
         }
     }
 
-    Promise.all(subscribePromises).catch(failureCb);
-    //.then(WaitLoop)
+    Promise.all(subscribePromises)
+        .then(WaitLoop)
+        .catch(failureCb);
 
     Promise.runQueue();
 }

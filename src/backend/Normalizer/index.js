@@ -1,5 +1,5 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+exports.__esModule = true;
 var Logger_1 = require("../Logger");
 var global_config_1 = require("../global-config");
 require("../../static/promise-polyfill/index.js");
@@ -66,8 +66,7 @@ function normalizer(config) {
         messageParser(err, msg, topic)
             .then(function (assets) {
             bulkPublisher(assets, publishConfig);
-        })
-            .catch(failureCb);
+        })["catch"](failureCb);
         Promise.runQueue();
         //maybe TODO: give a callback
     }
@@ -79,12 +78,11 @@ function normalizer(config) {
         }
     }
     Promise.all(subscribePromises)
-        .then(WaitLoop)
-        .catch(failureCb);
+        .then(WaitLoop)["catch"](failureCb);
     Promise.runQueue();
 }
 exports.normalizer = normalizer;
 exports.api = {
-    default: normalizer,
-    publisher: publisher,
+    "default": normalizer,
+    publisher: publisher
 };
