@@ -1,4 +1,4 @@
-import { GC, CollectionName } from '../global-config';
+import { GC, CollectionName, LogLevels } from '../global-config';
 import { Asset } from '../collection-schema/Assets';
 import { AssetHistory } from '../collection-schema/AssetHistory';
 import { CbCollectionLib } from '../collection-lib';
@@ -19,11 +19,11 @@ export function createAssetHistorySS(config: CreateAssetHistoryConfig): void {
     const logger = Logger({ name: 'createAssetHistorySS' });
 
     function successCb(value: unknown): void {
-        logger.publishLog(GC.LOG_LEVEL.SUCCESS, 'AssetHistory Creation Succeeded ', value);
+        logger.publishLog(LogLevels.SUCCESS, 'AssetHistory Creation Succeeded ', value);
     }
 
     function failureCb(reason: unknown): void {
-        logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed ', reason);
+        logger.publishLog(LogLevels.ERROR, 'Failed ', reason);
     }
 
     function getEmptyAssetHistoryObject(): AssetHistory {
@@ -64,7 +64,7 @@ export function createAssetHistorySS(config: CreateAssetHistoryConfig): void {
         const customData = parsedMsg['custom_data'];
 
         if (!customData) {
-            logger.publishLog(GC.LOG_LEVEL.DEBUG, 'Custom Data Missing: ', customData);
+            logger.publishLog(LogLevels.DEBUG, 'Custom Data Missing: ', customData);
             return [];
         }
 
@@ -87,7 +87,7 @@ export function createAssetHistorySS(config: CreateAssetHistoryConfig): void {
 
     function HandleMessage(err: boolean, msg: string, topic: string): void {
         if (err) {
-            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed to wait for message: ', err, ' ', msg, '  ', topic);
+            logger.publishLog(LogLevels.ERROR, 'Failed to wait for message: ', err, ' ', msg, '  ', topic);
             config.resp.error('Failed to wait for message: ' + err + ' ' + msg + '    ' + topic);
         }
 
@@ -95,20 +95,20 @@ export function createAssetHistorySS(config: CreateAssetHistoryConfig): void {
         try {
             parsedMsg = JSON.parse(msg);
         } catch (e) {
-            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed parse the message: ', e);
+            logger.publishLog(LogLevels.ERROR, 'Failed parse the message: ', e);
             return;
         }
         let assetHistoryItems: Array<AssetHistory> = [];
         const assetID = getAssetIdFromTopic(topic);
         if (!assetID) {
-            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Invalid topic received: ' + topic);
+            logger.publishLog(LogLevels.ERROR, 'Invalid topic received: ' + topic);
         }
 
         const standardHistoryData = createStandardHistoryData(assetID, parsedMsg);
         assetHistoryItems = assetHistoryItems.concat(standardHistoryData);
         assetHistoryItems = assetHistoryItems.concat(createCustomHistoryData(assetID, parsedMsg));
 
-        logger.publishLog(GC.LOG_LEVEL.DEBUG, 'HistoryData ', assetHistoryItems);
+        logger.publishLog(LogLevels.DEBUG, 'HistoryData ', assetHistoryItems);
         const assetHistoyCol = CbCollectionLib(CollectionName.ASSET_HISTORY);
 
         // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
@@ -120,10 +120,10 @@ export function createAssetHistorySS(config: CreateAssetHistoryConfig): void {
 
     function WaitLoop(err: boolean, data: string | null): void {
         if (err) {
-            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Subscribe failed for: ', SERVICE_INSTANCE_ID, ': ', data);
+            logger.publishLog(LogLevels.ERROR, 'Subscribe failed for: ', SERVICE_INSTANCE_ID, ': ', data);
             config.resp.error(data);
         }
-        logger.publishLog(GC.LOG_LEVEL.SUCCESS, 'Subscribed to Shared Topic. Starting Loop.');
+        logger.publishLog(LogLevels.SUCCESS, 'Subscribed to Shared Topic. Starting Loop.');
 
         // eslint-disable-next-line no-constant-condition
         while (true) {
