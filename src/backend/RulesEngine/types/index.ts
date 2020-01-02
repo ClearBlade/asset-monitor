@@ -98,31 +98,13 @@ export interface Condition {
     relationship: Relationship;
 }
 
-export type AllConditions = {
-    [x in ConditionalOperators]?: Array<Condition | AllConditions>;
+export type ConditionArray = Array<Condition | Conditions>;
+
+export type Conditions = {
+    [x in ConditionalOperators]?: ConditionArray;
 };
 
-// Rules Engine Condition Format (json-rules-engine format)
-
-export enum RulesEngineConditionalOperators {
-    AND = 'all',
-    OR = 'any',
-}
-
-export interface RulesEngineEvent {
-    type: string;
-    params: Params;
-}
-
-export interface RulesEngineCondition {
-    fact: string;
-    operator: string;
-    value: boolean | number | string;
-}
-
-export type AllRulesEngineConditions = {
-    [x in RulesEngineConditionalOperators]: Array<RulesEngineCondition | AllRulesEngineConditions>;
-};
+// Rules Engine Event Params (json-rules-engine format)
 
 export interface Params {
     eventTypeID: string;
@@ -134,13 +116,3 @@ export interface Params {
     ruleName: string;
 }
 
-export interface Rule {
-    name: string;
-    conditions: AllRulesEngineConditions;
-    event: RulesEngineEvent;
-}
-
-export interface RuleInfo {
-    name: string;
-    id: string;
-}

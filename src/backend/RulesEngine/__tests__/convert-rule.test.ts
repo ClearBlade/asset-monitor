@@ -1,69 +1,47 @@
 jest.mock('../async');
-import { AllRulesEngineConditions, Rule, EntityTypes, DurationUnits } from '../types';
+import { EntityTypes, DurationUnits } from '../types';
 import { ParseAndConvertConditions } from '../convert-rule';
 
 const id = 'testRuleId';
-const name = 'testRuleName';
-
-const ruleInfo = {
-    id,
-    name
-};
-
-const rule: Rule = {
-    name: name,
-    conditions: {} as AllRulesEngineConditions,
-    event: {
-        type: name,
-        params: {
-            eventTypeID: 'test',
-            actionIDs: ['test'],
-            priority: 1,
-            severity: 1,
-            ruleID: 'id',
-            ruleName: name,
-        },
-    },
-};
 
 describe('Convert Rules', function() {
     it('converts basic asset type to state', function() {
-        return ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.BASIC_ASSET_TYPE_TO_STATE).then(convertedRule => {
+        return ParseAndConvertConditions(id, conditions.BASIC_ASSET_TYPE_TO_STATE).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.BASIC_ASSET_TYPE_TO_STATE);
         });
     });
     it('converts basic area type to state', function() {
-        return ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.BASIC_AREA_TYPE_TO_STATE).then(convertedRule => {
+        return ParseAndConvertConditions(id, conditions.BASIC_AREA_TYPE_TO_STATE).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.BASIC_AREA_TYPE_TO_STATE);
         });
     });
     it('converts basic asset to state', function() {
-        return ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.BASIC_ASSET_TO_STATE).then(convertedRule => {
+        return ParseAndConvertConditions(id, conditions.BASIC_ASSET_TO_STATE).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.BASIC_ASSET_TO_STATE);
         });
     });
     it('converts basic area to state', function() {
-        return ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.BASIC_ASSET_TO_STATE).then(convertedRule => {
+        return ParseAndConvertConditions(id, conditions.BASIC_ASSET_TO_STATE).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.BASIC_ASSET_TO_STATE);
         });
     });
     it('converts asset type to state AND', function() {
-        return ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.ASSET_TYPE_TO_STATE_AND).then(convertedRule => {
+        return ParseAndConvertConditions(id, conditions.ASSET_TYPE_TO_STATE_AND).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.ASSET_TYPE_TO_STATE_AND);
         });
     });
     it('converts asset type to state OR', function() {
-        return ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.ASSET_TYPE_TO_STATE_OR).then(convertedRule => {
+        return ParseAndConvertConditions(id, conditions.ASSET_TYPE_TO_STATE_OR).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.ASSET_TYPE_TO_STATE_OR);
         });
     });
     it('converts nested asset type to state AND', function() {
-        return ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.NESTED_ASSET_TYPE_TO_STATE_AND).then(convertedRule => {
+        return ParseAndConvertConditions(id, conditions.NESTED_ASSET_TYPE_TO_STATE_AND).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.NESTED_ASSET_TYPE_TO_STATE_AND);
         });
     });
     it('converts nested asset type to state OR', function() {
-        return ParseAndConvertConditions(ruleInfo, rule.conditions, conditions.NESTED_ASSET_TYPE_TO_STATE_OR).then(convertedRule => {
+        return ParseAndConvertConditions(id, conditions.NESTED_ASSET_TYPE_TO_STATE_OR).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.NESTED_ASSET_TYPE_TO_STATE_OR);
         });
     });
