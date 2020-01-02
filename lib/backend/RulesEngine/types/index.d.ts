@@ -59,24 +59,9 @@ export interface Condition {
     entity: Entity;
     relationship: Relationship;
 }
-export declare type AllConditions = {
-    [x in ConditionalOperators]?: Array<Condition | AllConditions>;
-};
-export declare enum RulesEngineConditionalOperators {
-    AND = "all",
-    OR = "any"
-}
-export interface RulesEngineEvent {
-    type: string;
-    params: Params;
-}
-export interface RulesEngineCondition {
-    fact: string;
-    operator: string;
-    value: boolean | number | string;
-}
-export declare type AllRulesEngineConditions = {
-    [x in RulesEngineConditionalOperators]: Array<RulesEngineCondition | AllRulesEngineConditions>;
+export declare type ConditionArray = Array<Condition | Conditions>;
+export declare type Conditions = {
+    [x in ConditionalOperators]?: ConditionArray;
 };
 export interface Params {
     eventTypeID: string;
@@ -86,13 +71,4 @@ export interface Params {
     timeframe?: TimeFrame;
     ruleID: string;
     ruleName: string;
-}
-export interface Rule {
-    name: string;
-    conditions: AllRulesEngineConditions;
-    event: RulesEngineEvent;
-}
-export interface RuleInfo {
-    name: string;
-    id: string;
 }

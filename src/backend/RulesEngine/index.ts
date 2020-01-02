@@ -1,7 +1,7 @@
 import '../../static/promise-polyfill';
 import 'core-js/features/map';
-import { Engine, Event, RuleProperties, EngineResult } from 'json-rules-engine';
-import { AllConditions, Rule, AllRulesEngineConditions, RulesEngineEvent, Params, RuleInfo } from './types';
+import { Engine, Event, RuleProperties, EngineResult, TopLevelCondition } from 'json-rules-engine';
+import { Params } from './types';
 import { ParseAndConvertConditions } from './convert-rule';
 import { DoesTimeframeMatchRule } from './timeframe';
 import { FireEventsAndActions } from './events';
@@ -11,10 +11,12 @@ import { Rules } from '../collection-schema/Rules';
 function processRuleResults(events: Event[], facts: Record<string, string | number | boolean>, timestamp: string): void {
     if (events.length > 0) {
         for (let i = 0; i < events.length; i++) {
-            const params = events[i].params as Params;
-            if (params.timeframe === undefined || DoesTimeframeMatchRule(timestamp, params.timeframe)) {
-                // log('Cannot run rule because timeframe constraints failed: ' + event.type);
-                FireEventsAndActions(params);
+            if (!!events[i]) {
+                const params = events[i].params as Params;
+                if (DoesTimeframeMatchRule(timestamp, params.timeframe)) {
+                    // log('Cannot run rule because timeframe constraints failed: ' + event.type);
+                    FireEventsAndActions(events[i]);
+                }
             }
         }
         
@@ -42,42 +44,31 @@ export class RulesEngine {
         this.engine.addRule(rule);
     }
 
-    async convertRule(ruleData: Rules): Promise<Rule> {
-        const name: string = ruleData.label;
-        const conditions: AllConditions = JSON.parse(ruleData.conditions);
-        let timeframe;
-        let actionIDs: Array<string> = [];
-        if (ruleData.timeframe !== '') {
-            timeframe = JSON.parse(ruleData.timeframe);
-        }
-        if (ruleData['action_ids'] !== '') {
-            actionIDs = JSON.parse(ruleData['action_ids']);
-        }
-        const rule: Rule = {
-            name: ruleData.id,
-            conditions: {} as AllRulesEngineConditions,
-            event: {
-                type: name,
-                params: {
-                    eventTypeID: ruleData.event_type_id,
-                    actionIDs: actionIDs,
-                    priority: ruleData.priority,
-                    severity: ruleData.severity,
-                    timeframe: timeframe,
-                    ruleID: ruleData.id,
-                    ruleName: name,
-                },
-            } as RulesEngineEvent,
-        };
-        const ruleInfo: RuleInfo = {
-            name: name,
-            id: ruleData.id,
-        };
-        const promise = ParseAndConvertConditions(ruleInfo, rule.conditions, conditions).then(
-            (convertedConditions: AllRulesEngineConditions) => {
+    async convertRule(ruleData: Rules): Promise<RuleProperties> {
+        const { label, event_type_id, priority, severity, id, timeframe, action_ids, conditions } = ruleData;
+        
+        const parsedConditions = JSON.parse(conditions || '{}');
+        const parsedTimeframe = !!timeframe ? JSON.parse(timeframe) : timeframe;
+        const parsedActionIDs = !!action_ids ? JSON.parse(action_ids) : action_ids;
+
+        const promise = ParseAndConvertConditions(id, parsedConditions).then(
+            (convertedConditions: TopLevelCondition) => {
                 return {
-                    ...rule,
+                    name: id,
                     conditions: convertedConditions,
+                    event: {
+                        type: label,
+                        params: {
+                            eventTypeID: event_type_id,
+                            actionIDs: parsedActionIDs,
+                            priority,
+                            severity,
+                            timeframe: parsedTimeframe,
+                            ruleID: id,
+                            ruleName: label,
+                        },
+                    },
+                    priority
                 };
             },
         );

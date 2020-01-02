@@ -1,3 +1,4 @@
-import { AllConditions, AllRulesEngineConditions, RuleInfo } from './types';
+import { Conditions } from './types';
 import '../../static/promise-polyfill';
-export declare function ParseAndConvertConditions(ruleInfo: RuleInfo, rule: AllRulesEngineConditions, conditions: AllConditions): Promise<AllRulesEngineConditions>;
+import { TopLevelCondition, AnyConditions, AllConditions } from 'json-rules-engine';
+export declare function ParseAndConvertConditions(id: string, conditions: Conditions): Promise<TopLevelCondition | AnyConditions | AllConditions>;

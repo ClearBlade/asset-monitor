@@ -1,139 +1,129 @@
 import {
-    AllConditions,
     Condition,
     ConditionalOperators,
-    RulesEngineCondition,
-    RulesEngineConditionalOperators,
-    AllRulesEngineConditions,
     OperatorAndValue,
     Entity,
     EntityTypes,
     GetOperatorAndValue,
     Relationship,
-    RuleInfo,
+    Conditions,
+    ConditionArray,
 } from './types';
-import { AddDuration } from './duration';
+// import { AddDuration } from './duration';
 import '../../static/promise-polyfill';
 import { getAllAreasForType, getAllAssetsForType } from './async';
+import { TopLevelCondition, AnyConditions, AllConditions, ConditionProperties } from 'json-rules-engine';
 
-function createConditionsForEntity(rule: AllRulesEngineConditions, entity: Entity): Promise<boolean> {
+function createConditionsForEntity(entity: Entity): Promise<AnyConditions | undefined> {
+    const rule: AnyConditions = {
+        any: []
+    }
     let promise;
     switch (entity.entity_type) {
         case EntityTypes.ASSET_TYPE:
             promise = getAllAssetsForType(entity.id).then(assets => {
                 if (assets.length > 0) {
-                    rule[RulesEngineConditionalOperators.OR] = [];
                     for (let i = 0; i < assets.length; i++) {
-                        const entityCondition: RulesEngineCondition = {
+                        rule.any.push({
                             fact: 'id',
                             operator: 'equal',
                             value: assets[i].id as string,
-                        };                        
-                        rule[RulesEngineConditionalOperators.OR].push(entityCondition);
+                        });
                     }
-                    return true;
+                    return rule;
                 }
-                return false;
             });
             Promise.runQueue();
             return promise;
         case EntityTypes.AREA_TYPE:
             promise = getAllAreasForType(entity.id).then(areas => {
                 if (areas.length > 0) {
-                    rule[RulesEngineConditionalOperators.OR] = [];
                     for (let i = 0; i < areas.length; i++) {
-                        const entityCondition: RulesEngineCondition = {
+                        rule.any.push({
                             fact: 'id',
                             operator: 'equal',
                             value: areas[i].id as string,
-                        };                        
-                        rule[RulesEngineConditionalOperators.OR].push(entityCondition);
+                        });
                     }
-                    return true;
+                    return rule;
                 }
-                return false;
             });
             Promise.runQueue();
             return promise;
         default:
-            return new Promise(res => res(false));
+            return new Promise(res => res());
     }
 }
 
 function createConditionsForAttribute(
-    ruleInfo: RuleInfo,
-    rule: AllRulesEngineConditions,
+    id: string,
     relationship: Relationship,
-): Promise<boolean> {
+): Promise<AnyConditions | undefined> {
+    const rule: AnyConditions = {
+        any: []
+    }
     let promise;
     switch (relationship.attribute_type) {
         case EntityTypes.ASSET_TYPE:
             promise = getAllAssetsForType(relationship.attribute).then(assets => {
                 if (assets.length > 0) {
-                    rule[RulesEngineConditionalOperators.OR] = [];
                     const rval: OperatorAndValue = GetOperatorAndValue(relationship.operator, relationship.value);
                     for (let i = 0; i < assets.length; i++) {
-                        AddDuration(ruleInfo.id, ruleInfo.id, assets[i].id as string, relationship.duration);
-                        const attributeCondition: RulesEngineCondition = {
+                        // AddDuration(ruleInfo.id, ruleInfo.id, assets[i].id as string, relationship.duration);
+                        rule.any.push({
                             fact: assets[i].id as string,
                             operator: rval.operator,
                             value: rval.value,
-                        };                        
-                        rule[RulesEngineConditionalOperators.OR].push(attributeCondition);
+                        });
                     }
-                    return true;
+                    return rule;
                 }
-                return false;
             });
             Promise.runQueue();
             return promise;
         case EntityTypes.AREA_TYPE:
             promise = getAllAreasForType(relationship.attribute).then(areas => {
                 if (areas.length > 0) {
-                    rule[RulesEngineConditionalOperators.OR] = [];
                     const rval2: OperatorAndValue = GetOperatorAndValue(relationship.operator, relationship.value);
                     for (let i = 0; i < areas.length; i++) {
-                        AddDuration(ruleInfo.id, ruleInfo.id, areas[i].id as string, relationship.duration);
-                        const attributeCondition: RulesEngineCondition = {
+                        // AddDuration(ruleInfo.id, ruleInfo.id, areas[i].id as string, relationship.duration);
+                        rule.any.push({
                             fact: areas[i].id as string,
                             operator: rval2.operator,
                             value: rval2.value,
-                        };                        
-                        rule[RulesEngineConditionalOperators.OR].push(attributeCondition);
+                        });
                     }
-                    return true;
+                    return rule;
                 }
-                return false;
             });
             Promise.runQueue();
             return promise;
         default:
-            return new Promise(res => res(false));
+            return new Promise(res => res());
     }
 }
 
 function addSpecificEntityCondition(
     condition: Condition,
-    rule: AllRulesEngineConditions,
-): Promise<AllRulesEngineConditions> {
+    rule: AllConditions,
+): Promise<AllConditions> {
     if (
-        (condition as Condition).entity.entity_type === EntityTypes.ASSET ||
-        (condition as Condition).entity.entity_type === EntityTypes.AREA ||
-        (condition as Condition).entity.entity_type === EntityTypes.STATE
+        condition.entity.entity_type === EntityTypes.ASSET ||
+        condition.entity.entity_type === EntityTypes.AREA ||
+        condition.entity.entity_type === EntityTypes.STATE
     ) {
-        const entityCondition: RulesEngineCondition = {
+        const entityCondition: ConditionProperties = {
             fact: 'id',
             operator: 'equal',
             value: (condition as Condition).entity.id,
         };        
-        rule[RulesEngineConditionalOperators.AND].push(entityCondition);
+        rule.all.push(entityCondition);
         return new Promise(res => res(rule));
     } else {
-        const entityCondition: AllRulesEngineConditions = {} as AllRulesEngineConditions;
-        const promise = createConditionsForEntity(entityCondition, (condition as Condition).entity).then(
-            hasCondition => {
-                if (hasCondition) {                    
-                    rule[RulesEngineConditionalOperators.AND].push(entityCondition);
+        const promise = createConditionsForEntity(condition.entity).then(
+            entityCondition => {
+                if (entityCondition) {                    
+                    rule.all.push(entityCondition);
                 }
                 return rule;
             },
@@ -144,21 +134,22 @@ function addSpecificEntityCondition(
 }
 
 function addANDConditions(
-    ruleInfo: RuleInfo,
-    rule: AllRulesEngineConditions,
+    id: string,
     condition: Condition,
-): Promise<AllRulesEngineConditions> {
-    rule[RulesEngineConditionalOperators.AND] = []
-    const promise: Promise<AllRulesEngineConditions> = addSpecificEntityCondition(condition as Condition, rule).then(
+): Promise<AllConditions> {
+    const rule = {
+        all: []
+    }
+    const promise: Promise<AllConditions> = addSpecificEntityCondition(condition, rule).then(
         rule => {
             if (
-                (condition as Condition).relationship.attribute_type === EntityTypes.ASSET ||
-                (condition as Condition).relationship.attribute_type === EntityTypes.AREA ||
-                (condition as Condition).relationship.attribute_type === EntityTypes.STATE
+                condition.relationship.attribute_type === EntityTypes.ASSET ||
+                condition.relationship.attribute_type === EntityTypes.AREA ||
+                condition.relationship.attribute_type === EntityTypes.STATE
             ) {
                 const rval: OperatorAndValue = GetOperatorAndValue(
-                    (condition as Condition).relationship.operator,
-                    (condition as Condition).relationship.value,
+                    condition.relationship.operator,
+                    condition.relationship.value,
                 );
                 // AddDuration(
                 //     ruleInfo.id,
@@ -166,22 +157,19 @@ function addANDConditions(
                 //     (condition as Condition).relationship.attribute,
                 //     (condition as Condition).relationship.duration,
                 // );
-                const newCondition: RulesEngineCondition = {
-                    fact: (condition as Condition).relationship.attribute,
+                rule.all.push({
+                    fact: condition.relationship.attribute,
                     operator: rval.operator,
                     value: rval.value,
-                };                
-                rule[RulesEngineConditionalOperators.AND].push(newCondition);
+                });
                 return new Promise((res) => res(rule));
             } else {
-                const attributeCondition: AllRulesEngineConditions = {} as AllRulesEngineConditions;
                 const promise = createConditionsForAttribute(
-                    ruleInfo,
-                    attributeCondition,
-                    (condition as Condition).relationship,
-                ).then(hasCondition => {
-                    if (hasCondition) {                        
-                        rule[RulesEngineConditionalOperators.AND].push(attributeCondition);
+                    id,
+                    condition.relationship,
+                ).then(attributeCondition => {
+                    if (attributeCondition) {                        
+                        rule.all.push(attributeCondition);
                     }
                     return rule;
                 })
@@ -195,37 +183,33 @@ function addANDConditions(
 }
 
 function convertANDCondition(
-    ruleInfo: RuleInfo,
-    rule: AllRulesEngineConditions,
-    condition: Condition | AllConditions,
-): Promise<AllRulesEngineConditions> {
+    id: string,
+    condition: Condition | Conditions,
+): Promise<AllConditions> {
     if ((condition as Condition).entity) {
         // We have a condition
-        const promise = addANDConditions(ruleInfo, rule, condition as Condition);
+        const promise = addANDConditions(id, condition as Condition);
         Promise.runQueue();
         return promise;
     } else {
         // Seems like we have nested conditions
         const promise = ParseAndConvertConditions(
-            ruleInfo,
-            {} as AllRulesEngineConditions,
-            condition as AllConditions,
+            id,
+            condition as Conditions,
         );
         Promise.runQueue();
-        return promise;
+        return promise as Promise<AllConditions>;
     }
 }
 
 function convertORCondition(
-    ruleInfo: RuleInfo,
-    rule: AllRulesEngineConditions,
-    condition: Condition | AllConditions,
-): Promise<AllRulesEngineConditions> {
+    id: string,
+    condition: Condition | Conditions,
+): Promise<AnyConditions | AllConditions> {
     if ((condition as Condition).entity) {
         // We have a condition        
         const promise = addANDConditions(
-            ruleInfo,
-            {} as AllRulesEngineConditions,
+            id,
             condition as Condition,
         );
         Promise.runQueue();
@@ -233,27 +217,24 @@ function convertORCondition(
     } else {
         // Seems like we have nested conditions        
         const promise = ParseAndConvertConditions(
-            ruleInfo,
-            {} as AllRulesEngineConditions,
-            condition as AllConditions,
+            id,
+            condition as Conditions,
         );
         Promise.runQueue();
-        return promise;
+        return promise as Promise<AnyConditions>;
     }
 }
 
 export function ParseAndConvertConditions(
-    ruleInfo: RuleInfo,
-    rule: AllRulesEngineConditions,
-    conditions: AllConditions,
-): Promise<AllRulesEngineConditions> {
+    id: string,
+    conditions: Conditions,
+): Promise<TopLevelCondition | AnyConditions | AllConditions> {
     if (conditions.hasOwnProperty(ConditionalOperators.AND)) {
-        const subConditions = conditions[ConditionalOperators.AND] as Array<Condition | AllConditions>;
-        const promise = Promise.all(subConditions.map(s => convertANDCondition(ruleInfo, {...rule}, s))).then((rules) => {
+        const subConditions = conditions[ConditionalOperators.AND] as ConditionArray;
+        const promise = Promise.all(subConditions.map(s => convertANDCondition(id, s))).then((rules) => {
             if (rules.length > 1) {
                 return {
-                    ...rule,
-                    [RulesEngineConditionalOperators.AND]: [...rules]
+                    all: [...rules]
                 }
             } else {
                 return {
@@ -262,18 +243,17 @@ export function ParseAndConvertConditions(
             }
         }).catch((e) => {
             console.log('convertANDCondition error', e)
-            return rule
+            return {} as TopLevelCondition
         });
         Promise.runQueue();
         return promise;
     } else {
         // is an OR
-        const subConditions = conditions[ConditionalOperators.OR] as Array<Condition | AllConditions>;
-        const promise = Promise.all(subConditions.map(s => convertORCondition(ruleInfo, {...rule}, s))).then((rules) => {
+        const subConditions = conditions[ConditionalOperators.OR] as ConditionArray;
+        const promise = Promise.all(subConditions.map(s => convertORCondition(id, s))).then((rules) => {
             if (rules.length > 1) {
                 return {
-                    ...rule,
-                    [RulesEngineConditionalOperators.OR]: [...rules]
+                    any: [...rules]
                 }
             } else {
                 return {
@@ -281,7 +261,7 @@ export function ParseAndConvertConditions(
                 }
             }
         }).catch((e) => {
-            return rule
+            return {} as TopLevelCondition
         });
         Promise.runQueue();
         return promise;

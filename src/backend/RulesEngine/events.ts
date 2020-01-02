@@ -3,9 +3,10 @@ import { CbCollectionLib } from '../collection-lib';
 import { CollectionName } from '../global-config';
 import { Actions, ActionTypes } from '../collection-schema/Actions';
 import '../../static/promise-polyfill';
+import { Event } from 'json-rules-engine';
 
-function processEvents(params: Params): void {
-    console.log(params);
+function processEvents(event: Event): void {
+    console.log(event);
 }
 
 function getActionByID(actionID: string): Actions {
@@ -36,8 +37,8 @@ function performAction(action: Actions): void {
     }
 }
 
-function processActions(params: Params): void {
-    const actionTypeIDs: Array<string> = params.actionIDs;
+function processActions(event: Event): void {
+    const actionTypeIDs: Array<string> = (event.params as Params).actionIDs;
     for (const idx in actionTypeIDs) {
         const action: Actions = getActionByID(actionTypeIDs[idx]);
         // log('Action is ' + JSON.stringify(action));
@@ -45,7 +46,7 @@ function processActions(params: Params): void {
     }
 }
 
-export function FireEventsAndActions(params: Params): void {
-    processEvents(params);
-    processActions(params);
+export function FireEventsAndActions(event: Event): void {
+    processEvents(event);
+    processActions(event);
 }
