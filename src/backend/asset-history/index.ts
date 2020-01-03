@@ -47,6 +47,8 @@ export function createAssetHistorySS(config: CreateAssetHistoryConfig): void {
             if (parsedMsg[attributeName as keyof Asset]) {
                 currItem['asset_id'] = assetID;
                 currItem['attribute_name'] = attributeName;
+                // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+                // @ts-ignore
                 currItem['attribute_value'] = parsedMsg[attributeName as keyof Asset];
                 currItem['change_date'] = parsedMsg.last_updated || currDate;
                 currItem['location_change'] = true;
@@ -108,6 +110,8 @@ export function createAssetHistorySS(config: CreateAssetHistoryConfig): void {
 
         logger.publishLog(GC.LOG_LEVEL.DEBUG, 'HistoryData ', assetHistoryItems);
         const assetHistoyCol = CbCollectionLib(CollectionName.ASSET_HISTORY);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
         assetHistoyCol.cbCreatePromise({ item: assetHistoryItems }).then(successCb, failureCb);
 
         Promise.runQueue();

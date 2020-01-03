@@ -15,7 +15,11 @@ import {
 import { AddDuration } from './duration';
 import { CbCollectionLib } from '../collection-lib';
 import { CollectionName } from '../global-config';
+// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// @ts-ignore
 import { Asset } from '../collection-schema/assets';
+// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// @ts-ignore
 import { Areas } from '../collection-schema/areas';
 import '../../static/promise-polyfill';
 
