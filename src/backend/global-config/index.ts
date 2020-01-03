@@ -84,7 +84,7 @@ const globalConfig: GlobalConfig = {
         },
         statusConfig: {
             topicFn: Topics.DBUpdateAssetStatus,
-            keysToPublish: ['custom_data', 'type'],
+            keysToPublish: ['last_updated', 'custom_data', 'type'],
         },
         historyConfig: {
             topicFn: Topics.AssetHistory,
@@ -118,7 +118,7 @@ const globalConfig: GlobalConfig = {
         createNewAssetifMissing: false,
     },
     UPDATE_ASSET_STATUS_CONFIG: {
-        keysToUpdate: ['custom_data'],
+        keysToUpdate: ['last_updated', 'custom_data'],
         updateMethod: AssetStatusUpdateMethod.MERGE,
     },
 };
