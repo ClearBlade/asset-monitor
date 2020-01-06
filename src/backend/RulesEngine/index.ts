@@ -68,7 +68,6 @@ export class RulesEngine {
                             ruleName: label,
                         },
                     },
-                    priority
                 };
             },
         );

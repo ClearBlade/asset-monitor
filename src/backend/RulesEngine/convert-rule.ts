@@ -9,49 +9,81 @@ import {
     Conditions,
     ConditionArray,
 } from './types';
-// import { AddDuration } from './duration';
 import '../../static/promise-polyfill';
 import { getAllAreasForType, getAllAssetsForType } from './async';
 import { TopLevelCondition, AnyConditions, AllConditions, ConditionProperties } from 'json-rules-engine';
 
-function createConditionsForEntity(entity: Entity): Promise<AnyConditions | undefined> {
-    const rule: AnyConditions = {
-        any: []
-    }
-    let promise;
-    switch (entity.entity_type) {
+function getCollectionName(entityType: EntityTypes) {
+    switch (entityType) {
         case EntityTypes.ASSET_TYPE:
-            promise = getAllAssetsForType(entity.id).then(assets => {
+            return 'assets'
+        case EntityTypes.AREA_TYPE:
+            return 'areas'
+        default:
+            return entityType
+    }
+}
+
+function getConditionPropsForFact(id: string, condition: Condition, isPartOfType?: boolean): ConditionProperties {
+    const { relationship, entity } = condition;
+    switch (relationship.attribute_type) {
+        case EntityTypes.STATE:
+            return {
+                fact: 'state',
+                operator: relationship.operator,
+                params: {
+                    id,
+                    attribute: relationship.attribute,
+                    collection: getCollectionName(entity.entity_type),
+                    type: isPartOfType ? entity.id : false
+                },
+                path: `.custom_data.${relationship.attribute}.value`,
+                value: relationship.value
+            }
+    }
+}
+
+function formatConditionForEntity(id: string, condition: Condition, isPartOfType?: boolean): ConditionProperties[] {
+    const { attribute_type } = condition.relationship;
+    if (
+        attribute_type === EntityTypes.ASSET ||
+        attribute_type === EntityTypes.AREA ||
+        attribute_type === EntityTypes.STATE
+    ) {
+        return [getConditionPropsForFact(id, condition, isPartOfType)]
+    } else {
+        // handle asset type and area type
+    }
+}
+
+function createConditionsForType(condition: Condition): Promise<ConditionProperties[]> {
+    let promise;
+    const conditions: ConditionProperties[] = [];
+    switch (condition.entity.entity_type) {
+        case EntityTypes.ASSET_TYPE:
+            promise = getAllAssetsForType(condition.entity.id).then(assets => {
                 if (assets.length > 0) {
                     for (let i = 0; i < assets.length; i++) {
-                        rule.any.push({
-                            fact: 'id',
-                            operator: 'equal',
-                            value: assets[i].id as string,
-                        });
+                        conditions.push(...formatConditionForEntity(assets[i].id as string, condition, true));
                     }
-                    return rule;
                 }
+                return conditions
             });
             Promise.runQueue();
             return promise;
         case EntityTypes.AREA_TYPE:
-            promise = getAllAreasForType(entity.id).then(areas => {
+            promise = getAllAreasForType(condition.entity.id).then(areas => {
                 if (areas.length > 0) {
                     for (let i = 0; i < areas.length; i++) {
-                        rule.any.push({
-                            fact: 'id',
-                            operator: 'equal',
-                            value: areas[i].id as string,
-                        });
+                        conditions.push(...formatConditionForEntity(areas[i].id as string, condition, true));
                     }
-                    return rule;
                 }
+                return conditions;
             });
             Promise.runQueue();
             return promise;
         default:
-            return new Promise(res => res());
+            return new Promise(res => res(conditions));
     }
 }
 
@@ -103,121 +135,44 @@ function createConditionsForAttribute(
     }
 }
 
-function addSpecificEntityCondition(
+function addConditions(
+    ruleId: string,
     condition: Condition,
-    rule: AllConditions,
-): Promise<AllConditions> {
-    if (
-        condition.entity.entity_type === EntityTypes.ASSET ||
-        condition.entity.entity_type === EntityTypes.AREA ||
-        condition.entity.entity_type === EntityTypes.STATE
-    ) {
-        const entityCondition: ConditionProperties = {
-            fact: 'id',
-            operator: 'equal',
-            value: (condition as Condition).entity.id,
-        };        
-        rule.all.push(entityCondition);
-        return new Promise(res => res(rule));
-    } else {
-        const promise = createConditionsForEntity(condition.entity).then(
-            entityCondition => {
-                if (entityCondition) {                    
-                    rule.all.push(entityCondition);
+): Promise<AnyConditions> {
+    const rule: AnyConditions = {
+        any: []
+    }
+    let promise;
+    if (condition.entity.entity_type === EntityTypes.ASSET_TYPE || condition.entity.entity_type === EntityTypes.AREA_TYPE) {
+        promise = createConditionsForType(condition).then(
+            entityConditions => {
+                if (entityConditions.length) {                    
+                    rule.any.push(...entityConditions);
                 }
                 return rule;
             },
         );
-        Promise.runQueue();
-        return promise;
+    } else {
+        rule.any.push(...formatConditionForEntity(condition.entity.id, condition))
+        promise = new Promise((res) => res(rule));
     }
-}
-
-function addANDConditions(
-    id: string,
-    condition: Condition,
-): Promise<AllConditions> {
-    const rule = {
-        all: []
-    }
-    const promise: Promise<AllConditions> = addSpecificEntityCondition(condition, rule).then(
-        rule => {
-            if (
-                condition.relationship.attribute_type === EntityTypes.ASSET ||
-                condition.relationship.attribute_type === EntityTypes.AREA ||
-                condition.relationship.attribute_type === EntityTypes.STATE
-            ) {
-                const rval: OperatorAndValue = GetOperatorAndValue(
-                    condition.relationship.operator,
-                    condition.relationship.value,
-                );
-                // AddDuration(
-                //     ruleInfo.id,
-                //     ruleInfo.id,
-                //     (condition as Condition).relationship.attribute,
-                //     (condition as Condition).relationship.duration,
-                // );
-                rule.all.push({
-                    fact: condition.relationship.attribute,
-                    operator: rval.operator,
-                    value: rval.value,
-                });
-                return new Promise((res) => res(rule));
-            } else {
-                const promise = createConditionsForAttribute(
-                    id,
-                    condition.relationship,
-                ).then(attributeCondition => {
-                    if (attributeCondition) {                        
-                        rule.all.push(attributeCondition);
-                    }
-                    return rule;
-                })
-                Promise.runQueue();
-                return promise;
-            }
-        },
-    )
     Promise.runQueue();
-    return promise;
+    return promise as Promise<AnyConditions>;
 }
 
-function convertANDCondition(
-    id: string,
+function convertCondition(
+    ruleId: string,
     condition: Condition | Conditions,
-): Promise<AllConditions> {
+): Promise<AnyConditions> {
     if ((condition as Condition).entity) {
         // We have a condition
-        const promise = addANDConditions(id, condition as Condition);
+        const promise = addConditions(ruleId, condition as Condition);
         Promise.runQueue();
         return promise;
     } else {
         // Seems like we have nested conditions
         const promise = ParseAndConvertConditions(
-            id,
-            condition as Conditions,
-        );
-        Promise.runQueue();
-        return promise as Promise<AllConditions>;
-    }
-}
-
-function convertORCondition(
-    id: string,
-    condition: Condition | Conditions,
-): Promise<AnyConditions | AllConditions> {
-    if ((condition as Condition).entity) {
-        // We have a condition        
-        const promise = addANDConditions(
-            id,
-            condition as Condition,
-        );
-        Promise.runQueue();
-        return promise;
-    } else {
-        // Seems like we have nested conditions        
-        const promise = ParseAndConvertConditions(
-            id,
+            ruleId,
             condition as Conditions,
         );
         Promise.runQueue();
@@ -226,44 +181,30 @@ function convertORCondition(
 }
 
 export function ParseAndConvertConditions(
-    id: string,
+    ruleId: string,
     conditions: Conditions,
 ): Promise<TopLevelCondition | AnyConditions | AllConditions> {
-    if (conditions.hasOwnProperty(ConditionalOperators.AND)) {
-        const subConditions = conditions[ConditionalOperators.AND] as ConditionArray;
-        const promise = Promise.all(subConditions.map(s => convertANDCondition(id, s))).then((rules) => {
-            if (rules.length > 1) {
+    const firstKey = Object.keys(conditions)[0] as ConditionalOperators;
+    const subConditions = conditions[firstKey] as ConditionArray;
+    const promise = Promise.all(subConditions.map(s => convertCondition(ruleId, s))).then((rules) => {
+        if (rules.length > 1) {
+            if (firstKey === 'and') {
                 return {
                     all: [...rules]
                 }
             } else {
                 return {
-                    ...rules[0]
-                }
-            }
-        }).catch((e) => {
-            console.log('convertANDCondition error', e)
-            return {} as TopLevelCondition
-        });
-        Promise.runQueue();
-        return promise;
-    } else {
-        // is an OR
-        const subConditions = conditions[ConditionalOperators.OR] as ConditionArray;
-        const promise = Promise.all(subConditions.map(s => convertORCondition(id, s))).then((rules) => {
-            if (rules.length > 1) {
-                return {
                     any: [...rules]
                 }
-            } else {
-                return {
-                    ...rules[0]
-                }
             }
-        }).catch((e) => {
-            return {} as TopLevelCondition
-        });
-        Promise.runQueue();
-        return promise;
-    }
+        }
+        return {
+            ...rules[0]
+        }
+    }).catch((e) => {
+        console.log('convertCondition error', e)
+        return {} as TopLevelCondition
+    });
+    Promise.runQueue();
+    return promise;
 }
