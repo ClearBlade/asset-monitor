@@ -316,326 +316,392 @@ const conditions = {
 
 const parsedConditions = {
     BASIC_ASSET_TYPE_TO_STATE: {
-        all: [
+        any: [
             {
-                any: [
-                    {
-                        fact: 'id',
-                        operator: 'equal',
-                        value: 'testAsset1',
-                    },
-                    {
-                        fact: 'id',
-                        operator: 'equal',
-                        value: 'testAsset2',
-                    },
-                ],
-            },
-            {
-                fact: 'speed',
+                fact: 'state',
                 operator: 'equal',
-                value: 50,
+                params: {
+                    id: 'testAsset1',
+                    attribute: 'speed',
+                    collection: 'assets',
+                    type: 'train'
+                },
+                path: '.custom_data.speed.value',
+                value: 50
             },
-        ],
+            {
+                fact: 'state',
+                operator: 'equal',
+                params: {
+                    id: 'testAsset2',
+                    attribute: 'speed',
+                    collection: 'assets',
+                    type: 'train'
+                },
+                path: '.custom_data.speed.value',
+                value: 50
+            }
+        ]
     },
     BASIC_AREA_TYPE_TO_STATE: {
-        all: [
+        any: [
             {
-                any: [
-                    {
-                        fact: 'id',
-                        operator: 'equal',
-                        value: 'testArea1',
-                    },
-                    {
-                        fact: 'id',
-                        operator: 'equal',
-                        value: 'testArea2',
-                    },
-                ],
-            },
-            {
-                fact: 'temperature',
+                fact: 'state',
                 operator: 'equal',
-                value: 50,
+                params: {
+                    id: 'testArea1',
+                    attribute: 'temperature',
+                    collection: 'areas',
+                    type: 'yard'
+                },
+                path: '.custom_data.temperature.value',
+                value: 50
             },
-        ],
+            {
+                fact: 'state',
+                operator: 'equal',
+                params: {
+                    id: 'testArea2',
+                    attribute: 'temperature',
+                    collection: 'areas',
+                    type: 'yard'
+                },
+                path: '.custom_data.temperature.value',
+                value: 50
+            }
+        ]
     },
     BASIC_ASSET_TO_STATE: {
-        all: [
+        any: [
             {
-                fact: 'id',
+                fact: 'state',
                 operator: 'equal',
-                value: 'testAsset1',
-            },
-            {
-                fact: 'speed',
-                operator: 'equal',
-                value: 50,
-            },
+                params: {
+                    id: 'testAsset1',
+                    attribute: 'speed',
+                    collection: 'assets',
+                    type: false
+                },
+                path: '.custom_data.speed.value',
+                value: 50
+            }
         ],
     },
     BASIC_AREA_TO_STATE: {
-        all: [
+        any: [
             {
-                fact: 'id',
+                fact: 'state',
                 operator: 'equal',
-                value: 'testArea1',
-            },
-            {
-                fact: 'temperature',
-                operator: 'equal',
-                value: 50,
+                params: {
+                    id: 'testArea1',
+                    attribute: 'temperature',
+                    collection: 'areas',
+                    type: false
+                },
+                path: '.custom_data.temperature.value',
+                value: 50
             },
         ],
     },
     ASSET_TYPE_TO_STATE_AND: {
         all: [
             {
-                all: [
+                any: [
                     {
-                        any: [
-                            {
-                                fact: 'id',
-                                operator: 'equal',
-                                value: 'testAsset1',
-                            },
-                            {
-                                fact: 'id',
-                                operator: 'equal',
-                                value: 'testAsset2',
-                            },
-                        ],
-                    },
-                    {
-                        fact: 'speed',
+                        fact: 'state',
                         operator: 'equal',
-                        value: 50,
+                        params: {
+                            id: 'testAsset1',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: 'train'
+                        },
+                        path: '.custom_data.speed.value',
+                        value: 50
                     },
-                ],
+                    {
+                        fact: 'state',
+                        operator: 'equal',
+                        params: {
+                            id: 'testAsset2',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: 'train'
+                        },
+                        path: '.custom_data.speed.value',
+                        value: 50
+                    }
+                ]
             },
             {
-                all: [
+                any: [
                     {
-                        any: [
-                            {
-                                fact: 'id',
-                                operator: 'equal',
-                                value: 'testAsset1',
-                            },
-                            {
-                                fact: 'id',
-                                operator: 'equal',
-                                value: 'testAsset2',
-                            },
-                        ],
-                    },
-                    {
-                        fact: 'speed',
+                        fact: 'state',
                         operator: 'equal',
-                        value: 60,
+                        params: {
+                            id: 'testAsset1',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: 'train'
+                        },
+                        path: '.custom_data.speed.value',
+                        value: 60
                     },
-                ],
+                    {
+                        fact: 'state',
+                        operator: 'equal',
+                        params: {
+                            id: 'testAsset2',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: 'train'
+                        },
+                        path: '.custom_data.speed.value',
+                        value: 60
+                    }
+                ]
             }
         ]
     },
     ASSET_TYPE_TO_STATE_OR: {
         any: [
             {
-                all: [
+                any: [
                     {
-                        any: [
-                            {
-                                fact: 'id',
-                                operator: 'equal',
-                                value: 'testAsset1',
-                            },
-                            {
-                                fact: 'id',
-                                operator: 'equal',
-                                value: 'testAsset2',
-                            },
-                        ],
-                    },
-                    {
-                        fact: 'speed',
+                        fact: 'state',
                         operator: 'equal',
-                        value: 50,
+                        params: {
+                            id: 'testAsset1',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: 'train'
+                        },
+                        path: '.custom_data.speed.value',
+                        value: 50
                     },
-                ],
+                    {
+                        fact: 'state',
+                        operator: 'equal',
+                        params: {
+                            id: 'testAsset2',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: 'train'
+                        },
+                        path: '.custom_data.speed.value',
+                        value: 50
+                    }
+                ]
             },
             {
-                all: [
+                any: [
                     {
-                        any: [
-                            {
-                                fact: 'id',
-                                operator: 'equal',
-                                value: 'testAsset1',
-                            },
-                            {
-                                fact: 'id',
-                                operator: 'equal',
-                                value: 'testAsset2',
-                            },
-                        ],
-                    },
-                    {
-                        fact: 'speed',
+                        fact: 'state',
                         operator: 'equal',
-                        value: 60,
+                        params: {
+                            id: 'testAsset1',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: 'train'
+                        },
+                        path: '.custom_data.speed.value',
+                        value: 60
                     },
-                ],
+                    {
+                        fact: 'state',
+                        operator: 'equal',
+                        params: {
+                            id: 'testAsset2',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: 'train'
+                        },
+                        path: '.custom_data.speed.value',
+                        value: 60
+                    }
+                ]
             }
         ]
     },
     NESTED_ASSET_TYPE_TO_STATE_AND: {
-        "all": [
+        all: [
             {
-                "any": [
+                any: [
                     {
-                        "all": [
+                        any: [
                             {
-                                "any": [
-                                    { 
-                                        "fact": "id",
-                                        "operator": "equal",
-                                        "value": "testAsset1"
-                                    },{
-                                        "fact": "id",
-                                        "operator": "equal",
-                                        "value": "testAsset2"
-                                    }
-                                ]
+                                fact: 'state',
+                                operator: 'equal',
+                                params: {
+                                    id: 'testAsset1',
+                                    attribute: 'speed',
+                                    collection: 'assets',
+                                    type: 'train'
+                                },
+                                path: '.custom_data.speed.value',
+                                value: 50
                             },
                             {
-                                "fact": "speed",
-                                "operator": "equal",
-                                "value": 50
-                            },
+                                fact: 'state',
+                                operator: 'equal',
+                                params: {
+                                    id: 'testAsset2',
+                                    attribute: 'speed',
+                                    collection: 'assets',
+                                    type: 'train'
+                                },
+                                path: '.custom_data.speed.value',
+                                value: 50
+                            }
                         ]
                     },
                     {
-                        "all": [
+                        any: [
                             {
-                                "any": [
-                                    { 
-                                        "fact": "id",
-                                        "operator": "equal",
-                                        "value": "testAsset1"
-                                    },
-                                    {
-                                        "fact": "id",
-                                        "operator": "equal",
-                                        "value": "testAsset2"
-                                    }
-                                ]
+                                fact: 'state',
+                                operator: 'equal',
+                                params: {
+                                    id: 'testAsset1',
+                                    attribute: 'speed',
+                                    collection: 'assets',
+                                    type: 'train'
+                                },
+                                path: '.custom_data.speed.value',
+                                value: 60
                             },
                             {
-                                "fact": "speed",
-                                "operator": "equal",
-                                "value": 60
+                                fact: 'state',
+                                operator: 'equal',
+                                params: {
+                                    id: 'testAsset2',
+                                    attribute: 'speed',
+                                    collection: 'assets',
+                                    type: 'train'
+                                },
+                                path: '.custom_data.speed.value',
+                                value: 60
                             }
                         ]
                     }     
                 ]
             },
             {
-                "all": [
+                any: [
                     {
-                        "any": [
-                            { 
-                                "fact": "id",
-                                "operator": "equal",
-                                "value": "testAsset1"
-                            },
-                            {
-                                "fact": "id",
-                                "operator": "equal",
-                                "value": "testAsset2"
-                            }
-                        ]
+                        fact: 'state',
+                        operator: 'equal',
+                        params: {
+                            id: 'testAsset1',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: 'train'
+                        },
+                        path: '.custom_data.speed.value',
+                        value: 70
                     },
                     {
-                        "fact": "speed",
-                        "operator": "equal",
-                        "value": 70
+                        fact: 'state',
+                        operator: 'equal',
+                        params: {
+                            id: 'testAsset2',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: 'train'
+                        },
+                        path: '.custom_data.speed.value',
+                        value: 70
                     }
                 ]
             }
         ]
     },
     NESTED_ASSET_TYPE_TO_STATE_OR: {
-        "any": [
+        any: [
             {
-                "all": [
+                all: [
                     {
-                        "all": [
+                        any: [
                             {
-                                "any": [
-                                    { 
-                                        "fact": "id",
-                                        "operator": "equal",
-                                        "value": "testAsset1"
-                                    },{
-                                        "fact": "id",
-                                        "operator": "equal",
-                                        "value": "testAsset2"
-                                    }
-                                ]
+                                fact: 'state',
+                                operator: 'equal',
+                                params: {
+                                    id: 'testAsset1',
+                                    attribute: 'speed',
+                                    collection: 'assets',
+                                    type: 'train'
+                                },
+                                path: '.custom_data.speed.value',
+                                value: 50
                             },
                             {
-                                "fact": "speed",
-                                "operator": "equal",
-                                "value": 50
-                            },
+                                fact: 'state',
+                                operator: 'equal',
+                                params: {
+                                    id: 'testAsset2',
+                                    attribute: 'speed',
+                                    collection: 'assets',
+                                    type: 'train'
+                                },
+                                path: '.custom_data.speed.value',
+                                value: 50
+                            }
                         ]
                     },
                     {
-                        "all": [
+                        any: [
                             {
-                                "any": [
-                                    { 
-                                        "fact": "id",
-                                        "operator": "equal",
-                                        "value": "testAsset1"
-                                    },
-                                    {
-                                        "fact": "id",
-                                        "operator": "equal",
-                                        "value": "testAsset2"
-                                    }
-                                ]
+                                fact: 'state',
+                                operator: 'equal',
+                                params: {
+                                    id: 'testAsset1',
+                                    attribute: 'speed',
+                                    collection: 'assets',
+                                    type: 'train'
+                                },
+                                path: '.custom_data.speed.value',
+                                value: 60
                             },
                             {
-                                "fact": "speed",
-                                "operator": "equal",
-                                "value": 60
+                                fact: 'state',
+                                operator: 'equal',
+                                params: {
+                                    id: 'testAsset2',
+                                    attribute: 'speed',
+                                    collection: 'assets',
+                                    type: 'train'
+                                },
+                                path: '.custom_data.speed.value',
+                                value: 60
                             }
                         ]
                     }     
                 ]
             },
             {
-                "all": [
+                any: [
                     {
-                        "any": [
-                            { 
-                                "fact": "id",
-                                "operator": "equal",
-                                "value": "testAsset1"
-                            },
-                            {
-                                "fact": "id",
-                                "operator": "equal",
-                                "value": "testAsset2"
-                            }
-                        ]
+                        fact: 'state',
+                        operator: 'equal',
+                        params: {
+                            id: 'testAsset1',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: 'train'
+                        },
+                        path: '.custom_data.speed.value',
+                        value: 70
                     },
                     {
-                        "fact": "speed",
-                        "operator": "equal",
-                        "value": 70
+                        fact: 'state',
+                        operator: 'equal',
+                        params: {
+                            id: 'testAsset2',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: 'train'
+                        },
+                        path: '.custom_data.speed.value',
+                        value: 70
                     }
                 ]
             }

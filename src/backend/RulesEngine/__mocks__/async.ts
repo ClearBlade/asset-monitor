@@ -29,35 +29,7 @@ const assets: Array<CbServer.CollectionSchema<Asset>> = [
         type: 'train',
         latitude: null,
         longitude: null,
-    },
-    // {
-    //     custom_data: {},
-    //     description: '',
-    //     id: 'testAsset3',
-    //     image: '',
-    //     item_id: 'test3',
-    //     label: 'Test Asset 3',
-    //     last_updated: '',
-    //     owners: '',
-    //     parent: '',
-    //     type: 'gondola',
-    //     latitude: null,
-    //     longitude: null,
-    // },
-    // {
-    //     custom_data: {},
-    //     description: '',
-    //     id: 'testAsset4',
-    //     image: '',
-    //     item_id: 'test4',
-    //     label: 'Test Asset 4',
-    //     last_updated: '',
-    //     owners: '',
-    //     parent: '',
-    //     type: 'flatcar',
-    //     latitude: null,
-    //     longitude: null,
-    // },
+    }
 ];
 
 const areas: Array<CbServer.CollectionSchema<Areas>> = [
@@ -88,35 +60,7 @@ const areas: Array<CbServer.CollectionSchema<Areas>> = [
         type: 'yard',
         latitude: null,
         longitude: null,
-    },
-    // {
-    //     custom_data: {},
-    //     description: '',
-    //     id: 'testArea3',
-    //     image: '',
-    //     item_id: 'test3',
-    //     label: 'Test Area 3',
-    //     last_updated: '',
-    //     owners: '',
-    //     parent: '',
-    //     type: 'warehouse',
-    //     latitude: null,
-    //     longitude: null,
-    // },
-    // {
-    //     custom_data: {},
-    //     description: '',
-    //     id: 'testArea4',
-    //     image: '',
-    //     item_id: 'test4',
-    //     label: 'Test Area 4',
-    //     last_updated: '',
-    //     owners: '',
-    //     parent: '',
-    //     type: 'factory',
-    //     latitude: null,
-    //     longitude: null,
-    // },
+    }
 ];
 
 export function getAllAssetsForType(): Promise<Array<CbServer.CollectionSchema<Asset>>> {
