@@ -7,7 +7,7 @@ interface CollectionUpdateOptions {
 interface CollectionCreateOptions {
     item: Record<string, unknown> | Array<Record<string, unknown>>;
 }
-export interface CollectionFetchOptions {
+interface CollectionFetchOptions {
     query: CbServer.QueryObj;
 }
 interface CbCollectionLib {

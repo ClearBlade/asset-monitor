@@ -28,6 +28,7 @@ function getConditionPropsForFact(id: string, condition: Condition, isPartOfType
   const { relationship, entity } = condition;
   switch (relationship.attribute_type) {
       case EntityTypes.STATE:
+      default:
           return {
               fact: 'state',
               operator: relationship.operator,
@@ -53,6 +54,7 @@ function formatConditionForEntity(id: string, condition: Condition, isPartOfType
       return [getConditionPropsForFact(id, condition, isPartOfType)]
   } else {
       // handle asset type and area type
+      return []
   }
 }
 
