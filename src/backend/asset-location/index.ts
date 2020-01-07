@@ -1,9 +1,8 @@
-import { GC, CollectionName, UpdateAssetLocationSettings, LogLevels } from '../global-config';
+import { GC, CollectionName } from '../global-config';
 import { Asset } from '../collection-schema/Assets';
 import { CbCollectionLib } from '../collection-lib';
 import { Logger } from '../Logger';
 import { Topics, getAssetIdFromTopic } from '../Util';
-import { func } from 'prop-types';
 
 interface UpdateAssetLocationOptions {
     fetchedData: CbServer.CollectionSchema;
@@ -13,15 +12,8 @@ interface UpdateAssetLocationOptions {
 interface UpdateAssetLocationConfig {
     req: CbServer.BasicReq;
     resp: CbServer.Resp;
-    settings: UpdateAssetLocationSettings;
 }
 
-function handleServiceSettings(settings: UpdateAssetLocationSettings) {
-    if (!settings) {
-        settings = GC.UPDATE_ASSET_LOCATION_SETTINGS;
-    }
-    return settings;
-}
 export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
     const TOPIC = '$share/UpdateLocationGroup/' + Topics.DBUpdateAssetLocation('+');
     const SERVICE_INSTANCE_ID = config.req.service_instance_id;
@@ -30,14 +22,12 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
     const messaging = ClearBlade.Messaging();
     const logger = Logger({ name: 'updateAssetLocationSS' });
 
-    config.settings = handleServiceSettings(config.settings);
-
     function successCb(value: unknown): void {
-        logger.publishLog(LogLevels.SUCCESS, 'Succeeded ', value);
+        logger.publishLog(GC.LOG_LEVEL.SUCCESS, 'Succeeded ', value);
     }
 
     function failureCb(reason: unknown): void {
-        logger.publishLog(LogLevels.ERROR, 'Failed ', reason);
+        logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed ', reason);
     }
 
     function updateAssetLocation(assetsOpts: UpdateAssetLocationOptions): Promise<unknown> {
@@ -45,7 +35,7 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
         const incomingMsg = assetsOpts.incomingMsg;
         const assetsCol = CbCollectionLib(CollectionName.ASSETS);
 
-        logger.publishLog(LogLevels.DEBUG, 'DEBUG: ', 'In Update Asset Location');
+        logger.publishLog(GC.LOG_LEVEL.DEBUG, 'DEBUG: ', 'In Update Asset Location');
         if (!currentState.item_id) {
             return Promise.reject('Item Id is missing');
         }
@@ -76,7 +66,7 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
     }
 
     function createAsset(assetID: string, assetData: Asset): Promise<unknown> {
-        logger.publishLog(LogLevels.DEBUG, 'DEBUG: ', 'in Create Asset');
+        logger.publishLog(GC.LOG_LEVEL.DEBUG, 'DEBUG: ', 'in Create Asset');
 
         const assetsCol = CbCollectionLib(CollectionName.ASSETS);
         const newAsset = assetData;
@@ -91,7 +81,7 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
         try {
             newAsset['custom_data'] = JSON.stringify(assetData['custom_data']);
         } catch (e) {
-            logger.publishLog(LogLevels.ERROR, 'ERROR: ', SERVICE_INSTANCE_ID, ': Failed to stringify ', e);
+            logger.publishLog(GC.LOG_LEVEL.ERROR, 'ERROR: ', SERVICE_INSTANCE_ID, ': Failed to stringify ', e);
             return Promise.reject('Failed to stringify ' + e);
         }
         // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
@@ -101,7 +91,7 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
 
     function HandleMessage(err: boolean, msg: string, topic: string): void {
         if (err) {
-            logger.publishLog(LogLevels.ERROR, ' Failed to wait for message: ', err, ' ', msg, '  ', topic);
+            logger.publishLog(GC.LOG_LEVEL.ERROR, ' Failed to wait for message: ', err, ' ', msg, '  ', topic);
             config.resp.error('Failed to wait for message: ' + err + ' ' + msg + '    ' + topic);
         }
 
@@ -109,7 +99,7 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
         try {
             incomingMsg = JSON.parse(msg);
         } catch (e) {
-            logger.publishLog(LogLevels.ERROR, 'Failed parse the message: ', e);
+            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed parse the message: ', e);
             // service can exit here if we add resp.error(""), right now it fails silently by just publishing on error topic
             return;
         }
@@ -117,7 +107,7 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
         const assetID = getAssetIdFromTopic(topic);
 
         if (!assetID) {
-            logger.publishLog(LogLevels.ERROR, 'Invalid topic received: ', topic);
+            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Invalid topic received: ', topic);
             return;
         }
 
@@ -131,18 +121,19 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
                     const fetchedData = data.DATA[0];
                     updateAssetLocation({ fetchedData, incomingMsg }).then(successCb, failureCb);
                 } else if (data.DATA.length === 0) {
-                    if (config.settings.CREATE_NEW_ASSET_IF_MISSING) {
-                        createAsset(assetID, incomingMsg).then(successCb, failureCb);
-                        logger.publishLog(LogLevels.DEBUG, "Creating Asset since it doesn't exist");
-                    } else {
-                        logger.publishLog(LogLevels.ERROR, 'ERROR: ', " Asset doesn't exist so, ignoring: ", data);
-                    }
+                    createAsset(assetID, incomingMsg).then(successCb, failureCb);
+                    logger.publishLog(GC.LOG_LEVEL.ERROR, 'ERROR: ', " Asset doesn't exist so, ignoring: ", data);
                 } else {
-                    logger.publishLog(LogLevels.ERROR, 'ERROR: ', ' Multiple Assets with same assetId exists: ', data);
+                    logger.publishLog(
+                        GC.LOG_LEVEL.ERROR,
+                        'ERROR: ',
+                        ' Multiple Assets with same assetId exists: ',
+                        data,
+                    );
                 }
             })
             .catch(function(reason) {
-                logger.publishLog(LogLevels.ERROR, 'Failed to fetch: ', reason);
+                logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed to fetch: ', reason);
                 config.resp.error('Failed to fetch asset: ' + reason);
             });
 
@@ -151,10 +142,10 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
 
     function WaitLoop(err: boolean, data: string | null): void {
         if (err) {
-            logger.publishLog(LogLevels.ERROR, 'Subscribe failed for: ', SERVICE_INSTANCE_ID, ': ', data);
+            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Subscribe failed for: ', SERVICE_INSTANCE_ID, ': ', data);
             config.resp.error(data);
         }
-        logger.publishLog(LogLevels.SUCCESS, 'Subscribed to Shared Topic. Starting Loop.');
+        logger.publishLog(GC.LOG_LEVEL.SUCCESS, 'Subscribed to Shared Topic. Starting Loop.');
 
         // eslint-disable-next-line no-constant-condition
         while (true) {
@@ -164,7 +155,3 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
 
     messaging.subscribe(TOPIC, WaitLoop);
 }
-
-export const api = {
-    default: updateAssetLocationSS,
-};
