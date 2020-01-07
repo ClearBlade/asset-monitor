@@ -1,3 +1,4 @@
+import { CollectionName } from "../../global-config";
 export declare enum TimeFrameTypes {
     REPEATEACHWEEK = "repeatEachWeek",
     REPEATBYDAY = "repeatByDay"
@@ -63,7 +64,7 @@ export declare type ConditionArray = Array<Condition | Conditions>;
 export declare type Conditions = {
     [x in ConditionalOperators]?: ConditionArray;
 };
-export interface Params {
+export interface RuleParams {
     eventTypeID: string;
     actionIDs: Array<string>;
     priority: number;
@@ -71,4 +72,10 @@ export interface Params {
     timeframe?: TimeFrame;
     ruleID: string;
     ruleName: string;
+}
+export interface StateParams {
+    id: string;
+    attribute: string;
+    collection: CollectionName;
+    type: string;
 }

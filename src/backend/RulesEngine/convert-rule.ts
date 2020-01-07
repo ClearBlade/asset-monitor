@@ -1,11 +1,7 @@
 import {
     Condition,
     ConditionalOperators,
-    OperatorAndValue,
-    Entity,
     EntityTypes,
-    GetOperatorAndValue,
-    Relationship,
     Conditions,
     ConditionArray,
 } from './types';
@@ -36,7 +32,7 @@ function getConditionPropsForFact(id: string, condition: Condition, isPartOfType
                     id,
                     attribute: relationship.attribute,
                     collection: getCollectionName(entity.entity_type),
-                    type: isPartOfType ? entity.id : false
+                    type: isPartOfType ? entity.id : null
                 },
                 path: `.custom_data.${relationship.attribute}.value`,
                 value: relationship.value
@@ -89,53 +85,54 @@ function createConditionsForType(condition: Condition): Promise<ConditionPropert
     }
 }
 
-function createConditionsForAttribute(
-    id: string,
-    relationship: Relationship,
-): Promise<AnyConditions | undefined> {
-    const rule: AnyConditions = {
-        any: []
-    }
-    let promise;
-    switch (relationship.attribute_type) {
-        case EntityTypes.ASSET_TYPE:
-            promise = getAllAssetsForType(relationship.attribute).then(assets => {
-                if (assets.length > 0) {
-                    const rval: OperatorAndValue = GetOperatorAndValue(relationship.operator, relationship.value);
-                    for (let i = 0; i < assets.length; i++) {
-                        // AddDuration(ruleInfo.id, ruleInfo.id, assets[i].id as string, relationship.duration);
-                        rule.any.push({
-                            fact: assets[i].id as string,
-                            operator: rval.operator,
-                            value: rval.value,
-                        });
-                    }
-                    return rule;
-                }
-            });
-            Promise.runQueue();
-            return promise;
-        case EntityTypes.AREA_TYPE:
-            promise = getAllAreasForType(relationship.attribute).then(areas => {
-                if (areas.length > 0) {
-                    const rval2: OperatorAndValue = GetOperatorAndValue(relationship.operator, relationship.value);
-                    for (let i = 0; i < areas.length; i++) {
-                        // AddDuration(ruleInfo.id, ruleInfo.id, areas[i].id as string, relationship.duration);
-                        rule.any.push({
-                            fact: areas[i].id as string,
-                            operator: rval2.operator,
-                            value: rval2.value,
-                        });
-                    }
-                    return rule;
-                }
-            });
-            Promise.runQueue();
-            return promise;
-        default:
-            return new Promise(res => res());
-    }
-}
+/////////////////////////////////////////////// SAVING THIS FOR ADDING PROPERTIES FOR AREA/PROX/OCC CONDITIONS WITH TYPES IN RELATIONSHIP
+// function createConditionsForAttribute( 
+//     id: string,
+//     relationship: Relationship,
+// ): Promise<AnyConditions | undefined> {
+//     const rule: AnyConditions = {
+//         any: []
+//     }
+//     let promise;
+//     switch (relationship.attribute_type) {
+//         case EntityTypes.ASSET_TYPE:
+//             promise = getAllAssetsForType(relationship.attribute).then(assets => {
+//                 if (assets.length > 0) {
+//                     const rval: OperatorAndValue = GetOperatorAndValue(relationship.operator, relationship.value);
+//                     for (let i = 0; i < assets.length; i++) {
+//                         // AddDuration(ruleInfo.id, ruleInfo.id, assets[i].id as string, relationship.duration);
+//                         rule.any.push({
+//                             fact: assets[i].id as string,
+//                             operator: rval.operator,
+//                             value: rval.value,
+//                         });
+//                     }
+//                     return rule;
+//                 }
+//             });
+//             Promise.runQueue();
+//             return promise;
+//         case EntityTypes.AREA_TYPE:
+//             promise = getAllAreasForType(relationship.attribute).then(areas => {
+//                 if (areas.length > 0) {
+//                     const rval2: OperatorAndValue = GetOperatorAndValue(relationship.operator, relationship.value);
+//                     for (let i = 0; i < areas.length; i++) {
+//                         // AddDuration(ruleInfo.id, ruleInfo.id, areas[i].id as string, relationship.duration);
+//                         rule.any.push({
+//                             fact: areas[i].id as string,
+//                             operator: rval2.operator,
+//                             value: rval2.value,
+//                         });
+//                     }
+//                     return rule;
+//                 }
+//             });
+//             Promise.runQueue();
+//             return promise;
+//         default:
+//             return new Promise(res => res());
+//     }
+// }
 
 function addConditions(
     ruleId: string,
@@ -173,7 +170,7 @@ function convertCondition(
         return promise;
     } else {
         // Seems like we have nested conditions
-        const promise = ParseAndConvertConditions(
+        const promise = parseAndConvertConditions(
             ruleId,
             condition as Conditions,
         );
@@ -182,7 +179,7 @@ function convertCondition(
     }
 }
 
-export function ParseAndConvertConditions(
+export function parseAndConvertConditions(
     ruleId: string,
     conditions: Conditions,
 ): Promise<TopLevelCondition | AnyConditions | AllConditions> {

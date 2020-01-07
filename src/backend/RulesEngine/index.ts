@@ -1,32 +1,15 @@
 import '../../static/promise-polyfill';
 import 'core-js/features/map';
-import { Engine, Event, RuleProperties, EngineResult, TopLevelCondition } from 'json-rules-engine';
-import { Params } from './types';
-import { ParseAndConvertConditions } from './convert-rule';
-import { DoesTimeframeMatchRule } from './timeframe';
-import { FireEventsAndActions } from './events';
+import { Engine, Event, RuleProperties, TopLevelCondition, Almanac, AllConditions, AnyConditions, NestedCondition, ConditionProperties, RuleResult } from 'json-rules-engine';
+import { StateParams } from './types';
+import { parseAndConvertConditions } from './convert-rule';
+import { doesTimeframeMatchRule } from './timeframe';
+import { processEvent, Entities } from './events';
 // import { ProcessDurationIfExists } from './duration';
 import { Rules } from '../collection-schema/Rules';
-
-function processRuleResults(events: Event[], facts: Record<string, string | number | boolean>, timestamp: string): void {
-    if (events.length > 0) {
-        for (let i = 0; i < events.length; i++) {
-            if (!!events[i]) {
-                const params = events[i].params as Params;
-                if (DoesTimeframeMatchRule(timestamp, params.timeframe)) {
-                    // log('Cannot run rule because timeframe constraints failed: ' + event.type);
-                    FireEventsAndActions(events[i]);
-                }
-            }
-        }
-        
-    // log('Rule success ' + JSON.stringify(event) + ' and ' + JSON.stringify(facts));
-    }
-    // rule failed
-    // log('Rule failed');
-    console.log('facts', facts);
-    return;
-}
+import { CbCollectionLib } from '../collection-lib';
+import { Areas } from '../collection-schema/Areas';
+import { Asset } from '../collection-schema/Assets';
 
 export class RulesEngine {
     engine: Engine;
@@ -36,7 +19,13 @@ export class RulesEngine {
         const options = {
             allowUndefinedFacts: true,
         };
-        this.engine = new Engine([], options);
+        this.engine = new Engine([], options)
+            .addFact('state', function(params, almanac) {
+                handleStateRule(params as StateParams, almanac);
+            })
+            .on('success', function(event, almanac, ruleResult) {
+                handleRuleSuccess(event, almanac, ruleResult)
+            })
         this.data = {};
     }
 
@@ -51,7 +40,7 @@ export class RulesEngine {
         const parsedTimeframe = !!timeframe ? JSON.parse(timeframe) : timeframe;
         const parsedActionIDs = !!action_ids ? JSON.parse(action_ids) : action_ids;
 
-        const promise = ParseAndConvertConditions(id, parsedConditions).then(
+        const promise = parseAndConvertConditions(id, parsedConditions).then(
             (convertedConditions: TopLevelCondition) => {
                 return {
                     name: id,
@@ -75,15 +64,86 @@ export class RulesEngine {
         return promise;
     }
 
-    async run(facts: Record<string, string | number | boolean>, timestamp: string): Promise<EngineResult> {
-        const promise = this.engine.run(facts).then(
-            results => {
-                processRuleResults(results.events, facts, timestamp);
-                return results;
-            },
-            err => err.message,
-        );
+    async run(facts: Record<string, string | number | boolean>): Promise<string> {
+        const promise = this.engine.run(facts).then(() => 'ENGINE SUCCESSFULLY COMPLETED').catch((e) => `ENGINE ERROR: ${JSON.stringify(e)}`)
         Promise.runQueue();
         return promise;
     }
 }
+
+function handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResult) {
+    // @ts-ignore json-rule-engine types does not include factMap
+    const timestamp = almanac.factMap.get('incomingData').timestamp;
+    const timeframe = (event.params as Record<string, any>).timeframe;
+    if (doesTimeframeMatchRule(timestamp, timeframe)) {
+        const triggers = getTriggerIds(ruleResult.conditions.hasOwnProperty('all') ? (ruleResult.conditions as AllConditions).all : (ruleResult.conditions as AnyConditions).any, []);
+        const entities: Entities = triggers.reduce((acc: object, trigger: string) => {
+            // @ts-ignore json-rule-engine types does not include factMap
+            acc[trigger] = almanac.factMap.get(trigger);
+            return acc;
+        }, {})
+        processEvent(event, entities);
+    }
+}
+
+function handleStateRule(params: StateParams, almanac: Almanac) {
+    const promise = almanac.factValue('incomingData').then((incomingData: any) => {
+        const promise = almanac.factValue(params.id).then((customData) => customData).catch(() => {
+            return new Promise((res) => { // custom data has not been fetched for asset
+                const collection = CbCollectionLib(params.collection);
+                const query = ClearBlade.Query({ collectionName: params.collection });
+                if (!!params.type) {
+                    query.equalTo('type', params.type);
+                } else {
+                    query.equalTo('id', params.id);
+                }
+                const promise = collection.cbFetchPromise({ query }).then((data: CbServer.CollectionFetchData<Asset | Areas>) => {
+                    let initialData; // the fact who started all this mess
+                    for (let i = 0; i < data.DATA.length; i++) {
+                        const entityData = data.DATA[i];
+                        let withParsedCustomData = { // parse custom_data
+                            ...entityData,
+                            custom_data: JSON.parse(entityData.custom_data as string || '{}')
+                        }
+                        if (entityData.id === incomingData.id) { // if this one is the same as asset that triggered engine
+                            withParsedCustomData = {
+                                ...withParsedCustomData,
+                                ...incomingData,
+                                custom_data: {
+                                    ...withParsedCustomData.custom_data,
+                                    ...incomingData.custom_data
+                                }
+                            }
+                        }
+                        if (params.id === entityData.id) { // if this one is the same as asset that triggered fact
+                            initialData = {...withParsedCustomData};
+                        }
+                        almanac.addRuntimeFact(entityData.id as string, withParsedCustomData); // add fact for id
+                    } 
+                    res(initialData); // resolve the initial fact's value
+                })
+                Promise.runQueue();
+                return promise;
+            })
+        })
+        Promise.runQueue();
+        return promise;
+    })
+    Promise.runQueue();
+    return promise;
+}
+
+function getTriggerIds(conditions: NestedCondition[], ids: string[]) {
+    for ( let i = 0; i < conditions.length; i++) {
+        const firstKey = Object.keys(conditions[i])[0];
+        if (firstKey === 'all' || firstKey === 'any') {
+            getTriggerIds(conditions[i][firstKey as keyof TopLevelCondition], ids)
+        // @ts-ignore json-rule-engine types does not include result
+        } else if (!!conditions[i].result){
+            ids.push(((conditions[i] as ConditionProperties).params as Record<string, any>).id)
+        }
+    }
+    return ids;
+}
+
+

@@ -1,52 +1,77 @@
-import { Params } from './types';
-import { CbCollectionLib } from '../collection-lib';
-import { CollectionName } from '../global-config';
-import { Actions, ActionTypes } from '../collection-schema/Actions';
+import { RuleParams } from './types';
+import { ActionTypes } from '../collection-schema/Actions';
 import '../../static/promise-polyfill';
 import { Event } from 'json-rules-engine';
+import { Areas } from '../collection-schema/Areas';
+import { Asset } from '../collection-schema/Assets';
+import { getActionByID, getOpenStateForEvent, createEvent } from './async';
+import * as uuid from 'uuid/v4';
+import { EventSchema } from '../collection-schema/Events';
 
-function processEvents(event: Event): void {
-    console.log(event);
+export interface Entities {
+    [x: string]: Asset | Areas;
 }
 
-function getActionByID(actionID: string): Actions {
-    const actionsCollection = CbCollectionLib(CollectionName.ACTIONS);
-    const actionsCollectionQuery = ClearBlade.Query({ collectionName: CollectionName.ACTIONS });
-    actionsCollectionQuery.equalTo('id', actionID);
+function getSplitEntities(entities: Entities) {
+    return Object.keys(entities).reduce((acc, id) => {
+        if (entities[id].hasOwnProperty('polygon')) {
+            acc.areas[id] = entities[id];
+        } else {
+            acc.assets[id] = entities[id];
+        }
+        return acc;
+    }, {
+        assets: {} as Entities,
+        areas: {} as Entities
+    })
+}
 
-    if (actionsCollection) {
-        actionsCollection.cbFetchPromise({ query: actionsCollectionQuery }).then(data => {
-            return Array.isArray(data.DATA) && data.DATA[0] ? data.DATA[0] : {};
-        });
+export function processEvent(event: Event, entities: Entities): Promise<EventSchema> {
+    const { eventTypeID, actionIDs, priority, severity, ruleID } = event.params as RuleParams
+    const promise = getOpenStateForEvent(eventTypeID).then((state) => {
+        const id = uuid();
+        const splitEntities = getSplitEntities(entities);
+        const item: EventSchema = {
+            last_updated: new Date().toISOString(),
+            is_open: true,
+            label: `${eventTypeID}_${id}`,
+            severity,
+            id,
+            type: eventTypeID,
+            state: state || 'Open',
+            priority,
+            action_ids: JSON.stringify(actionIDs || []),
+            rule_id: ruleID,
+            assets: JSON.stringify(splitEntities.assets),
+            areas: JSON.stringify(splitEntities.areas)
+        }
+
+        const promise = createEvent({ item }).then(() => {
+            for (let i = 0; i < (event.params as RuleParams).actionIDs.length; i++) {
+                performAction((event.params as RuleParams).actionIDs[i]);
+            }
+            return item;
+        })
         Promise.runQueue();
-    }
-    return {};
+        return promise;
+    })
+    Promise.runQueue();
+    return promise;
 }
 
-function performAction(action: Actions): void {
-    switch (action.type) {
-        case ActionTypes.SEND_SMS:
-            // send sms
-            break;
-        case ActionTypes.SEND_EMAIL:
-            // send email
-            break;
-        case ActionTypes.PUBLISH_MESSAGE:
-            // publish message
-            break;
-    }
-}
-
-function processActions(event: Event): void {
-    const actionTypeIDs: Array<string> = (event.params as Params).actionIDs;
-    for (const idx in actionTypeIDs) {
-        const action: Actions = getActionByID(actionTypeIDs[idx]);
-        // log('Action is ' + JSON.stringify(action));
-        performAction(action);
-    }
-}
-
-export function FireEventsAndActions(event: Event): void {
-    processEvents(event);
-    processActions(event);
+function performAction(actionId: string): void {
+    getActionByID(actionId).then(function(action) {
+        switch (action.type) {
+            case ActionTypes.SEND_SMS:
+                // send sms
+                break;
+            case ActionTypes.SEND_EMAIL:
+                // send email
+                break;
+            case ActionTypes.PUBLISH_MESSAGE:
+                // publish message
+                break;
+        }
+    })
+    Promise.runQueue();
 }

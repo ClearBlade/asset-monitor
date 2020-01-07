@@ -1,6 +1,30 @@
 import { Asset } from '../../collection-schema/assets';
 import { Areas } from '../../collection-schema/Areas';
 
+export function getAllAssetsForType(): Promise<Array<CbServer.CollectionSchema<Asset>>> {
+    return new Promise(resolve => {
+        resolve(assets);
+    });
+}
+
+export function getAllAreasForType(): Promise<Array<CbServer.CollectionSchema<Asset>>> {
+    return new Promise(resolve => {
+        resolve(areas);
+    });
+}
+
+export function getOpenStateForEvent(): Promise<string> {
+    return new Promise(resolve => {
+        resolve('open');
+    })
+}
+
+export function createEvent(): Promise<undefined> {
+    return new Promise(resolve => {
+        resolve();
+    })
+}
+
 const assets: Array<CbServer.CollectionSchema<Asset>> = [
     {
         custom_data: {},
@@ -62,15 +86,3 @@ const areas: Array<CbServer.CollectionSchema<Areas>> = [
         longitude: null,
     }
 ];
-
-export function getAllAssetsForType(): Promise<Array<CbServer.CollectionSchema<Asset>>> {
-    return new Promise(resolve => {
-        resolve(assets);
-    });
-}
-
-export function getAllAreasForType(): Promise<Array<CbServer.CollectionSchema<Asset>>> {
-    return new Promise(resolve => {
-        resolve(areas);
-    });
-}

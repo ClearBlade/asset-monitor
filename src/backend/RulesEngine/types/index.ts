@@ -1,3 +1,5 @@
+import { CollectionName } from "../../global-config";
+
 // Time Frames
 
 export enum TimeFrameTypes {
@@ -106,7 +108,7 @@ export type Conditions = {
 
 // Rules Engine Event Params (json-rules-engine format)
 
-export interface Params {
+export interface RuleParams {
     eventTypeID: string;
     actionIDs: Array<string>;
     priority: number;
@@ -114,5 +116,14 @@ export interface Params {
     timeframe?: TimeFrame;
     ruleID: string;
     ruleName: string;
+}
+
+// Condition Params
+
+export interface StateParams {
+    id: string;
+    attribute: string;
+    collection: CollectionName;
+    type: string;
 }
 
