@@ -77,5 +77,5 @@
         "src/backend/asset-location",
         "src/backend/asset-status"
     ],
-    "exclude": ["node_modules", "**/__tests__/*"]
+    "exclude": ["node_modules", "**/__tests__/*", "**/__mocks__/*"]
 }

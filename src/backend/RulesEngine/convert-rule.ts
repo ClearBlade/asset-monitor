@@ -1,290 +1,212 @@
 import {
-    AllConditions,
     Condition,
     ConditionalOperators,
-    RulesEngineCondition,
-    RulesEngineConditionalOperators,
-    AllRulesEngineConditions,
     OperatorAndValue,
     Entity,
     EntityTypes,
     GetOperatorAndValue,
     Relationship,
-    RuleInfo,
+    Conditions,
+    ConditionArray,
 } from './types';
-import { AddDuration } from './duration';
-import { CbCollectionLib } from '../collection-lib';
-import { CollectionName } from '../global-config';
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-// @ts-ignore
-import { Asset } from '../collection-schema/assets';
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-// @ts-ignore
-import { Areas } from '../collection-schema/areas';
 import '../../static/promise-polyfill';
+import { getAllAreasForType, getAllAssetsForType } from './async';
+import { TopLevelCondition, AnyConditions, AllConditions, ConditionProperties } from 'json-rules-engine';
 
-// @ts-ignore
-const ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
-
-export function ParseAndConvertConditions(
-    ruleInfo: RuleInfo,
-    rule: AllRulesEngineConditions,
-    conditions: AllConditions,
-) {
-    if (conditions.hasOwnProperty('and')) {
-        rule[RulesEngineConditionalOperators.AND] = [];
-        convertANDConditions(ruleInfo, rule, conditions);
-    } else if (conditions.hasOwnProperty('or')) {
-        rule[RulesEngineConditionalOperators.OR] = [];
-        convertORConditions(ruleInfo, rule, conditions);
-    }
-}
-
-function convertANDConditions(ruleInfo: RuleInfo, rule: AllRulesEngineConditions, conditions: AllConditions) {
-    const subConditions: Array<Condition | AllConditions> = conditions[ConditionalOperators.AND];
-    for (let i = 0; i < subConditions.length; i++) {
-        const condition: Condition | AllConditions = subConditions[i];
-        if (condition.hasOwnProperty('entity')) {
-            // We have a condition
-            if (
-                (condition as Condition).entity.entity_type === EntityTypes.ASSET ||
-                (condition as Condition).entity.entity_type === EntityTypes.AREA ||
-                (condition as Condition).entity.entity_type === EntityTypes.STATE
-            ) {
-                const entityCondition: RulesEngineCondition = {
-                    fact: 'id',
-                    operator: 'equal',
-                    value: (condition as Condition).entity.id,
-                };
-                rule[RulesEngineConditionalOperators.AND].push(entityCondition);
-            } else {
-                const entityCondition: AllRulesEngineConditions = {} as AllRulesEngineConditions;
-                if (createConditionsForEntity(entityCondition, (condition as Condition).entity)) {
-                    rule[RulesEngineConditionalOperators.AND].push(entityCondition);
-                }
-            }
-            if (
-                (condition as Condition).relationship.attribute_type === EntityTypes.ASSET ||
-                (condition as Condition).relationship.attribute_type === EntityTypes.AREA ||
-                (condition as Condition).relationship.attribute_type === EntityTypes.STATE
-            ) {
-                const rval: OperatorAndValue = GetOperatorAndValue(
-                    (condition as Condition).relationship.operator,
-                    (condition as Condition).relationship.value,
-                );
-                AddDuration(
-                    ruleInfo.id,
-                    ruleInfo.id,
-                    (condition as Condition).relationship.attribute,
-                    (condition as Condition).relationship.duration,
-                );
-                const newCondition: RulesEngineCondition = {
-                    fact: (condition as Condition).relationship.attribute,
-                    operator: rval.operator,
-                    value: rval.value,
-                };
-                rule[RulesEngineConditionalOperators.AND].push(newCondition);
-            } else {
-                const attributeCondition: AllRulesEngineConditions = {} as AllRulesEngineConditions;
-                if (createConditionsForAttribute(ruleInfo, attributeCondition, (condition as Condition).relationship)) {
-                    rule[RulesEngineConditionalOperators.AND].push(attributeCondition);
-                }
-            }
-        } else {
-            // Seems like we have nested conditions
-            rule[RulesEngineConditionalOperators.AND].push({} as AllRulesEngineConditions);
-            const len: number = rule[RulesEngineConditionalOperators.AND].length;
-            ParseAndConvertConditions(
-                ruleInfo,
-                rule[RulesEngineConditionalOperators.AND][len - 1] as AllRulesEngineConditions,
-                condition as AllConditions,
-            );
-        }
-    }
-}
-
-function convertORConditions(ruleInfo: RuleInfo, rule: AllRulesEngineConditions, conditions: AllConditions) {
-    const subConditions: Array<Condition | AllConditions> = conditions[ConditionalOperators.OR];
-    for (let i = 0; i < subConditions.length; i++) {
-        const condition: Condition | AllConditions = subConditions[i];
-        if (condition.hasOwnProperty('entity')) {
-            // We have a condition
-            rule[RulesEngineConditionalOperators.OR].push({} as AllRulesEngineConditions);
-            const len: number = rule[RulesEngineConditionalOperators.OR].length;
-            addANDConditions(
-                ruleInfo,
-                rule[RulesEngineConditionalOperators.OR][len - 1] as AllRulesEngineConditions,
-                condition as Condition,
-            );
-        } else {
-            // Seems like we have nested conditions
-            rule[RulesEngineConditionalOperators.OR].push({} as AllRulesEngineConditions);
-            const len: number = rule[RulesEngineConditionalOperators.OR].length;
-            ParseAndConvertConditions(
-                ruleInfo,
-                rule[RulesEngineConditionalOperators.OR][len - 1] as AllRulesEngineConditions,
-                condition as AllConditions,
-            );
-        }
-    }
-}
-
-function addANDConditions(ruleInfo: RuleInfo, rule: AllRulesEngineConditions, condition: Condition) {
-    rule[RulesEngineConditionalOperators.AND] = [];
-    if (
-        (condition as Condition).entity.entity_type === EntityTypes.ASSET ||
-        (condition as Condition).entity.entity_type === EntityTypes.AREA ||
-        (condition as Condition).entity.entity_type === EntityTypes.STATE
-    ) {
-        const entityCondition: RulesEngineCondition = {
-            fact: 'id',
-            operator: 'equal',
-            value: (condition as Condition).entity.id,
-        };
-        rule[RulesEngineConditionalOperators.AND].push(entityCondition);
-    } else {
-        const entityCondition: AllRulesEngineConditions = {} as AllRulesEngineConditions;
-        if (createConditionsForEntity(entityCondition, (condition as Condition).entity)) {
-            rule[RulesEngineConditionalOperators.AND].push(entityCondition);
-        }
-    }
-    if (
-        (condition as Condition).relationship.attribute_type === EntityTypes.ASSET ||
-        (condition as Condition).relationship.attribute_type === EntityTypes.AREA ||
-        (condition as Condition).relationship.attribute_type === EntityTypes.STATE
-    ) {
-        const rval: OperatorAndValue = GetOperatorAndValue(
-            (condition as Condition).relationship.operator,
-            (condition as Condition).relationship.value,
-        );
-        AddDuration(
-            ruleInfo.id,
-            ruleInfo.id,
-            (condition as Condition).relationship.attribute,
-            (condition as Condition).relationship.duration,
-        );
-        const newCondition: RulesEngineCondition = {
-            fact: (condition as Condition).relationship.attribute,
-            operator: rval.operator,
-            value: rval.value,
-        };
-        rule[RulesEngineConditionalOperators.AND].push(newCondition);
-    } else {
-        const attributeCondition: AllRulesEngineConditions = {} as AllRulesEngineConditions;
-        if (createConditionsForAttribute(ruleInfo, attributeCondition, (condition as Condition).relationship)) {
-            rule[RulesEngineConditionalOperators.AND].push(attributeCondition);
-        }
-    }
-}
-
-function createConditionsForEntity(rule: AllRulesEngineConditions, entity: Entity): boolean {
-    switch (entity.entity_type) {
+function getCollectionName(entityType: EntityTypes) {
+    switch (entityType) {
         case EntityTypes.ASSET_TYPE:
-            const assets = getAllAssetsForType(entity.id);
-            if (assets.length <= 0) {
-                return false;
-            }
-            rule[RulesEngineConditionalOperators.OR] = [];
-            for (let i = 0; i < assets.length; i++) {
-                const entityCondition: RulesEngineCondition = {
-                    fact: 'id',
-                    operator: 'equal',
-                    value: assets[i].id as string,
-                };
-                rule[RulesEngineConditionalOperators.OR].push(entityCondition);
-            }
-            return true;
+            return 'assets'
         case EntityTypes.AREA_TYPE:
-            const areas = getAllAreasForType(entity.id);
-            if (areas.length <= 0) {
-                return false;
-            }
-            rule[RulesEngineConditionalOperators.OR] = [];
-            for (let i = 0; i < areas.length; i++) {
-                const entityCondition: RulesEngineCondition = {
-                    fact: 'id',
-                    operator: 'equal',
-                    value: areas[i].id,
-                };
-                rule[RulesEngineConditionalOperators.OR].push(entityCondition);
-            }
-            return true;
+            return 'areas'
         default:
-            return false;
+            return entityType
+    }
+}
+
+function getConditionPropsForFact(id: string, condition: Condition, isPartOfType?: boolean): ConditionProperties {
+    const { relationship, entity } = condition;
+    switch (relationship.attribute_type) {
+        case EntityTypes.STATE:
+        default:
+            return {
+                fact: 'state',
+                operator: relationship.operator,
+                params: {
+                    id,
+                    attribute: relationship.attribute,
+                    collection: getCollectionName(entity.entity_type),
+                    type: isPartOfType ? entity.id : false
+                },
+                path: `.custom_data.${relationship.attribute}.value`,
+                value: relationship.value
+            }
+    }
+}
+
+function formatConditionForEntity(id: string, condition: Condition, isPartOfType?: boolean): ConditionProperties[] {
+    const { attribute_type } = condition.relationship;
+    if (
+        attribute_type === EntityTypes.ASSET ||
+        attribute_type === EntityTypes.AREA ||
+        attribute_type === EntityTypes.STATE
+    ) {
+        return [getConditionPropsForFact(id, condition, isPartOfType)]
+    } else {
+        // handle asset type and area type
+        return [];
+    }
+}
+
+function createConditionsForType(condition: Condition): Promise<ConditionProperties[]> {
+    let promise;
+    const conditions: ConditionProperties[] = [];
+    switch (condition.entity.entity_type) {
+        case EntityTypes.ASSET_TYPE:
+            promise = getAllAssetsForType(condition.entity.id).then(assets => {
+                if (assets.length > 0) {
+                    for (let i = 0; i < assets.length; i++) {
+                        conditions.push(...formatConditionForEntity(assets[i].id as string, condition, true));
+                    }
+                }
+                return conditions
+            });
+            Promise.runQueue();
+            return promise;
+        case EntityTypes.AREA_TYPE:
+            promise = getAllAreasForType(condition.entity.id).then(areas => {
+                if (areas.length > 0) {
+                    for (let i = 0; i < areas.length; i++) {
+                        conditions.push(...formatConditionForEntity(areas[i].id as string, condition, true));
+                    }
+                }
+                return conditions;
+            });
+            Promise.runQueue();
+            return promise;
+        default:
+            return new Promise(res => res(conditions));
     }
 }
 
 function createConditionsForAttribute(
-    ruleInfo: RuleInfo,
-    rule: AllRulesEngineConditions,
+    id: string,
     relationship: Relationship,
-): boolean {
+): Promise<AnyConditions | undefined> {
+    const rule: AnyConditions = {
+        any: []
+    }
+    let promise;
     switch (relationship.attribute_type) {
         case EntityTypes.ASSET_TYPE:
-            const assets = getAllAssetsForType(relationship.attribute);
-            if (assets.length <= 0) {
-                return false;
-            }
-            rule[RulesEngineConditionalOperators.OR] = [];
-            const rval: OperatorAndValue = GetOperatorAndValue(relationship.operator, relationship.value);
-            for (let i = 0; i < assets.length; i++) {
-                AddDuration(ruleInfo.id, ruleInfo.id, assets[i].id as string, relationship.duration);
-                const attributeCondition: RulesEngineCondition = {
-                    fact: assets[i].id as string,
-                    operator: rval.operator,
-                    value: rval.value,
-                };
-                rule[RulesEngineConditionalOperators.OR].push(attributeCondition);
-            }
-            return true;
+            promise = getAllAssetsForType(relationship.attribute).then(assets => {
+                if (assets.length > 0) {
+                    const rval: OperatorAndValue = GetOperatorAndValue(relationship.operator, relationship.value);
+                    for (let i = 0; i < assets.length; i++) {
+                        // AddDuration(ruleInfo.id, ruleInfo.id, assets[i].id as string, relationship.duration);
+                        rule.any.push({
+                            fact: assets[i].id as string,
+                            operator: rval.operator,
+                            value: rval.value,
+                        });
+                    }
+                    return rule;
+                }
+            });
+            Promise.runQueue();
+            return promise;
         case EntityTypes.AREA_TYPE:
-            const areas = getAllAreasForType(relationship.attribute);
-            if (areas.length <= 0) {
-                return false;
-            }
-            rule[RulesEngineConditionalOperators.OR] = [];
-            const rval2: OperatorAndValue = GetOperatorAndValue(relationship.operator, relationship.value);
-            for (let i = 0; i < areas.length; i++) {
-                AddDuration(ruleInfo.id, ruleInfo.id, areas[i].id, relationship.duration);
-                const attributeCondition: RulesEngineCondition = {
-                    fact: areas[i].id,
-                    operator: rval2.operator,
-                    value: rval2.value,
-                };
-                rule[RulesEngineConditionalOperators.OR].push(attributeCondition);
-            }
-            return true;
+            promise = getAllAreasForType(relationship.attribute).then(areas => {
+                if (areas.length > 0) {
+                    const rval2: OperatorAndValue = GetOperatorAndValue(relationship.operator, relationship.value);
+                    for (let i = 0; i < areas.length; i++) {
+                        // AddDuration(ruleInfo.id, ruleInfo.id, areas[i].id as string, relationship.duration);
+                        rule.any.push({
+                            fact: areas[i].id as string,
+                            operator: rval2.operator,
+                            value: rval2.value,
+                        });
+                    }
+                    return rule;
+                }
+            });
+            Promise.runQueue();
+            return promise;
         default:
-            return false;
+            return new Promise(res => res());
     }
 }
 
-function getAllAssetsForType(assetType: string): Asset[] {
-    const assetsCollection = CbCollectionLib(CollectionName.ASSETS);
-    const assetsCollectionQuery = ClearBlade.Query({ collectionName: CollectionName.ASSETS });
-    assetsCollectionQuery.equalTo('type', assetType);
-
-    if (assetsCollection) {
-        assetsCollection.cbFetchPromise({ query: assetsCollectionQuery }).then(data => {
-            return Array.isArray(data.DATA) ? data.DATA : [];
-        });
-        // @ts-ignore
-        Promise.runQueue();
+function addConditions(
+    ruleId: string,
+    condition: Condition,
+): Promise<AnyConditions> {
+    const rule: AnyConditions = {
+        any: []
     }
-    return [];
+    let promise;
+    if (condition.entity.entity_type === EntityTypes.ASSET_TYPE || condition.entity.entity_type === EntityTypes.AREA_TYPE) {
+        promise = createConditionsForType(condition).then(
+            entityConditions => {
+                if (entityConditions.length) {                    
+                    rule.any.push(...entityConditions);
+                }
+                return rule;
+            },
+        );
+    } else {
+        rule.any.push(...formatConditionForEntity(condition.entity.id, condition))
+        promise = new Promise((res) => res(rule));
+    }
+    Promise.runQueue();
+    return promise as Promise<AnyConditions>;
 }
 
-function getAllAreasForType(areaType: string): Areas[] {
-    const areasCollection = CbCollectionLib(CollectionName.AREAS);
-    const areasCollectionQuery = ClearBlade.Query({ collectionName: CollectionName.AREAS });
-    areasCollectionQuery.equalTo('type', areaType);
-
-    if (areasCollection) {
-        areasCollection.cbFetchPromise({ query: areasCollectionQuery }).then(data => {
-            return Array.isArray(data.DATA) ? data.DATA : [];
-        });
-        // @ts-ignore
+function convertCondition(
+    ruleId: string,
+    condition: Condition | Conditions,
+): Promise<AnyConditions> {
+    if ((condition as Condition).entity) {
+        // We have a condition
+        const promise = addConditions(ruleId, condition as Condition);
         Promise.runQueue();
+        return promise;
+    } else {
+        // Seems like we have nested conditions
+        const promise = ParseAndConvertConditions(
+            ruleId,
+            condition as Conditions,
+        );
+        Promise.runQueue();
+        return promise as Promise<AnyConditions>;
     }
-    return [];
+}
+
+export function ParseAndConvertConditions(
+    ruleId: string,
+    conditions: Conditions,
+): Promise<TopLevelCondition | AnyConditions | AllConditions> {
+    const firstKey = Object.keys(conditions)[0] as ConditionalOperators;
+    const subConditions = conditions[firstKey] as ConditionArray;
+    const promise = Promise.all(subConditions.map(s => convertCondition(ruleId, s))).then((rules) => {
+        if (rules.length > 1) {
+            if (firstKey === 'and') {
+                return {
+                    all: [...rules]
+                }
+            } else {
+                return {
+                    any: [...rules]
+                }
+            }
+        }
+        return {
+            ...rules[0]
+        }
+    }).catch((e) => {
+        console.log('convertCondition error', e)
+        return {} as TopLevelCondition
+    });
+    Promise.runQueue();
+    return promise;
 }

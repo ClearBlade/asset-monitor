@@ -19,6 +19,6 @@ export function AddDuration(ruleName: string, ruleID: string, fact: string, dura
     };
 }
 
-export function ProcessDurationIfExists(ruleName: string, ruleID: string, fact: string): boolean {
-    return false;
-}
+// export function ProcessDurationIfExists(ruleName: string, ruleID: string, fact: string): boolean {
+//     return false;
+// }

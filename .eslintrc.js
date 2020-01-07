@@ -11,5 +11,6 @@ module.exports = {
     ],
     rules: {
         '@typescript-eslint/camelcase': 0,
+        '@typescript-eslint/no-use-before-define': ["error", { "functions": false }]
     },
 };

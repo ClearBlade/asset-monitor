@@ -124,9 +124,9 @@ declare namespace CbServer {
         collectionID: string;
     }
 
-    interface CollectionSchema {
+    type CollectionSchema<T extends {} = {}> = T & {
         item_id: string;
-    }
+    };
 
     interface CollectionFetchData {
         DATA: Array<CollectionSchema>;
