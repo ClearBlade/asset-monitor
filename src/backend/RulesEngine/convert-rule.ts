@@ -34,7 +34,7 @@ function getConditionPropsForFact(id: string, condition: Condition, isPartOfType
                     collection: getCollectionName(entity.entity_type),
                     type: isPartOfType ? entity.id : null
                 },
-                path: `.custom_data.${relationship.attribute}.value`,
+                path: `.data.custom_data.${relationship.attribute}.value`,
                 value: relationship.value
             }
     }

@@ -3,7 +3,7 @@ import { CollectionName } from '../global-config';
 import { Asset } from '../collection-schema/Assets';
 import { Areas } from '../collection-schema/Areas';
 import { Actions } from '../collection-schema/Actions';
-import { EventType } from '../collection-schema/Events';
+import { EventType, EventSchema } from '../collection-schema/Events';
 
 export function getAllAssetsForType(assetType: string): Promise<Array<CbServer.CollectionSchema<Asset>>> {
     const assetsCollection = CbCollectionLib(CollectionName.ASSETS);
@@ -52,7 +52,7 @@ export function getOpenStateForEvent(eventTypeId: string): Promise<string> {
     return promise;
 }
 
-export function createEvent(item: Record<string, unknown>) {
+export function createEvent(item: Record<string, any>) {
     const eventsCollection = CbCollectionLib(CollectionName.EVENTS);
-    return eventsCollection.cbCreatePromise({ item })
+    return eventsCollection.cbCreatePromise({ item });
 }

@@ -5,6 +5,6 @@ export declare function getAllAssetsForType(assetType: string): Promise<Array<Cb
 export declare function getAllAreasForType(areaType: string): Promise<Array<CbServer.CollectionSchema<Areas>>>;
 export declare function getActionByID(actionID: string): Promise<Actions>;
 export declare function getOpenStateForEvent(eventTypeId: string): Promise<string>;
-export declare function createEvent(item: Record<string, unknown>): Promise<{
+export declare function createEvent(item: Record<string, any>): Promise<{
     item_id: string;
 }[]>;

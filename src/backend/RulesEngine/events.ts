@@ -31,7 +31,7 @@ export function processEvent(event: Event, entities: Entities): Promise<EventSch
     const promise = getOpenStateForEvent(eventTypeID).then((state) => {
         const id = uuid();
         const splitEntities = getSplitEntities(entities);
-        const item: EventSchema = {
+        const item = {
             last_updated: new Date().toISOString(),
             is_open: true,
             label: `${eventTypeID}_${id}`,
@@ -45,8 +45,7 @@ export function processEvent(event: Event, entities: Entities): Promise<EventSch
             assets: JSON.stringify(splitEntities.assets),
             areas: JSON.stringify(splitEntities.areas)
         }
-
-        const promise = createEvent({ item }).then(() => {
+        const promise = createEvent(item).then(() => {
             for (let i = 0; i < (event.params as RuleParams).actionIDs.length; i++) {
                 performAction((event.params as RuleParams).actionIDs[i]);
             }

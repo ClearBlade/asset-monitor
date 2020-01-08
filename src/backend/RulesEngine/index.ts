@@ -85,7 +85,7 @@ export class RulesEngine {
 
     async run(fact: IncomingFact): Promise<string> {
         const promise = this.engine.run(fact)
-        .then((results) => `SUCCESSFUL RULES: ${results.events.map((e) => e.type).join(', ')}`)
+        .then((results) => `SUCCESS! EVENTS FIRED: ${results.events.map((e) => e.type).join(', ')}`)
         .catch((e) => `ENGINE ERROR: ${JSON.stringify(e)}`)
         Promise.runQueue();
         return promise;
@@ -102,7 +102,7 @@ function handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResul
         const triggers = getTriggerIds(ruleResult.conditions.hasOwnProperty('all') ? (ruleResult.conditions as AllConditions).all : (ruleResult.conditions as AnyConditions).any, []);
         const entities: Entities = triggers.reduce((acc: object, trigger: string) => {
             // @ts-ignore json-rule-engine types does not include factMap
-            acc[trigger] = almanac.factMap.get(trigger);
+            acc[trigger] = almanac.factMap.get(trigger).value.data;
             return acc;
         }, {})
         // @ts-ignore
@@ -113,9 +113,9 @@ function handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResul
 
 function handleStateCondition(params: StateParams, almanac: Almanac) {
     const promise = almanac.factValue('incomingData').then((incomingData: any) => {
-        const promise = almanac.factValue(params.id).then((customData) => {
-            if (!!customData) { return customData };
-            return new Promise((res) => { // custom data has not been fetched for asset
+        const promise = almanac.factValue(params.id).then((data) => {
+            return data ||
+            new Promise((res) => { // custom data has not been fetched for asset
                 const collection = CbCollectionLib(params.collection);
                 const query = ClearBlade.Query({ collectionName: params.collection });
                 if (!!params.type) {
@@ -144,9 +144,9 @@ function handleStateCondition(params: StateParams, almanac: Almanac) {
                         if (params.id === entityData.id) { // if this one is the same as asset that triggered fact
                             initialData = {...withParsedCustomData};
                         }
-                        almanac.addRuntimeFact(entityData.id as string, withParsedCustomData); // add fact for id
+                        almanac.addRuntimeFact(entityData.id as string, {data: withParsedCustomData}); // add fact for id
                     }
-                    res(initialData); // resolve the initial fact's value
+                    res({ data: initialData}); // resolve the initial fact's value
                 })
                 Promise.runQueue();
                 return promise;
