@@ -57,4 +57,9 @@ describe('Timeframe for Rules', () => {
     });
     expect(matchesRule).toBe(false);
   });
+
+  it('validates no timeframe', () => {
+    const matchesRule = doesTimeframeMatchRule(timestamp);
+    expect(matchesRule).toBe(true);
+  });
 });

@@ -62,8 +62,8 @@ function checkRepeatEachWeek(timeframeObj: TimeframeObj): boolean {
     return true
 }
 
-export function doesTimeframeMatchRule(timestamp: string, timeframe: TimeFrame | undefined): boolean {
-    if (!timeframe) {return false;}
+export function doesTimeframeMatchRule(timestamp: string, timeframe?: TimeFrame): boolean {
+    if (!timeframe) {return true;}
     const ruleDate: Date = new Date(timestamp);
     const ruleDay = DaysOfTheWeek[ruleDate.getUTCDay()];
     const ruleHours = ruleDate.getUTCHours();
