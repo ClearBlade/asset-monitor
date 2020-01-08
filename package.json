@@ -99,7 +99,9 @@
         "lib": "lib"
     },
     "dependencies": {
+        "core-js": "^3.6.2",
         "json-rules-engine": "^5.0.0",
+        "selectn": "^1.1.2",
         "uuid": "^3.3.3"
     },
     "repository": {

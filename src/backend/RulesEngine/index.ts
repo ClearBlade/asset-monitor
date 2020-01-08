@@ -1,6 +1,6 @@
 import '../../static/promise-polyfill';
 import 'core-js/features/map';
-import { Engine, Event, RuleProperties, TopLevelCondition, Almanac, AllConditions, AnyConditions, NestedCondition, ConditionProperties, RuleResult, Rule } from 'json-rules-engine';
+import { Engine, Event, TopLevelCondition, Almanac, AllConditions, AnyConditions, NestedCondition, ConditionProperties, RuleResult, Rule } from 'json-rules-engine';
 import { StateParams } from './types';
 import { parseAndConvertConditions } from './convert-rule';
 import { doesTimeframeMatchRule } from './timeframe';
@@ -10,31 +10,36 @@ import { Rules } from '../collection-schema/Rules';
 import { CbCollectionLib } from '../collection-lib';
 import { Areas } from '../collection-schema/Areas';
 import { Asset } from '../collection-schema/Assets';
-import { thisExpression } from '@babel/types';
+
+interface IncomingFact {
+    incomingData: {
+        id: string;
+        [x: string]: string | number | boolean | object;
+    }
+}
 
 export class RulesEngine {
     engine: Engine;
     rules: {[id: string]: Rule}; // track rules here since there is not getRule method needed for edit/delete
     constructor() {
         Number.parseFloat = parseFloat;
-        const options = {
-            allowUndefinedFacts: true,
-        };
-        this.engine = new Engine([], options)
-            .addFact('state', function(params, almanac) {
-                handleStateCondition(params as StateParams, almanac);
-            })
-            .on('success', function(event, almanac, ruleResult) {
-                handleRuleSuccess(event, almanac, ruleResult)
-            })
         this.rules = {};
+
+        this.engine = new Engine([], {
+            allowUndefinedFacts: true
+        })
+        .addFact('state', (params, almanac) => handleStateCondition(params as StateParams, almanac))
+        .on('success', handleRuleSuccess);
     }
 
-    addRule(ruleData: Rules): void {
-        this.convertRule(ruleData).then((rule) => {
+    async addRule(ruleData: Rules): Promise<Rule> {
+        const promise = this.convertRule(ruleData).then((rule) => {
             this.rules[rule.name] = rule;
             this.engine.addRule(rule);
+            return rule;
         })
+        Promise.runQueue();
+        return promise;
     }
 
     editRule(id: string, ruleData: Rules): void {
@@ -43,8 +48,8 @@ export class RulesEngine {
     }
 
     deleteRule(id: string): void {
+        this.engine.removeRule(this.rules[id]);
         delete this.rules[id];
-        this.engine.removeRule(this.rules[id])
     }
 
     async convertRule(ruleData: Rules): Promise<Rule> {
@@ -78,8 +83,10 @@ export class RulesEngine {
         return promise;
     }
 
-    async run(facts: Record<string, string | number | boolean>): Promise<string> {
-        const promise = this.engine.run(facts).then(() => 'ENGINE SUCCESSFULLY COMPLETED').catch((e) => `ENGINE ERROR: ${JSON.stringify(e)}`)
+    async run(fact: IncomingFact): Promise<string> {
+        const promise = this.engine.run(fact)
+        .then((results) => `SUCCESSFUL RULES: ${results.events.map((e) => e.type).join(', ')}`)
+        .catch((e) => `ENGINE ERROR: ${JSON.stringify(e)}`)
         Promise.runQueue();
         return promise;
     }
@@ -89,6 +96,8 @@ function handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResul
     // @ts-ignore json-rule-engine types does not include factMap
     const timestamp = almanac.factMap.get('incomingData').timestamp;
     const timeframe = (event.params as Record<string, any>).timeframe;
+    //@ts-ignore
+    log('GOT SUCCESSFUL RULE ' + JSON.stringify(ruleResult))
     if (doesTimeframeMatchRule(timestamp, timeframe)) {
         const triggers = getTriggerIds(ruleResult.conditions.hasOwnProperty('all') ? (ruleResult.conditions as AllConditions).all : (ruleResult.conditions as AnyConditions).any, []);
         const entities: Entities = triggers.reduce((acc: object, trigger: string) => {
@@ -96,13 +105,16 @@ function handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResul
             acc[trigger] = almanac.factMap.get(trigger);
             return acc;
         }, {})
+        // @ts-ignore
+        log('IS IN TIMEFRAME: ' + JSON.stringify(event));
         processEvent(event, entities);
     }
 }
 
 function handleStateCondition(params: StateParams, almanac: Almanac) {
     const promise = almanac.factValue('incomingData').then((incomingData: any) => {
-        const promise = almanac.factValue(params.id).then((customData) => customData).catch(() => {
+        const promise = almanac.factValue(params.id).then((customData) => {
+            if (!!customData) { return customData };
             return new Promise((res) => { // custom data has not been fetched for asset
                 const collection = CbCollectionLib(params.collection);
                 const query = ClearBlade.Query({ collectionName: params.collection });
@@ -133,7 +145,7 @@ function handleStateCondition(params: StateParams, almanac: Almanac) {
                             initialData = {...withParsedCustomData};
                         }
                         almanac.addRuntimeFact(entityData.id as string, withParsedCustomData); // add fact for id
-                    } 
+                    }
                     res(initialData); // resolve the initial fact's value
                 })
                 Promise.runQueue();

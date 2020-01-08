@@ -1,12 +1,23 @@
 import '../../static/promise-polyfill';
 import 'core-js/features/map';
-import { Engine, RuleProperties } from 'json-rules-engine';
+import { Engine, Rule } from 'json-rules-engine';
 import { Rules } from '../collection-schema/Rules';
+interface IncomingFact {
+    incomingData: {
+        id: string;
+        [x: string]: string | number | boolean | object;
+    };
+}
 export declare class RulesEngine {
     engine: Engine;
-    data: object;
+    rules: {
+        [id: string]: Rule;
+    };
     constructor();
-    addRule(rule: RuleProperties): void;
-    convertRule(ruleData: Rules): Promise<RuleProperties>;
-    run(facts: Record<string, string | number | boolean>): Promise<string>;
+    addRule(ruleData: Rules): Promise<Rule>;
+    editRule(id: string, ruleData: Rules): void;
+    deleteRule(id: string): void;
+    convertRule(ruleData: Rules): Promise<Rule>;
+    run(fact: IncomingFact): Promise<string>;
 }
+export {};
