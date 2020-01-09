@@ -3,7 +3,7 @@ import { CollectionName } from '../global-config';
 import { Asset } from '../collection-schema/Assets';
 import { Areas } from '../collection-schema/Areas';
 import { Actions } from '../collection-schema/Actions';
-import { EventType, EventSchema } from '../collection-schema/Events';
+import { EventType } from '../collection-schema/Events';
 
 export function getAllAssetsForType(assetType: string): Promise<Array<CbServer.CollectionSchema<Asset>>> {
     const assetsCollection = CbCollectionLib(CollectionName.ASSETS);
@@ -42,17 +42,24 @@ export function getActionByID(actionID: string): Promise<Actions> {
 
 export function getOpenStateForEvent(eventTypeId: string): Promise<string> {
     const eventTypesCollection = CbCollectionLib(CollectionName.EVENT_TYPES);
-    const eventTypesCollectionQuery = ClearBlade.Query({ collectionName: CollectionName.EVENT_TYPES }).equalTo('id', eventTypeId);
+    const eventTypesCollectionQuery = ClearBlade.Query({ collectionName: CollectionName.EVENT_TYPES }).equalTo(
+        'id',
+        eventTypeId,
+    );
 
-    const promise = eventTypesCollection.cbFetchPromise({ query: eventTypesCollectionQuery }).then((data: CbServer.CollectionFetchData<EventType>) => {
-        const typeData = Array.isArray(data.DATA) && data.DATA[0]
-        return typeData && !!typeData.has_lifecycle && JSON.parse(typeData.open_states || '[]').length ? JSON.parse(typeData.open_states as string)[0] : '';
-    });
+    const promise = eventTypesCollection
+        .cbFetchPromise({ query: eventTypesCollectionQuery })
+        .then((data: CbServer.CollectionFetchData<EventType>) => {
+            const typeData = Array.isArray(data.DATA) && data.DATA[0];
+            return typeData && !!typeData.has_lifecycle && JSON.parse(typeData.open_states || '[]').length
+                ? JSON.parse(typeData.open_states as string)[0]
+                : '';
+        });
     Promise.runQueue();
     return promise;
 }
 
-export function createEvent(item: Record<string, any>) {
+export function createEvent(item: Record<string, string | boolean | number>): Promise<{ item_id: string }[]> {
     const eventsCollection = CbCollectionLib(CollectionName.EVENTS);
     return eventsCollection.cbCreatePromise({ item });
 }

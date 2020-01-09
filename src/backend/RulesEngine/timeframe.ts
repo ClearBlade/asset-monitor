@@ -1,25 +1,27 @@
 import { TimeFrame, TimeFrameTypes, DaysOfTheWeek, Days } from './types';
-import { start } from 'repl';
 
 function checkForValidTimeframeFormat(timeTuples: Array<number[]>): boolean {
-    timeTuples.forEach((a) => {
+    timeTuples.forEach(a => {
         if (a.length !== 2) {
             return false;
         }
         a.forEach((t, idx) => {
-            if (t === NaN) { // valid number
+            if (isNaN(t)) {
+                // valid number
                 return false;
-            } else if (idx === 0) { // valid hours
+            } else if (idx === 0) {
+                // valid hours
                 if (t < 0 || t > 24) {
                     return false;
                 }
-            } else if (idx === 1) { // valid minutes
+            } else if (idx === 1) {
+                // valid minutes
                 if (t < 0 || t > 59) {
-                    return false
+                    return false;
                 }
             }
-        })
-    })
+        });
+    });
     return true;
 }
 
@@ -59,25 +61,27 @@ function checkRepeatEachWeek(timeframeObj: TimeframeObj): boolean {
             return false;
         }
     }
-    return true
+    return true;
 }
 
 export function doesTimeframeMatchRule(timestamp: string, timeframe?: TimeFrame): boolean {
-    if (!timeframe) {return true;}
+    if (!timeframe) {
+        return true;
+    }
     const ruleDate: Date = new Date(timestamp);
     const ruleDay = DaysOfTheWeek[ruleDate.getUTCDay()];
     const ruleHours = ruleDate.getUTCHours();
     const ruleMinutes = ruleDate.getUTCMinutes();
     const { days } = timeframe;
-    
-    const startTime: number[] = timeframe.startTime.split(':').map((t) => parseInt(t));
-    const endTime: number[] = timeframe.endTime.split(':').map((t) => parseInt(t));
-    
+
+    const startTime: number[] = timeframe.startTime.split(':').map(t => parseInt(t));
+    const endTime: number[] = timeframe.endTime.split(':').map(t => parseInt(t));
+
     if (checkForValidTimeframeFormat([startTime, endTime])) {
         if (days.indexOf(ruleDay) > -1) {
             switch (timeframe.type) {
                 case TimeFrameTypes.REPEATEACHWEEK:
-                    return checkRepeatEachWeek({ days, ruleDay, ruleHours, ruleMinutes, startTime, endTime })
+                    return checkRepeatEachWeek({ days, ruleDay, ruleHours, ruleMinutes, startTime, endTime });
                 case TimeFrameTypes.REPEATBYDAY:
                     return checkRepeatByDay({ days, ruleDay, ruleHours, ruleMinutes, startTime, endTime });
                 default:
@@ -85,7 +89,7 @@ export function doesTimeframeMatchRule(timestamp: string, timeframe?: TimeFrame)
             }
         }
         // log(`${ruleDay} does not fall within timeframe`);
-        return false
+        return false;
     }
     // log(`Invalid time format. Start time: ${timeframe.startTime}. End time: ${timeframe.endTime}`);
     return false;

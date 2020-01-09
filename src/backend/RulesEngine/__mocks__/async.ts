@@ -16,13 +16,13 @@ export function getAllAreasForType(): Promise<Array<CbServer.CollectionSchema<As
 export function getOpenStateForEvent(): Promise<string> {
     return new Promise(resolve => {
         resolve('open');
-    })
+    });
 }
 
 export function createEvent(): Promise<undefined> {
     return new Promise(resolve => {
         resolve();
-    })
+    });
 }
 
 const assets: Array<CbServer.CollectionSchema<Asset>> = [
@@ -53,7 +53,7 @@ const assets: Array<CbServer.CollectionSchema<Asset>> = [
         type: 'train',
         latitude: null,
         longitude: null,
-    }
+    },
 ];
 
 const areas: Array<CbServer.CollectionSchema<Areas>> = [
@@ -84,5 +84,5 @@ const areas: Array<CbServer.CollectionSchema<Areas>> = [
         type: 'yard',
         latitude: null,
         longitude: null,
-    }
+    },
 ];

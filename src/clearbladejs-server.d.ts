@@ -134,7 +134,7 @@ declare namespace CbServer {
         NEXTPAGEURL: string | null;
         PREVPAGEURL: string | null;
         TOTAL: number;
-    }
+    };
 
     type collectionFetchCallback = (err: boolean, data: CollectionFetchData) => void;
 

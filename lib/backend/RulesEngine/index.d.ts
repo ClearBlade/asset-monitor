@@ -1,4 +1,4 @@
-import { Rules } from "../collection-schema/Rules";
+import { Rules } from '../collection-schema/Rules';
 interface RulesEngineAPI {
     resp: CbServer.Resp;
     fetchRulesForEngine: () => Promise<Rules[]>;

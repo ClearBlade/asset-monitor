@@ -1,4 +1,4 @@
-import { CollectionName } from "../../global-config";
+import { CollectionName } from '../../global-config';
 
 // Time Frames
 
@@ -126,4 +126,3 @@ export interface StateParams {
     collection: CollectionName;
     type: string;
 }
-
