@@ -13,7 +13,8 @@ export declare class RulesEngine {
     rules: {
         [id: string]: Rule;
     };
-    constructor();
+    actionTopic: string;
+    constructor(actionTopic: string);
     addRule(ruleData: Rules): Promise<Rule>;
     editRule(id: string, ruleData: Rules): void;
     deleteRule(id: string): void;

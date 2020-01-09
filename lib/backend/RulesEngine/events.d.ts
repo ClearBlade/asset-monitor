@@ -6,4 +6,4 @@ import { EventSchema } from '../collection-schema/Events';
 export interface Entities {
     [x: string]: Asset | Areas;
 }
-export declare function processEvent(event: Event, entities: Entities): Promise<EventSchema>;
+export declare function processEvent(event: Event, entities: Entities, actionTopic: string): Promise<EventSchema>;

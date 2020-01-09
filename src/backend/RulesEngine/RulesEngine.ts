@@ -21,15 +21,16 @@ interface IncomingFact {
 export class RulesEngine {
     engine: Engine;
     rules: {[id: string]: Rule}; // track rules here since there is not getRule method needed for edit/delete
-    constructor() {
+    actionTopic: string;
+    constructor(actionTopic: string) {
         Number.parseFloat = parseFloat;
         this.rules = {};
-
+        this.actionTopic = actionTopic;
         this.engine = new Engine([], {
             allowUndefinedFacts: true
         })
         .addFact('state', (params, almanac) => handleStateCondition(params as StateParams, almanac))
-        .on('success', handleRuleSuccess);
+        .on('success', (event, almanac, ruleResult) => handleRuleSuccess(event, almanac, ruleResult, this.actionTopic));
     }
 
     async addRule(ruleData: Rules): Promise<Rule> {
@@ -92,7 +93,7 @@ export class RulesEngine {
     }
 }
 
-function handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResult) {
+function handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResult, actionTopic: string) {
     // @ts-ignore json-rule-engine types does not include factMap
     const timestamp = almanac.factMap.get('incomingData').timestamp;
     const timeframe = (event.params as Record<string, any>).timeframe;
@@ -105,7 +106,7 @@ function handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResul
         }, {})
         // @ts-ignore
         log('Processing rule for successful event: ' + JSON.stringify(ruleResult))
-        processEvent(event, entities);
+        processEvent(event, entities, actionTopic);
     }
 }
 
