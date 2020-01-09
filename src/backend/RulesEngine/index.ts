@@ -32,6 +32,7 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine }:
       })
       Promise.runQueue();
     })
+    Promise.runQueue();
 
     function subscribeAndInitialize() {
       Promise.all(incomingDataTopics.map((topic) => {
