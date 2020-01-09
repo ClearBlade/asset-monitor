@@ -4,15 +4,16 @@ import { subscriber } from "../Normalizer";
 
 interface RulesEngineAPI {
     resp: CbServer.Resp;
-    rules: Rules[];
+    fetchRulesForEngine: () => Promise<Rules[]>;
     incomingDataTopics: string[];
 }
 
 const engine = new RulesEngine();
 
-export function rulesEngineApi({ resp, rules, incomingDataTopics }: RulesEngineAPI): void {
+export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine }: RulesEngineAPI): void {
     const messaging = ClearBlade.Messaging();
-    Promise.all(rules.map((ruleData) => {
+    fetchRulesForEngine().then((rules) => {
+      Promise.all(rules.map((ruleData) => {
         const promise = engine.addRule(ruleData)
             .then((rule) => rule.name)
             .catch((e) => {
@@ -21,15 +22,16 @@ export function rulesEngineApi({ resp, rules, incomingDataTopics }: RulesEngineA
             });
         Promise.runQueue();
         return promise;
-    })).then((ruleNames) => {
-        //@ts-ignore
-        log(`Successfully added rules: ${ruleNames.join(', ')}`);
-        subscribeAndInitialize();
-    }).catch((e) => {
-        //@ts-ignore
-        log(e)
+      })).then((ruleNames) => {
+          //@ts-ignore
+          log(`Successfully added rules: ${ruleNames.join(', ')}`);
+          subscribeAndInitialize();
+      }).catch((e) => {
+          //@ts-ignore
+          log(e)
+      })
+      Promise.runQueue();
     })
-    Promise.runQueue();
 
     function subscribeAndInitialize() {
       Promise.all(incomingDataTopics.map((topic) => {

@@ -1,8 +1,8 @@
 import { Rules } from "../collection-schema/Rules";
 interface RulesEngineAPI {
     resp: CbServer.Resp;
-    rules: Rules[];
+    fetchRulesForEngine: () => Promise<Rules[]>;
     incomingDataTopics: string[];
 }
-export declare function rulesEngineApi({ resp, rules, incomingDataTopics }: RulesEngineAPI): void;
+export declare function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine }: RulesEngineAPI): void;
 export {};

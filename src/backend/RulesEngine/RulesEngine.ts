@@ -96,8 +96,6 @@ function handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResul
     // @ts-ignore json-rule-engine types does not include factMap
     const timestamp = almanac.factMap.get('incomingData').timestamp;
     const timeframe = (event.params as Record<string, any>).timeframe;
-    //@ts-ignore
-    log('GOT SUCCESSFUL RULE ' + JSON.stringify(ruleResult))
     if (doesTimeframeMatchRule(timestamp, timeframe)) {
         const triggers = getTriggerIds(ruleResult.conditions.hasOwnProperty('all') ? (ruleResult.conditions as AllConditions).all : (ruleResult.conditions as AnyConditions).any, []);
         const entities: Entities = triggers.reduce((acc: object, trigger: string) => {
@@ -106,7 +104,7 @@ function handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResul
             return acc;
         }, {})
         // @ts-ignore
-        log('IS IN TIMEFRAME: ' + JSON.stringify(event));
+        log('Processing rule for successful event: ' + JSON.stringify(ruleResult))
         processEvent(event, entities);
     }
 }
