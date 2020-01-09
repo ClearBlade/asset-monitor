@@ -22,6 +22,8 @@ export enum CollectionName {
     ASSET_TYPES = 'asset_types',
     AREAS = 'areas',
     ACTIONS = 'actions',
+    EVENT_TYPES = 'event_types',
+    EVENTS = 'events'
 }
 
 export enum AssetStatusUpdateMethod {

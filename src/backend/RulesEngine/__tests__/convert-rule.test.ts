@@ -1,47 +1,47 @@
 jest.mock('../async');
 import { EntityTypes, DurationUnits } from '../types';
-import { ParseAndConvertConditions } from '../convert-rule';
+import { parseAndConvertConditions } from '../convert-rule';
 
 const id = 'testRuleId';
 
 describe('Convert Rules', function() {
     it('converts basic asset type to state', function() {
-        return ParseAndConvertConditions(id, conditions.BASIC_ASSET_TYPE_TO_STATE).then(convertedRule => {
+        return parseAndConvertConditions(id, conditions.BASIC_ASSET_TYPE_TO_STATE).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.BASIC_ASSET_TYPE_TO_STATE);
         });
     });
     it('converts basic area type to state', function() {
-        return ParseAndConvertConditions(id, conditions.BASIC_AREA_TYPE_TO_STATE).then(convertedRule => {
+        return parseAndConvertConditions(id, conditions.BASIC_AREA_TYPE_TO_STATE).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.BASIC_AREA_TYPE_TO_STATE);
         });
     });
     it('converts basic asset to state', function() {
-        return ParseAndConvertConditions(id, conditions.BASIC_ASSET_TO_STATE).then(convertedRule => {
+        return parseAndConvertConditions(id, conditions.BASIC_ASSET_TO_STATE).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.BASIC_ASSET_TO_STATE);
         });
     });
     it('converts basic area to state', function() {
-        return ParseAndConvertConditions(id, conditions.BASIC_ASSET_TO_STATE).then(convertedRule => {
+        return parseAndConvertConditions(id, conditions.BASIC_ASSET_TO_STATE).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.BASIC_ASSET_TO_STATE);
         });
     });
     it('converts asset type to state AND', function() {
-        return ParseAndConvertConditions(id, conditions.ASSET_TYPE_TO_STATE_AND).then(convertedRule => {
+        return parseAndConvertConditions(id, conditions.ASSET_TYPE_TO_STATE_AND).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.ASSET_TYPE_TO_STATE_AND);
         });
     });
     it('converts asset type to state OR', function() {
-        return ParseAndConvertConditions(id, conditions.ASSET_TYPE_TO_STATE_OR).then(convertedRule => {
+        return parseAndConvertConditions(id, conditions.ASSET_TYPE_TO_STATE_OR).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.ASSET_TYPE_TO_STATE_OR);
         });
     });
     it('converts nested asset type to state AND', function() {
-        return ParseAndConvertConditions(id, conditions.NESTED_ASSET_TYPE_TO_STATE_AND).then(convertedRule => {
+        return parseAndConvertConditions(id, conditions.NESTED_ASSET_TYPE_TO_STATE_AND).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.NESTED_ASSET_TYPE_TO_STATE_AND);
         });
     });
     it('converts nested asset type to state OR', function() {
-        return ParseAndConvertConditions(id, conditions.NESTED_ASSET_TYPE_TO_STATE_OR).then(convertedRule => {
+        return parseAndConvertConditions(id, conditions.NESTED_ASSET_TYPE_TO_STATE_OR).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.NESTED_ASSET_TYPE_TO_STATE_OR);
         });
     });
@@ -326,7 +326,7 @@ const parsedConditions = {
                     collection: 'assets',
                     type: 'train'
                 },
-                path: '.custom_data.speed.value',
+                path: '.data.custom_data.speed.value',
                 value: 50
             },
             {
@@ -338,7 +338,7 @@ const parsedConditions = {
                     collection: 'assets',
                     type: 'train'
                 },
-                path: '.custom_data.speed.value',
+                path: '.data.custom_data.speed.value',
                 value: 50
             }
         ]
@@ -354,7 +354,7 @@ const parsedConditions = {
                     collection: 'areas',
                     type: 'yard'
                 },
-                path: '.custom_data.temperature.value',
+                path: '.data.custom_data.temperature.value',
                 value: 50
             },
             {
@@ -366,7 +366,7 @@ const parsedConditions = {
                     collection: 'areas',
                     type: 'yard'
                 },
-                path: '.custom_data.temperature.value',
+                path: '.data.custom_data.temperature.value',
                 value: 50
             }
         ]
@@ -380,9 +380,9 @@ const parsedConditions = {
                     id: 'testAsset1',
                     attribute: 'speed',
                     collection: 'assets',
-                    type: false
+                    type: null
                 },
-                path: '.custom_data.speed.value',
+                path: '.data.custom_data.speed.value',
                 value: 50
             }
         ],
@@ -396,9 +396,9 @@ const parsedConditions = {
                     id: 'testArea1',
                     attribute: 'temperature',
                     collection: 'areas',
-                    type: false
+                    type: null
                 },
-                path: '.custom_data.temperature.value',
+                path: '.data.custom_data.temperature.value',
                 value: 50
             },
         ],
@@ -416,7 +416,7 @@ const parsedConditions = {
                             collection: 'assets',
                             type: 'train'
                         },
-                        path: '.custom_data.speed.value',
+                        path: '.data.custom_data.speed.value',
                         value: 50
                     },
                     {
@@ -428,7 +428,7 @@ const parsedConditions = {
                             collection: 'assets',
                             type: 'train'
                         },
-                        path: '.custom_data.speed.value',
+                        path: '.data.custom_data.speed.value',
                         value: 50
                     }
                 ]
@@ -444,7 +444,7 @@ const parsedConditions = {
                             collection: 'assets',
                             type: 'train'
                         },
-                        path: '.custom_data.speed.value',
+                        path: '.data.custom_data.speed.value',
                         value: 60
                     },
                     {
@@ -456,7 +456,7 @@ const parsedConditions = {
                             collection: 'assets',
                             type: 'train'
                         },
-                        path: '.custom_data.speed.value',
+                        path: '.data.custom_data.speed.value',
                         value: 60
                     }
                 ]
@@ -476,7 +476,7 @@ const parsedConditions = {
                             collection: 'assets',
                             type: 'train'
                         },
-                        path: '.custom_data.speed.value',
+                        path: '.data.custom_data.speed.value',
                         value: 50
                     },
                     {
@@ -488,7 +488,7 @@ const parsedConditions = {
                             collection: 'assets',
                             type: 'train'
                         },
-                        path: '.custom_data.speed.value',
+                        path: '.data.custom_data.speed.value',
                         value: 50
                     }
                 ]
@@ -504,7 +504,7 @@ const parsedConditions = {
                             collection: 'assets',
                             type: 'train'
                         },
-                        path: '.custom_data.speed.value',
+                        path: '.data.custom_data.speed.value',
                         value: 60
                     },
                     {
@@ -516,7 +516,7 @@ const parsedConditions = {
                             collection: 'assets',
                             type: 'train'
                         },
-                        path: '.custom_data.speed.value',
+                        path: '.data.custom_data.speed.value',
                         value: 60
                     }
                 ]
@@ -538,7 +538,7 @@ const parsedConditions = {
                                     collection: 'assets',
                                     type: 'train'
                                 },
-                                path: '.custom_data.speed.value',
+                                path: '.data.custom_data.speed.value',
                                 value: 50
                             },
                             {
@@ -550,7 +550,7 @@ const parsedConditions = {
                                     collection: 'assets',
                                     type: 'train'
                                 },
-                                path: '.custom_data.speed.value',
+                                path: '.data.custom_data.speed.value',
                                 value: 50
                             }
                         ]
@@ -566,7 +566,7 @@ const parsedConditions = {
                                     collection: 'assets',
                                     type: 'train'
                                 },
-                                path: '.custom_data.speed.value',
+                                path: '.data.custom_data.speed.value',
                                 value: 60
                             },
                             {
@@ -578,7 +578,7 @@ const parsedConditions = {
                                     collection: 'assets',
                                     type: 'train'
                                 },
-                                path: '.custom_data.speed.value',
+                                path: '.data.custom_data.speed.value',
                                 value: 60
                             }
                         ]
@@ -596,7 +596,7 @@ const parsedConditions = {
                             collection: 'assets',
                             type: 'train'
                         },
-                        path: '.custom_data.speed.value',
+                        path: '.data.custom_data.speed.value',
                         value: 70
                     },
                     {
@@ -608,7 +608,7 @@ const parsedConditions = {
                             collection: 'assets',
                             type: 'train'
                         },
-                        path: '.custom_data.speed.value',
+                        path: '.data.custom_data.speed.value',
                         value: 70
                     }
                 ]
@@ -630,7 +630,7 @@ const parsedConditions = {
                                     collection: 'assets',
                                     type: 'train'
                                 },
-                                path: '.custom_data.speed.value',
+                                path: '.data.custom_data.speed.value',
                                 value: 50
                             },
                             {
@@ -642,7 +642,7 @@ const parsedConditions = {
                                     collection: 'assets',
                                     type: 'train'
                                 },
-                                path: '.custom_data.speed.value',
+                                path: '.data.custom_data.speed.value',
                                 value: 50
                             }
                         ]
@@ -658,7 +658,7 @@ const parsedConditions = {
                                     collection: 'assets',
                                     type: 'train'
                                 },
-                                path: '.custom_data.speed.value',
+                                path: '.data.custom_data.speed.value',
                                 value: 60
                             },
                             {
@@ -670,7 +670,7 @@ const parsedConditions = {
                                     collection: 'assets',
                                     type: 'train'
                                 },
-                                path: '.custom_data.speed.value',
+                                path: '.data.custom_data.speed.value',
                                 value: 60
                             }
                         ]
@@ -688,7 +688,7 @@ const parsedConditions = {
                             collection: 'assets',
                             type: 'train'
                         },
-                        path: '.custom_data.speed.value',
+                        path: '.data.custom_data.speed.value',
                         value: 70
                     },
                     {
@@ -700,7 +700,7 @@ const parsedConditions = {
                             collection: 'assets',
                             type: 'train'
                         },
-                        path: '.custom_data.speed.value',
+                        path: '.data.custom_data.speed.value',
                         value: 70
                     }
                 ]

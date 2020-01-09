@@ -128,8 +128,8 @@ declare namespace CbServer {
         item_id: string;
     };
 
-    interface CollectionFetchData {
-        DATA: Array<CollectionSchema>;
+    type CollectionFetchData<T extends {} = {}> = T & {
+        DATA: Array<CollectionSchema<T>>;
         CURRENTPAGE: number;
         NEXTPAGEURL: string | null;
         PREVPAGEURL: string | null;
