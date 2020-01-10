@@ -17,7 +17,7 @@ export declare class RulesEngine {
     actionTopic: string;
     constructor(actionTopic: string);
     addRule(ruleData: Rules): Promise<Rule>;
-    editRule(id: string, ruleData: Rules): void;
+    editRule(ruleData: Rules): void;
     deleteRule(id: string): void;
     convertRule(ruleData: Rules): Promise<Rule>;
     run(fact: IncomingFact): Promise<string>;

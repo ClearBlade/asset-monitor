@@ -52,23 +52,41 @@ export class RulesEngine {
     }
 
     async addRule(ruleData: Rules): Promise<Rule> {
-        const promise = this.convertRule(ruleData).then(rule => {
-            this.rules[rule.name] = rule;
-            this.engine.addRule(rule);
-            return rule;
-        });
-        Promise.runQueue();
-        return promise;
+        if (!!ruleData.id && !!ruleData.conditions) {
+            const promise = this.convertRule(ruleData).then(rule => {
+                this.rules[rule.name] = rule;
+                this.engine.addRule(rule);
+                //@ts-ignore
+                log('RULE ADDED: ' + JSON.stringify(this.rules));
+                return rule;
+            });
+            Promise.runQueue();
+            return promise;
+        } else {
+            return new Promise((res, rej) =>
+                rej(`Tried to add rule, but it does not have a valid id or is missing conditions`),
+            );
+        }
     }
 
-    editRule(id: string, ruleData: Rules): void {
-        this.deleteRule(id);
-        this.addRule(ruleData);
+    editRule(ruleData: Rules): void {
+        if (this.rules[ruleData.id]) {
+            this.deleteRule(ruleData.id);
+            this.addRule(ruleData);
+            //@ts-ignore
+            log('RULE EDITED: ' + JSON.stringify(this.rules));
+        } else {
+            this.addRule(ruleData);
+        }
     }
 
     deleteRule(id: string): void {
-        this.engine.removeRule(this.rules[id]);
-        delete this.rules[id];
+        if (this.rules[id]) {
+            this.engine.removeRule(this.rules[id]);
+            delete this.rules[id];
+            //@ts-ignore
+            log('RULE DELETED: ' + JSON.stringify(this.rules));
+        }
     }
 
     async convertRule(ruleData: Rules): Promise<Rule> {
