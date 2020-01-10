@@ -1,4 +1,4 @@
-import { CollectionName } from "../../global-config";
+import { CollectionName } from '../../global-config';
 export declare enum TimeFrameTypes {
     REPEATEACHWEEK = "repeatEachWeek",
     REPEATBYDAY = "repeatByDay"

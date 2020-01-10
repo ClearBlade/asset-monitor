@@ -161,8 +161,8 @@ const conditions = {
                         unit: DurationUnits.SECONDS,
                     },
                 },
-            }
-        ]
+            },
+        ],
     },
     ASSET_TYPE_TO_STATE_OR: {
         or: [
@@ -197,12 +197,12 @@ const conditions = {
                         unit: DurationUnits.SECONDS,
                     },
                 },
-            }
-        ]
+            },
+        ],
     },
     NESTED_ASSET_TYPE_TO_STATE_AND: {
         and: [
-            { 
+            {
                 or: [
                     {
                         entity: {
@@ -235,8 +235,8 @@ const conditions = {
                                 unit: DurationUnits.SECONDS,
                             },
                         },
-                    }
-                ]
+                    },
+                ],
             },
             {
                 entity: {
@@ -258,7 +258,7 @@ const conditions = {
     },
     NESTED_ASSET_TYPE_TO_STATE_OR: {
         or: [
-            { 
+            {
                 and: [
                     {
                         entity: {
@@ -291,8 +291,8 @@ const conditions = {
                                 unit: DurationUnits.SECONDS,
                             },
                         },
-                    }
-                ]
+                    },
+                ],
             },
             {
                 entity: {
@@ -312,7 +312,7 @@ const conditions = {
             },
         ],
     },
-}
+};
 
 const parsedConditions = {
     BASIC_ASSET_TYPE_TO_STATE: {
@@ -324,10 +324,10 @@ const parsedConditions = {
                     id: 'testAsset1',
                     attribute: 'speed',
                     collection: 'assets',
-                    type: 'train'
+                    type: 'train',
                 },
                 path: '.data.custom_data.speed.value',
-                value: 50
+                value: 50,
             },
             {
                 fact: 'state',
@@ -336,12 +336,12 @@ const parsedConditions = {
                     id: 'testAsset2',
                     attribute: 'speed',
                     collection: 'assets',
-                    type: 'train'
+                    type: 'train',
                 },
                 path: '.data.custom_data.speed.value',
-                value: 50
-            }
-        ]
+                value: 50,
+            },
+        ],
     },
     BASIC_AREA_TYPE_TO_STATE: {
         any: [
@@ -352,10 +352,10 @@ const parsedConditions = {
                     id: 'testArea1',
                     attribute: 'temperature',
                     collection: 'areas',
-                    type: 'yard'
+                    type: 'yard',
                 },
                 path: '.data.custom_data.temperature.value',
-                value: 50
+                value: 50,
             },
             {
                 fact: 'state',
@@ -364,12 +364,12 @@ const parsedConditions = {
                     id: 'testArea2',
                     attribute: 'temperature',
                     collection: 'areas',
-                    type: 'yard'
+                    type: 'yard',
                 },
                 path: '.data.custom_data.temperature.value',
-                value: 50
-            }
-        ]
+                value: 50,
+            },
+        ],
     },
     BASIC_ASSET_TO_STATE: {
         any: [
@@ -380,11 +380,11 @@ const parsedConditions = {
                     id: 'testAsset1',
                     attribute: 'speed',
                     collection: 'assets',
-                    type: null
+                    type: null,
                 },
                 path: '.data.custom_data.speed.value',
-                value: 50
-            }
+                value: 50,
+            },
         ],
     },
     BASIC_AREA_TO_STATE: {
@@ -396,10 +396,10 @@ const parsedConditions = {
                     id: 'testArea1',
                     attribute: 'temperature',
                     collection: 'areas',
-                    type: null
+                    type: null,
                 },
                 path: '.data.custom_data.temperature.value',
-                value: 50
+                value: 50,
             },
         ],
     },
@@ -414,10 +414,10 @@ const parsedConditions = {
                             id: 'testAsset1',
                             attribute: 'speed',
                             collection: 'assets',
-                            type: 'train'
+                            type: 'train',
                         },
                         path: '.data.custom_data.speed.value',
-                        value: 50
+                        value: 50,
                     },
                     {
                         fact: 'state',
@@ -426,12 +426,12 @@ const parsedConditions = {
                             id: 'testAsset2',
                             attribute: 'speed',
                             collection: 'assets',
-                            type: 'train'
+                            type: 'train',
                         },
                         path: '.data.custom_data.speed.value',
-                        value: 50
-                    }
-                ]
+                        value: 50,
+                    },
+                ],
             },
             {
                 any: [
@@ -442,10 +442,10 @@ const parsedConditions = {
                             id: 'testAsset1',
                             attribute: 'speed',
                             collection: 'assets',
-                            type: 'train'
+                            type: 'train',
                         },
                         path: '.data.custom_data.speed.value',
-                        value: 60
+                        value: 60,
                     },
                     {
                         fact: 'state',
@@ -454,14 +454,14 @@ const parsedConditions = {
                             id: 'testAsset2',
                             attribute: 'speed',
                             collection: 'assets',
-                            type: 'train'
+                            type: 'train',
                         },
                         path: '.data.custom_data.speed.value',
-                        value: 60
-                    }
-                ]
-            }
-        ]
+                        value: 60,
+                    },
+                ],
+            },
+        ],
     },
     ASSET_TYPE_TO_STATE_OR: {
         any: [
@@ -474,10 +474,10 @@ const parsedConditions = {
                             id: 'testAsset1',
                             attribute: 'speed',
                             collection: 'assets',
-                            type: 'train'
+                            type: 'train',
                         },
                         path: '.data.custom_data.speed.value',
-                        value: 50
+                        value: 50,
                     },
                     {
                         fact: 'state',
@@ -486,12 +486,12 @@ const parsedConditions = {
                             id: 'testAsset2',
                             attribute: 'speed',
                             collection: 'assets',
-                            type: 'train'
+                            type: 'train',
                         },
                         path: '.data.custom_data.speed.value',
-                        value: 50
-                    }
-                ]
+                        value: 50,
+                    },
+                ],
             },
             {
                 any: [
@@ -502,10 +502,10 @@ const parsedConditions = {
                             id: 'testAsset1',
                             attribute: 'speed',
                             collection: 'assets',
-                            type: 'train'
+                            type: 'train',
                         },
                         path: '.data.custom_data.speed.value',
-                        value: 60
+                        value: 60,
                     },
                     {
                         fact: 'state',
@@ -514,14 +514,14 @@ const parsedConditions = {
                             id: 'testAsset2',
                             attribute: 'speed',
                             collection: 'assets',
-                            type: 'train'
+                            type: 'train',
                         },
                         path: '.data.custom_data.speed.value',
-                        value: 60
-                    }
-                ]
-            }
-        ]
+                        value: 60,
+                    },
+                ],
+            },
+        ],
     },
     NESTED_ASSET_TYPE_TO_STATE_AND: {
         all: [
@@ -536,10 +536,10 @@ const parsedConditions = {
                                     id: 'testAsset1',
                                     attribute: 'speed',
                                     collection: 'assets',
-                                    type: 'train'
+                                    type: 'train',
                                 },
                                 path: '.data.custom_data.speed.value',
-                                value: 50
+                                value: 50,
                             },
                             {
                                 fact: 'state',
@@ -548,12 +548,12 @@ const parsedConditions = {
                                     id: 'testAsset2',
                                     attribute: 'speed',
                                     collection: 'assets',
-                                    type: 'train'
+                                    type: 'train',
                                 },
                                 path: '.data.custom_data.speed.value',
-                                value: 50
-                            }
-                        ]
+                                value: 50,
+                            },
+                        ],
                     },
                     {
                         any: [
@@ -564,10 +564,10 @@ const parsedConditions = {
                                     id: 'testAsset1',
                                     attribute: 'speed',
                                     collection: 'assets',
-                                    type: 'train'
+                                    type: 'train',
                                 },
                                 path: '.data.custom_data.speed.value',
-                                value: 60
+                                value: 60,
                             },
                             {
                                 fact: 'state',
@@ -576,14 +576,14 @@ const parsedConditions = {
                                     id: 'testAsset2',
                                     attribute: 'speed',
                                     collection: 'assets',
-                                    type: 'train'
+                                    type: 'train',
                                 },
                                 path: '.data.custom_data.speed.value',
-                                value: 60
-                            }
-                        ]
-                    }     
-                ]
+                                value: 60,
+                            },
+                        ],
+                    },
+                ],
             },
             {
                 any: [
@@ -594,10 +594,10 @@ const parsedConditions = {
                             id: 'testAsset1',
                             attribute: 'speed',
                             collection: 'assets',
-                            type: 'train'
+                            type: 'train',
                         },
                         path: '.data.custom_data.speed.value',
-                        value: 70
+                        value: 70,
                     },
                     {
                         fact: 'state',
@@ -606,14 +606,14 @@ const parsedConditions = {
                             id: 'testAsset2',
                             attribute: 'speed',
                             collection: 'assets',
-                            type: 'train'
+                            type: 'train',
                         },
                         path: '.data.custom_data.speed.value',
-                        value: 70
-                    }
-                ]
-            }
-        ]
+                        value: 70,
+                    },
+                ],
+            },
+        ],
     },
     NESTED_ASSET_TYPE_TO_STATE_OR: {
         any: [
@@ -628,10 +628,10 @@ const parsedConditions = {
                                     id: 'testAsset1',
                                     attribute: 'speed',
                                     collection: 'assets',
-                                    type: 'train'
+                                    type: 'train',
                                 },
                                 path: '.data.custom_data.speed.value',
-                                value: 50
+                                value: 50,
                             },
                             {
                                 fact: 'state',
@@ -640,12 +640,12 @@ const parsedConditions = {
                                     id: 'testAsset2',
                                     attribute: 'speed',
                                     collection: 'assets',
-                                    type: 'train'
+                                    type: 'train',
                                 },
                                 path: '.data.custom_data.speed.value',
-                                value: 50
-                            }
-                        ]
+                                value: 50,
+                            },
+                        ],
                     },
                     {
                         any: [
@@ -656,10 +656,10 @@ const parsedConditions = {
                                     id: 'testAsset1',
                                     attribute: 'speed',
                                     collection: 'assets',
-                                    type: 'train'
+                                    type: 'train',
                                 },
                                 path: '.data.custom_data.speed.value',
-                                value: 60
+                                value: 60,
                             },
                             {
                                 fact: 'state',
@@ -668,14 +668,14 @@ const parsedConditions = {
                                     id: 'testAsset2',
                                     attribute: 'speed',
                                     collection: 'assets',
-                                    type: 'train'
+                                    type: 'train',
                                 },
                                 path: '.data.custom_data.speed.value',
-                                value: 60
-                            }
-                        ]
-                    }     
-                ]
+                                value: 60,
+                            },
+                        ],
+                    },
+                ],
             },
             {
                 any: [
@@ -686,10 +686,10 @@ const parsedConditions = {
                             id: 'testAsset1',
                             attribute: 'speed',
                             collection: 'assets',
-                            type: 'train'
+                            type: 'train',
                         },
                         path: '.data.custom_data.speed.value',
-                        value: 70
+                        value: 70,
                     },
                     {
                         fact: 'state',
@@ -698,13 +698,13 @@ const parsedConditions = {
                             id: 'testAsset2',
                             attribute: 'speed',
                             collection: 'assets',
-                            type: 'train'
+                            type: 'train',
                         },
                         path: '.data.custom_data.speed.value',
-                        value: 70
-                    }
-                ]
-            }
-        ]
+                        value: 70,
+                    },
+                ],
+            },
+        ],
     },
-}
+};
