@@ -35,12 +35,12 @@ const mockedUUID = 'UUID';
 
 const finishedEvent: EventSchema = {
     last_updated: mockedTimestamp,
-    is_open: true,
+    is_open: false,
     label: `type1_${mockedUUID}`,
     severity: 2,
     id: mockedUUID,
     type: 'type1',
-    state: 'open',
+    state: 'Closed',
     priority: 1,
     action_ids: '[]',
     rule_id: 'rule1',
@@ -53,7 +53,7 @@ describe('Events For Rules', () => {
     // @ts-ignore
     uuid.mockImplementation(() => mockedUUID);
     it('processEvent processes event correctly after async calls', () => {
-        return processEvent(event, entities).then(eventResult => {
+        return processEvent(event, entities, '').then(eventResult => {
             expect(eventResult).toEqual(finishedEvent);
         });
     });

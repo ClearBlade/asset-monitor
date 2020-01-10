@@ -40,7 +40,12 @@ export function getActionByID(actionID: string): Promise<Actions> {
     return promise;
 }
 
-export function getOpenStateForEvent(eventTypeId: string): Promise<string> {
+export interface EventState {
+    is_open: boolean;
+    state: string;
+}
+
+export function getStateForEvent(eventTypeId: string): Promise<EventState> {
     const eventTypesCollection = CbCollectionLib(CollectionName.EVENT_TYPES);
     const eventTypesCollectionQuery = ClearBlade.Query({ collectionName: CollectionName.EVENT_TYPES }).equalTo(
         'id',
@@ -51,9 +56,20 @@ export function getOpenStateForEvent(eventTypeId: string): Promise<string> {
         .cbFetchPromise({ query: eventTypesCollectionQuery })
         .then((data: CbServer.CollectionFetchData<EventType>) => {
             const typeData = Array.isArray(data.DATA) && data.DATA[0];
-            return typeData && !!typeData.has_lifecycle && JSON.parse(typeData.open_states || '[]').length
-                ? JSON.parse(typeData.open_states as string)[0]
-                : '';
+            if (typeData && !!typeData.has_lifecycle) {
+                const openState = JSON.parse((typeData.open_states as string) || '[]')[0];
+                if (openState) {
+                    return { is_open: true, state: openState };
+                }
+                const closedState = JSON.parse((typeData.closed_states as string) || '[]')[0];
+                if (closedState) {
+                    return { is_open: false, state: closedState };
+                }
+            }
+            return {
+                is_open: false,
+                state: '',
+            };
         });
     Promise.runQueue();
     return promise;

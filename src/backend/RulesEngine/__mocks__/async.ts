@@ -1,5 +1,6 @@
 import { Asset } from '../../collection-schema/assets';
 import { Areas } from '../../collection-schema/Areas';
+import { EventState } from '../async';
 
 export function getAllAssetsForType(): Promise<Array<CbServer.CollectionSchema<Asset>>> {
     return new Promise(resolve => {
@@ -13,9 +14,9 @@ export function getAllAreasForType(): Promise<Array<CbServer.CollectionSchema<As
     });
 }
 
-export function getOpenStateForEvent(): Promise<string> {
+export function getStateForEvent(): Promise<EventState> {
     return new Promise(resolve => {
-        resolve('open');
+        resolve({ is_open: false, state: 'Closed' });
     });
 }
 

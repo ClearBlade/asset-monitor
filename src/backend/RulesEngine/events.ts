@@ -3,7 +3,7 @@ import '../../static/promise-polyfill';
 import { Event } from 'json-rules-engine';
 import { Areas } from '../collection-schema/Areas';
 import { Asset } from '../collection-schema/Assets';
-import { getActionByID, getOpenStateForEvent, createEvent } from './async';
+import { getActionByID, getStateForEvent, createEvent } from './async';
 import * as uuid from 'uuid/v4';
 import { EventSchema } from '../collection-schema/Events';
 
@@ -35,17 +35,17 @@ function getSplitEntities(entities: Entities): SplitEntities {
 
 export function processEvent(event: Event, entities: Entities, actionTopic: string): Promise<EventSchema> {
     const { eventTypeID, actionIDs, priority, severity, ruleID } = event.params as RuleParams;
-    const promise = getOpenStateForEvent(eventTypeID).then(state => {
+    const promise = getStateForEvent(eventTypeID).then(({ is_open, state }) => {
         const id = uuid();
         const splitEntities = getSplitEntities(entities);
         const item = {
             last_updated: new Date().toISOString(),
-            is_open: true,
+            is_open,
             label: `${eventTypeID}_${id}`,
             severity,
             id,
             type: eventTypeID,
-            state: state || 'Open',
+            state,
             priority,
             action_ids: JSON.stringify(actionIDs || []),
             rule_id: ruleID,
