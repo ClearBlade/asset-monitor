@@ -132,9 +132,9 @@ export class RulesEngine {
 
 function handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResult, actionTopic: string): void {
     // @ts-ignore json-rule-engine types does not include factMap
-    const timestamp = almanac.factMap.get('incomingData').timestamp;
+    const incomingData = almanac.factMap.get('incomingData').value;
     const timeframe = (event.params as Record<string, string | TimeFrame>).timeframe;
-    if (doesTimeframeMatchRule(timestamp, timeframe as TimeFrame)) {
+    if (doesTimeframeMatchRule(incomingData.timestamp, timeframe as TimeFrame)) {
         const triggers = getTriggerIds(
             (ruleResult.conditions as AllConditions).all
                 ? (ruleResult.conditions as AllConditions).all
@@ -148,7 +148,7 @@ function handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResul
         }, {});
         // @ts-ignore
         log('Processing rule for successful event: ' + JSON.stringify(ruleResult));
-        processEvent(event, entities, actionTopic);
+        processEvent(event, entities, actionTopic, incomingData);
     }
 }
 

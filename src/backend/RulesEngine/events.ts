@@ -33,7 +33,7 @@ function getSplitEntities(entities: Entities): SplitEntities {
     );
 }
 
-export function processEvent(event: Event, entities: Entities, actionTopic: string): Promise<EventSchema> {
+export function processEvent(event: Event, entities: Entities, actionTopic: string, trigger: Entities): Promise<EventSchema> {
     const { eventTypeID, actionIDs, priority, severity, ruleID } = event.params as RuleParams;
     const promise = getStateForEvent(eventTypeID).then(({ is_open, state }) => {
         const id = uuid();
@@ -55,7 +55,7 @@ export function processEvent(event: Event, entities: Entities, actionTopic: stri
         const promise = createEvent(item).then(() => {
             if (actionTopic) {
                 for (let i = 0; i < (event.params as RuleParams).actionIDs.length; i++) {
-                    performAction((event.params as RuleParams).actionIDs[i], item, actionTopic);
+                    performAction((event.params as RuleParams).actionIDs[i], item, actionTopic, trigger);
                 }
             }
             return item;
@@ -67,7 +67,7 @@ export function processEvent(event: Event, entities: Entities, actionTopic: stri
     return promise;
 }
 
-function performAction(actionId: string, event: EventSchema, actionTopic: string): void {
+function performAction(actionId: string, event: EventSchema, actionTopic: string, triggerMessage: Entities): void {
     getActionByID(actionId).then(function(action) {
         const messaging = ClearBlade.Messaging();
         messaging.publish(
@@ -75,6 +75,7 @@ function performAction(actionId: string, event: EventSchema, actionTopic: string
             JSON.stringify({
                 action,
                 event,
+                triggerMessage
             }),
         );
     });
