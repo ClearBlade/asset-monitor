@@ -33,7 +33,12 @@ function getSplitEntities(entities: Entities): SplitEntities {
     );
 }
 
-export function processEvent(event: Event, entities: Entities, actionTopic: string, trigger: Entities): Promise<EventSchema> {
+export function processEvent(
+    event: Event,
+    entities: Entities,
+    actionTopic: string,
+    trigger: Entities,
+): Promise<EventSchema> {
     const { eventTypeID, actionIDs, priority, severity, ruleID } = event.params as RuleParams;
     const promise = getStateForEvent(eventTypeID).then(({ is_open, state }) => {
         const id = uuid();
@@ -75,7 +80,7 @@ function performAction(actionId: string, event: EventSchema, actionTopic: string
             JSON.stringify({
                 action,
                 event,
-                triggerMessage
+                triggerMessage,
             }),
         );
     });
