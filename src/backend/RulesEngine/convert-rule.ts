@@ -14,7 +14,7 @@ function getCollectionName(entityType: EntityTypes): EntityTypes {
     }
 }
 
-function getConditionPropsForFact(id: string, condition: Condition, isPartOfType?: boolean): ConditionProperties {
+function getConditionProps(id: string, condition: Condition, isPartOfType?: boolean): ConditionProperties {
     const { relationship, entity } = condition;
     switch (relationship.attribute_type) {
         case EntityTypes.STATE:
@@ -28,20 +28,24 @@ function getConditionPropsForFact(id: string, condition: Condition, isPartOfType
                     collection: getCollectionName(entity.entity_type),
                     type: isPartOfType ? entity.id : null,
                 },
-                path: `.data.custom_data.${relationship.attribute}.value`,
+                path: `.data.custom_data.${relationship.attribute}`,
                 value: relationship.value,
             };
     }
 }
 
-function formatConditionForEntity(id: string, condition: Condition, isPartOfType?: boolean): ConditionProperties[] {
+function formatConditionForEntity(
+    entityId: string,
+    condition: Condition,
+    isPartOfType?: boolean,
+): ConditionProperties[] {
     const { attribute_type } = condition.relationship;
     if (
         attribute_type === EntityTypes.ASSET ||
         attribute_type === EntityTypes.AREA ||
         attribute_type === EntityTypes.STATE
     ) {
-        return [getConditionPropsForFact(id, condition, isPartOfType)];
+        return [getConditionProps(entityId, condition, isPartOfType)];
     } else {
         // handle asset type and area type
         return [];

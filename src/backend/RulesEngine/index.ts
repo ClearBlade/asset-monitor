@@ -72,19 +72,13 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
             if (topic === RULES_UPDATED_TOPIC) {
                 handleRulesCollUpdate(msg);
             } else {
-                const id = topic.split('/')[2];
-                let parsedMessage;
+                let incomingData;
                 try {
-                    parsedMessage = JSON.parse(msg);
+                    incomingData = JSON.parse(msg);
                 } catch (e) {
                     resp.error('Invalid message structure: ' + JSON.stringify(e));
                 }
-                const fact = {
-                    incomingData: {
-                        id,
-                        ...parsedMessage,
-                    },
-                };
+                const fact = { incomingData };
                 engine
                     .run(fact)
                     .then(successMsg => {
