@@ -16,19 +16,11 @@ export function cbifyData(input: FlattenedObject, normalizerConfig: NormalizerDe
         delete input[normalizerConfig[value]];
     });
     cbfiedData['custom_data'] = {};
+
+    //Process the custom_data structure
     cbfiedData.custom_data = input;
     
-    //Process the custom_data structure
-    //    if (normalizerConfig.custom_data) {
-    //        Object.keys(normalizerConfig.custom_data).forEach(function(key) {
-    //             cbfiedData.custom_data[key as string] =
-    //                    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-    //                    // @ts-ignore
-    //                    input[normalizerConfig.custom_data[key]];
-    //            }
-    //        });
-    //    } else {
-    //}
+
     return cbfiedData;
 }
 
