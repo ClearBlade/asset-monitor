@@ -34,13 +34,18 @@ export interface UpdateAssetStatusOptions {
     LOG_SETTING: LogLevels;
     UPDATE_METHOD: AssetStatusUpdateMethod;
 }
+export interface CreateAssetHistoryOptions {
+    standardKeysToStore: Array<string>;
+    customDataKeysToStore: Array<string>;
+    LOG_SETTING?: LogLevels;
+}
 export interface GlobalConfig {
     LOG_LEVEL: LogLevel;
     LOG_SETTING: LogLevels;
     CUSTOM_CONFIGS: {
         [key: string]: NormalizerDeviceMap;
     };
-    ASSET_HISTORY_CONFIG: AssetHistoryConfig;
+    ASSET_HISTORY_CONFIG: CreateAssetHistoryOptions;
     NORMALIZER_PUB_CONFIG: NormalizerPublishConfig;
     UPDATE_ASSET_LOCATION_OPTIONS: UpdateAssetLocationOptions;
     UPDATE_ASSET_STATUS_OPTIONS: UpdateAssetStatusOptions;

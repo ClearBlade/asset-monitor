@@ -5,7 +5,7 @@ export interface FlattenedObject {
     [key: string]: string | number | boolean | Array<unknown>;
 }
 
-export function cbifyData(input: Asset, normalizerConfig: NormalizerDeviceMap): Asset {
+export function cbifyData(input: FlattenedObject, normalizerConfig: NormalizerDeviceMap): Asset {
     const cbfiedData: Asset = {};
     Object.keys(normalizerConfig).forEach(function(value) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
@@ -16,18 +16,19 @@ export function cbifyData(input: Asset, normalizerConfig: NormalizerDeviceMap): 
         delete input[normalizerConfig[value]];
     });
     cbfiedData['custom_data'] = {};
-
+    cbfiedData.custom_data = input;
+    
     //Process the custom_data structure
-    if (normalizerConfig.custom_data) {
-        Object.keys(normalizerConfig.custom_data).forEach(function(value) {
-            if (cbfiedData.custom_data) {
-                (cbfiedData.custom_data as { [key: string]: string })[value] =
-                    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-                    // @ts-ignore
-                    input[normalizerConfig.custom_data[value]];
-            }
-        });
-    }
+    //    if (normalizerConfig.custom_data) {
+    //        Object.keys(normalizerConfig.custom_data).forEach(function(key) {
+    //             cbfiedData.custom_data[key as string] =
+    //                    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+    //                    // @ts-ignore
+    //                    input[normalizerConfig.custom_data[key]];
+    //            }
+    //        });
+    //    } else {
+    //}
     return cbfiedData;
 }
 
