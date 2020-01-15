@@ -1,29 +1,44 @@
-import { GC, CollectionName } from '../global-config';
+import { GC, CollectionName, LogLevels } from '../global-config';
 import { Asset } from '../collection-schema/Assets';
 import { AssetHistory } from '../collection-schema/AssetHistory';
 import { CbCollectionLib } from '../collection-lib';
 import { Logger } from '../Logger';
 import { Topics, getAssetIdFromTopic } from '../Util';
+import { CreateAssetHistoryOptions } from '../global-config';
 
 interface CreateAssetHistoryConfig {
     req: CbServer.BasicReq;
     resp: CbServer.Resp;
+    options?: CreateAssetHistoryOptions;
 }
 
-export function createAssetHistorySS(config: CreateAssetHistoryConfig): void {
+const defaultOptions = {
+    standardKeysToStore: GC.ASSET_HISTORY_CONFIG.standardKeysToStore,
+    customDataKeysToStore:GC.ASSET_HISTORY_CONFIG.customDataKeysToStore,
+    LOG_SETTING : GC.ASSET_HISTORY_CONFIG.LOG_SETTING,
+};
+export function createAssetHistorySS({
+    req,
+    resp,
+    options:{
+        standardKeysToStore = defaultOptions.standardKeysToStore,
+        customDataKeysToStore = defaultOptions.customDataKeysToStore,
+        LOG_SETTING = defaultOptions.LOG_SETTING,
+    } = defaultOptions,
+}: CreateAssetHistoryConfig): void {
     const TOPIC = '$share/AssetHistoryGroup/' + Topics.HistoryAssetLocation('+');
-    const SERVICE_INSTANCE_ID = config.req.service_instance_id;
+    const SERVICE_INSTANCE_ID = req.service_instance_id;
 
-    ClearBlade.init({ request: config.req });
+    ClearBlade.init({ request: req });
     const messaging = ClearBlade.Messaging();
-    const logger = Logger({ name: 'createAssetHistorySS' });
+    const logger = Logger({ name: 'createAssetHistorySS', logSetting: LOG_SETTING });
 
     function successCb(value: unknown): void {
-        logger.publishLog(GC.LOG_LEVEL.SUCCESS, 'AssetHistory Creation Succeeded ', value);
+        logger.publishLog(LogLevels.SUCCESS, 'AssetHistory Creation Succeeded ', value);
     }
 
     function failureCb(reason: unknown): void {
-        logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed ', reason);
+        logger.publishLog(LogLevels.ERROR, 'Failed ', reason);
     }
 
     function getEmptyAssetHistoryObject(): AssetHistory {
@@ -41,9 +56,9 @@ export function createAssetHistorySS(config: CreateAssetHistoryConfig): void {
         const assetHistoryItems: Array<AssetHistory> = [];
         const currDate = new Date().toISOString();
 
-        for (let i = 0; i < GC.ASSET_HISTORY_CONFIG.length; i++) {
+        for (let i = 0; i < standardKeysToStore.length; i++) {
             const currItem = getEmptyAssetHistoryObject();
-            const attributeName = GC.ASSET_HISTORY_CONFIG[i];
+            const attributeName = standardKeysToStore[i];
             if (parsedMsg[attributeName as keyof Asset]) {
                 currItem['asset_id'] = assetID;
                 currItem['attribute_name'] = attributeName;
@@ -64,14 +79,15 @@ export function createAssetHistorySS(config: CreateAssetHistoryConfig): void {
         const customData = parsedMsg['custom_data'];
 
         if (!customData) {
-            logger.publishLog(GC.LOG_LEVEL.DEBUG, 'Custom Data Missing: ', customData);
+            logger.publishLog(LogLevels.DEBUG, 'Custom Data Missing: ', customData);
             return [];
         }
 
         const historyData: Array<AssetHistory> = [];
         const currDate = new Date().toISOString();
-
-        for (const key of Object.keys(customData)) {
+        const keysToStore = (customDataKeysToStore.length > 0) ? customDataKeysToStore : Object.keys(customData);
+        
+        for (const key of keysToStore) {
             historyData.push({
                 ...getEmptyAssetHistoryObject(),
                 change_date: currDate,
@@ -87,28 +103,28 @@ export function createAssetHistorySS(config: CreateAssetHistoryConfig): void {
 
     function HandleMessage(err: boolean, msg: string, topic: string): void {
         if (err) {
-            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed to wait for message: ', err, ' ', msg, '  ', topic);
-            config.resp.error('Failed to wait for message: ' + err + ' ' + msg + '    ' + topic);
+            logger.publishLog(LogLevels.ERROR, 'Failed to wait for message: ', err, ' ', msg, '  ', topic);
+            resp.error('Failed to wait for message: ' + err + ' ' + msg + '    ' + topic);
         }
 
         let parsedMsg: Asset;
         try {
             parsedMsg = JSON.parse(msg);
         } catch (e) {
-            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed parse the message: ', e);
+            logger.publishLog(LogLevels.ERROR, 'Failed parse the message: ', e);
             return;
         }
         let assetHistoryItems: Array<AssetHistory> = [];
         const assetID = getAssetIdFromTopic(topic);
         if (!assetID) {
-            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Invalid topic received: ' + topic);
+            logger.publishLog(LogLevels.ERROR, 'Invalid topic received: ' + topic);
         }
 
         const standardHistoryData = createStandardHistoryData(assetID, parsedMsg);
         assetHistoryItems = assetHistoryItems.concat(standardHistoryData);
         assetHistoryItems = assetHistoryItems.concat(createCustomHistoryData(assetID, parsedMsg));
 
-        logger.publishLog(GC.LOG_LEVEL.DEBUG, 'HistoryData ', assetHistoryItems);
+        logger.publishLog(LogLevels.DEBUG, 'HistoryData ', assetHistoryItems);
         const assetHistoyCol = CbCollectionLib(CollectionName.ASSET_HISTORY);
         // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
         // @ts-ignore
@@ -119,10 +135,10 @@ export function createAssetHistorySS(config: CreateAssetHistoryConfig): void {
 
     function WaitLoop(err: boolean, data: string | null): void {
         if (err) {
-            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Subscribe failed for: ', SERVICE_INSTANCE_ID, ': ', data);
-            config.resp.error(data);
+            logger.publishLog(LogLevels.ERROR, 'Subscribe failed for: ', SERVICE_INSTANCE_ID, ': ', data);
+            resp.error(data);
         }
-        logger.publishLog(GC.LOG_LEVEL.SUCCESS, 'Subscribed to Shared Topic. Starting Loop.');
+        logger.publishLog(LogLevels.SUCCESS, 'Subscribed to Shared Topic. Starting Loop.');
 
         // eslint-disable-next-line no-constant-condition
         while (true) {

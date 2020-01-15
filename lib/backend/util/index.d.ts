@@ -3,7 +3,7 @@ import { NormalizerDeviceMap } from '../global-config';
 export interface FlattenedObject {
     [key: string]: string | number | boolean | Array<unknown>;
 }
-export declare function cbifyData(input: Asset, normalizerConfig: NormalizerDeviceMap): Asset;
+export declare function cbifyData(input: FlattenedObject, normalizerConfig: NormalizerDeviceMap): Asset;
 export declare function cbifyAll(input: Array<FlattenedObject>, normalizerConfig: NormalizerDeviceMap): Array<Asset>;
 export declare function flattenJSON(data: Record<string, unknown>): FlattenedObject;
 export declare function flattenObjects(objArr: Array<Record<string, unknown>>): Array<FlattenedObject>;

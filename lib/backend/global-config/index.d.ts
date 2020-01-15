@@ -27,13 +27,19 @@ export declare enum AssetStatusUpdateMethod {
 export declare type IKeyForLocationUpdate = Array<string>;
 export declare type IKeyForStatusUpdate = Array<string>;
 export declare type AssetHistoryConfig = Array<string>;
-export interface UpdateAssetLocationConfig {
-    keysToUpdate: IKeyForLocationUpdate;
-    createNewAssetifMissing: boolean;
+export interface UpdateAssetLocationOptions {
+    KEYS_TO_UPDATE?: IKeyForLocationUpdate;
+    LOG_SETTING?: LogLevels;
+    CREATE_NEW_ASSET_IF_MISSING?: boolean;
 }
-export interface UpdateAssetStatusConfig {
-    keysToUpdate: IKeyForStatusUpdate;
-    updateMethod: AssetStatusUpdateMethod;
+export interface UpdateAssetStatusOptions {
+    LOG_SETTING: LogLevels;
+    UPDATE_METHOD: AssetStatusUpdateMethod;
+}
+export interface CreateAssetHistoryOptions {
+    standardKeysToStore: Array<string>;
+    customDataKeysToStore: Array<string>;
+    LOG_SETTING?: LogLevels;
 }
 export interface GlobalConfig {
     LOG_LEVEL: LogLevel;
@@ -41,10 +47,10 @@ export interface GlobalConfig {
     CUSTOM_CONFIGS: {
         [key: string]: NormalizerDeviceMap;
     };
-    ASSET_HISTORY_CONFIG: AssetHistoryConfig;
+    ASSET_HISTORY_CONFIG: CreateAssetHistoryOptions;
     NORMALIZER_PUB_CONFIG: NormalizerPublishConfig;
-    UPDATE_ASSET_LOCATION_CONFIG: UpdateAssetLocationConfig;
-    UPDATE_ASSET_STATUS_CONFIG: UpdateAssetStatusConfig;
+    UPDATE_ASSET_LOCATION_OPTIONS: UpdateAssetLocationOptions;
+    UPDATE_ASSET_STATUS_OPTIONS: UpdateAssetStatusOptions;
 }
 export declare function CreateConfig(config: GlobalConfig['CUSTOM_CONFIGS']): GlobalConfig;
 export declare const GC: GlobalConfig;
