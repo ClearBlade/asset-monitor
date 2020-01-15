@@ -154,55 +154,59 @@ function handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResul
 
 function handleStateCondition(params: StateParams, almanac: Almanac): Promise<FactData> {
     const promise = almanac.factValue<WithParsedCustomData>('incomingData').then(incomingData => {
-        const promise = almanac.factValue(params.id).then(data => {
-            return (
-                data ||
-                new Promise(res => {
-                    // custom data has not been fetched for asset
-                    const collection = CbCollectionLib(params.collection);
-                    const query = ClearBlade.Query({ collectionName: params.collection });
-                    if (params.type) {
-                        query.equalTo('type', params.type);
-                    } else {
-                        query.equalTo('id', params.id);
-                    }
-                    const promise = collection
-                        .cbFetchPromise({ query })
-                        .then((data: CbServer.CollectionFetchData<Asset | Areas>) => {
-                            let initialData; // the fact who started all this mess
-                            for (let i = 0; i < data.DATA.length; i++) {
-                                const entityData = data.DATA[i];
-                                let withParsedCustomData: WithParsedCustomData = {
-                                    // parse custom_data
-                                    ...entityData,
-                                    custom_data: JSON.parse((entityData.custom_data as string) || '{}'),
-                                };
-                                if (entityData.id === incomingData.id) {
-                                    // if this one is the same as asset that triggered engine
-                                    withParsedCustomData = {
-                                        ...withParsedCustomData,
-                                        ...incomingData,
-                                        custom_data: {
-                                            ...withParsedCustomData.custom_data,
-                                            ...incomingData.custom_data,
-                                        },
+        const isIncoming = params.id === incomingData.id;
+        const isDifferentType = params.type !== incomingData.type;
+        if (isIncoming || isDifferentType) {
+            const promise = almanac.factValue(params.id).then(data => {
+                return (
+                    data ||
+                    new Promise(res => {
+                        // custom data has not been fetched for asset
+                        const collection = CbCollectionLib(params.collection);
+                        const query = ClearBlade.Query({ collectionName: params.collection });
+                        if (params.id === incomingData.id) {
+                            query.equalTo('id', params.id);
+                        } else {
+                            query.equalTo('type', params.type);
+                        }
+                        const promise = collection
+                            .cbFetchPromise({ query })
+                            .then((data: CbServer.CollectionFetchData<Asset | Areas>) => {
+                                let initialData; // the fact who started all this mess
+                                for (let i = 0; i < data.DATA.length; i++) {
+                                    const entityData = data.DATA[i];
+                                    let withParsedCustomData: WithParsedCustomData = {
+                                        // parse custom_data
+                                        ...entityData,
+                                        custom_data: JSON.parse((entityData.custom_data as string) || '{}'),
                                     };
+                                    if (entityData.id === incomingData.id) {
+                                        // if this one is the same as asset that triggered engine
+                                        withParsedCustomData = {
+                                            ...withParsedCustomData,
+                                            ...incomingData,
+                                            custom_data: {
+                                                ...withParsedCustomData.custom_data,
+                                                ...incomingData.custom_data,
+                                            },
+                                        };
+                                    }
+                                    if (params.id === entityData.id) {
+                                        // if this one is the same as asset that triggered fact
+                                        initialData = { ...withParsedCustomData };
+                                    }
+                                    almanac.addRuntimeFact(entityData.id as string, { data: withParsedCustomData }); // add fact for id
                                 }
-                                if (params.id === entityData.id) {
-                                    // if this one is the same as asset that triggered fact
-                                    initialData = { ...withParsedCustomData };
-                                }
-                                almanac.addRuntimeFact(entityData.id as string, { data: withParsedCustomData }); // add fact for id
-                            }
-                            res({ data: initialData }); // resolve the initial fact's value
-                        });
-                    Promise.runQueue();
-                    return promise;
-                })
-            );
-        });
-        Promise.runQueue();
-        return promise;
+                                res({ data: initialData }); // resolve the initial fact's value
+                            });
+                        Promise.runQueue();
+                        return promise;
+                    })
+                );
+            });
+            Promise.runQueue();
+            return promise;
+        }
     });
     Promise.runQueue();
     return promise as Promise<FactData>;
