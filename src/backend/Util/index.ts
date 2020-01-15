@@ -15,11 +15,9 @@ export function cbifyData(input: FlattenedObject, normalizerConfig: NormalizerDe
         // @ts-ignore
         delete input[normalizerConfig[value]];
     });
-    cbfiedData['custom_data'] = {};
 
     //Process the custom_data structure
-    cbfiedData.custom_data = input;
-    
+    cbfiedData['custom_data'] = input;
 
     return cbfiedData;
 }

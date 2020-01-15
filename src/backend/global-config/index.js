@@ -15,6 +15,8 @@ var CollectionName;
     CollectionName["ASSET_TYPES"] = "asset_types";
     CollectionName["AREAS"] = "areas";
     CollectionName["ACTIONS"] = "actions";
+    CollectionName["EVENT_TYPES"] = "event_types";
+    CollectionName["EVENTS"] = "events";
 })(CollectionName = exports.CollectionName || (exports.CollectionName = {}));
 var AssetStatusUpdateMethod;
 (function (AssetStatusUpdateMethod) {
@@ -30,11 +32,16 @@ var globalConfig = {
     },
     LOG_SETTING: LogLevels.DEBUG,
     CUSTOM_CONFIGS: {},
-    ASSET_HISTORY_CONFIG: ['location_x', 'location_y', 'location_z'],
+    ASSET_HISTORY_CONFIG: {
+        standardKeysToStore: ['location_x', 'location_y', 'location_z'],
+        customDataKeysToStore: [],
+        LOG_SETTING: LogLevels.DEBUG
+    },
     NORMALIZER_PUB_CONFIG: {
         locationConfig: {
             topicFn: Util_1.Topics.DBUpdateAssetLocation,
             keysToPublish: [
+                'id',
                 'location_x',
                 'location_y',
                 'location_z',
@@ -48,11 +55,29 @@ var globalConfig = {
         },
         statusConfig: {
             topicFn: Util_1.Topics.DBUpdateAssetStatus,
-            keysToPublish: ['custom_data', 'type']
+            keysToPublish: ['custom_data', 'id', 'type']
         },
         historyConfig: {
             topicFn: Util_1.Topics.AssetHistory,
             keysToPublish: [
+                'id',
+                'location_x',
+                'location_y',
+                'location_z',
+                'location_unit',
+                'location_type',
+                'latitude',
+                'longitude',
+                'last_updated',
+                'last_location_updated',
+                'custom_data',
+                'type',
+            ]
+        },
+        rulesConfig: {
+            topicFn: Util_1.Topics.RulesAssetLocation,
+            keysToPublish: [
+                'id',
                 'location_x',
                 'location_y',
                 'location_z',
@@ -79,8 +104,8 @@ var globalConfig = {
             'last_updated',
             'last_location_updated',
         ],
-        LOG_SETTING: LogLevels.DEBUG,
-        CREATE_NEW_ASSET_IF_MISSING: false
+        CREATE_NEW_ASSET_IF_MISSING: false,
+        LOG_SETTING: LogLevels.DEBUG
     },
     UPDATE_ASSET_STATUS_OPTIONS: {
         UPDATE_METHOD: AssetStatusUpdateMethod.MERGE,

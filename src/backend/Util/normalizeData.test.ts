@@ -21,6 +21,7 @@ let config = {
     last_updated: 'lastSeen',
     last_location_updated: 'lastSeen',
     id: 'id',
+    type:'type'
 };
 
 let output = [
@@ -37,7 +38,11 @@ let output = [
         last_updated: undefined,
         last_location_updated: undefined,
         id: 'yash_deviceid',
-        custom_data: {},
+        type:'testing',
+        custom_data: {
+            something: 'is up',
+            goal: 'Incoming from CMX normalizer topic',
+        },
     },
 ];
 
