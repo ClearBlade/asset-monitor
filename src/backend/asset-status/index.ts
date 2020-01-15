@@ -123,7 +123,3 @@ export function updateAssetStatusSS({
 
     messaging.subscribe(TOPIC, WaitLoop);
 }
-
-export const api = {
-    default: updateAssetStatusSS,
-};

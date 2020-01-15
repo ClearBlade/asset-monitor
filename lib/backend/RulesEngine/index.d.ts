@@ -1,13 +1,9 @@
-import '../../static/promise-polyfill';
-import 'core-js/features/map';
-import { Engine, RuleProperties } from 'json-rules-engine';
-import { Rule } from './types';
 import { Rules } from '../collection-schema/Rules';
-export declare class RulesEngine {
-    engine: Engine;
-    data: object;
-    constructor();
-    addRule(rule: RuleProperties): void;
-    convertRule(ruleData: Rules): Rule;
-    run(facts: Record<string, any>): void;
+interface RulesEngineAPI {
+    resp: CbServer.Resp;
+    fetchRulesForEngine: () => Promise<Rules[]>;
+    incomingDataTopics: string[];
+    actionTopic: string;
 }
+export declare function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, actionTopic }: RulesEngineAPI): void;
+export {};

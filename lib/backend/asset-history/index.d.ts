@@ -5,7 +5,4 @@ interface CreateAssetHistoryConfig {
     options?: CreateAssetHistoryOptions;
 }
 export declare function createAssetHistorySS({ req, resp, options: { standardKeysToStore, customDataKeysToStore, LOG_SETTING, }, }: CreateAssetHistoryConfig): void;
-export declare const api: {
-    default: typeof createAssetHistorySS;
-};
 export {};

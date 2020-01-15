@@ -1,3 +1,4 @@
+import { CollectionName } from '../../global-config';
 export declare enum TimeFrameTypes {
     REPEATEACHWEEK = "repeatEachWeek",
     REPEATBYDAY = "repeatByDay"
@@ -17,7 +18,7 @@ export interface TimeFrame {
     endTime: string;
     days: Array<Days>;
 }
-export declare const DaysOfTheWeek: Array<string>;
+export declare const DaysOfTheWeek: Array<Days>;
 export declare enum DurationUnits {
     SECONDS = "s",
     MINUTES = "m",
@@ -59,26 +60,11 @@ export interface Condition {
     entity: Entity;
     relationship: Relationship;
 }
-export declare type AllConditions = {
-    [x in ConditionalOperators]: Array<Condition | AllConditions>;
+export declare type ConditionArray = Array<Condition | Conditions>;
+export declare type Conditions = {
+    [x in ConditionalOperators]?: ConditionArray;
 };
-export declare enum RulesEngineConditionalOperators {
-    AND = "all",
-    OR = "any"
-}
-export interface RulesEngineEvent {
-    type: string;
-    params: Params;
-}
-export interface RulesEngineCondition {
-    fact: string;
-    operator: string;
-    value: boolean | number | string;
-}
-export declare type AllRulesEngineConditions = {
-    [x in RulesEngineConditionalOperators]: Array<RulesEngineCondition | AllRulesEngineConditions>;
-};
-export interface Params {
+export interface RuleParams {
     eventTypeID: string;
     actionIDs: Array<string>;
     priority: number;
@@ -87,12 +73,9 @@ export interface Params {
     ruleID: string;
     ruleName: string;
 }
-export interface Rule {
-    name: string;
-    conditions: AllRulesEngineConditions;
-    event: RulesEngineEvent;
-}
-export interface RuleInfo {
-    name: string;
+export interface StateParams {
     id: string;
+    attribute: string;
+    collection: CollectionName;
+    type: string;
 }

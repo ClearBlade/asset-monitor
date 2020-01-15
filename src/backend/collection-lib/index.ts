@@ -8,8 +8,6 @@ interface CollectionUpdateOptions {
 }
 
 interface CollectionCreateOptions {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-    // @ts-ignore
     item: Record<string, unknown> | Array<Record<string, unknown>>;
 }
 

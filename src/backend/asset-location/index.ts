@@ -41,11 +41,11 @@ export function updateAssetLocationSS({
     //settings = settings || GC.UPDATE_ASSET_LOCATION_SETTINGS;
 
     function successCb(value: unknown): void {
-        logger.publishLog(LogLevels.SUCCESS, 'Succeeded ', value);
+        logger.publishLog(GC.LOG_LEVEL.SUCCESS, 'Succeeded ', value);
     }
 
     function failureCb(reason: unknown): void {
-        logger.publishLog(LogLevels.ERROR, 'Failed ', reason);
+        logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed ', reason);
     }
 
     function updateAssetLocation(assetsOpts: UpdateAssetLocationDataOptions): Promise<unknown> {
@@ -53,7 +53,7 @@ export function updateAssetLocationSS({
         const incomingMsg = assetsOpts.incomingMsg;
         const assetsCol = CbCollectionLib(CollectionName.ASSETS);
 
-        logger.publishLog(LogLevels.DEBUG, 'DEBUG: ', 'In Update Asset Location');
+        logger.publishLog(GC.LOG_LEVEL.DEBUG, 'DEBUG: ', 'In Update Asset Location');
         if (!currentState.item_id) {
             return Promise.reject('Item Id is missing');
         }
@@ -78,15 +78,14 @@ export function updateAssetLocationSS({
 
         //DEV_TODO comment the logs once the entire flow works or
         // just change the LOG_LEVEL to info in the custom_config
-        logger.publishLog(LogLevels.DEBUG, 'DEBUG: logging changes: ', changes);
-
+        logger.publishLog(GC.LOG_LEVEL.DEBUG, 'DEBUG: logging changes: ', changes);
         // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
         // @ts-ignore
         return assetsCol.cbUpdatePromise({ query, changes });
     }
 
     function createAsset(assetID: string, assetData: Asset): Promise<unknown> {
-        logger.publishLog(LogLevels.DEBUG, 'DEBUG: ', 'in Create Asset');
+        logger.publishLog(GC.LOG_LEVEL.DEBUG, 'DEBUG: ', 'in Create Asset');
 
         const assetsCol = CbCollectionLib(CollectionName.ASSETS);
         const newAsset = assetData;
@@ -101,10 +100,9 @@ export function updateAssetLocationSS({
         try {
             newAsset['custom_data'] = JSON.stringify(assetData['custom_data']);
         } catch (e) {
-            logger.publishLog(LogLevels.ERROR, 'ERROR: ', SERVICE_INSTANCE_ID, ': Failed to stringify ', e);
+            logger.publishLog(GC.LOG_LEVEL.ERROR, 'ERROR: ', SERVICE_INSTANCE_ID, ': Failed to stringify ', e);
             return Promise.reject('Failed to stringify ' + e);
         }
-
         // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
         // @ts-ignore
         return assetsCol.cbCreatePromise({ item: [newAsset] });
@@ -120,7 +118,7 @@ export function updateAssetLocationSS({
         try {
             incomingMsg = JSON.parse(msg);
         } catch (e) {
-            logger.publishLog(LogLevels.ERROR, 'Failed parse the message: ', e);
+            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed parse the message: ', e);
             // service can exit here if we add resp.error(""), right now it fails silently by just publishing on error topic
             return;
         }
@@ -128,7 +126,7 @@ export function updateAssetLocationSS({
         const assetID = getAssetIdFromTopic(topic);
 
         if (!assetID) {
-            logger.publishLog(LogLevels.ERROR, 'Invalid topic received: ', topic);
+            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Invalid topic received: ', topic);
             return;
         }
 
@@ -149,7 +147,12 @@ export function updateAssetLocationSS({
                         logger.publishLog(LogLevels.ERROR, 'ERROR: ', " Asset doesn't exist so, ignoring: ", data);
                     }
                 } else {
-                    logger.publishLog(LogLevels.ERROR, 'ERROR: ', ' Multiple Assets with same assetId exists: ', data);
+                    logger.publishLog(
+                        GC.LOG_LEVEL.ERROR,
+                        'ERROR: ',
+                        ' Multiple Assets with same assetId exists: ',
+                        data,
+                    );
                 }
             })
             .catch(function(reason) {
@@ -165,7 +168,7 @@ export function updateAssetLocationSS({
             logger.publishLog(LogLevels.ERROR, 'Subscribe failed for: ', SERVICE_INSTANCE_ID, ': ', data);
             resp.error(data);
         }
-        logger.publishLog(LogLevels.SUCCESS, 'Subscribed to Shared Topic. Starting Loop.');
+        logger.publishLog(GC.LOG_LEVEL.SUCCESS, 'Subscribed to Shared Topic. Starting Loop.');
 
         // eslint-disable-next-line no-constant-condition
         while (true) {
@@ -175,7 +178,3 @@ export function updateAssetLocationSS({
 
     messaging.subscribe(TOPIC, WaitLoop);
 }
-
-export const api = {
-    default: updateAssetLocationSS,
-};

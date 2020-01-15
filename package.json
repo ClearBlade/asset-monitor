@@ -1,6 +1,6 @@
 {
     "name": "@clearblade/asset-monitor",
-    "version": "1.1.8",
+    "version": "1.1.11",
     "description": "Asset Monitor Biolerplate",
     "scripts": {
         "test": "jest",
@@ -35,6 +35,7 @@
         "@types/jest": "^24.0.6",
         "@types/node": "^11.9.4",
         "@types/react": "^16.8.10",
+        "@types/uuid": "^3.4.6",
         "@typescript-eslint/eslint-plugin": "^2.12.0",
         "@typescript-eslint/parser": "^2.12.0",
         "ajv": "^6.10.2",
@@ -98,7 +99,10 @@
         "lib": "lib"
     },
     "dependencies": {
-        "json-rules-engine": "^5.0.0"
+        "core-js": "^3.6.2",
+        "json-rules-engine": "^5.0.0",
+        "selectn": "^1.1.2",
+        "uuid": "^3.3.3"
     },
     "repository": {
         "type": "git",

@@ -22,6 +22,8 @@ export enum CollectionName {
     ASSET_TYPES = 'asset_types',
     AREAS = 'areas',
     ACTIONS = 'actions',
+    EVENT_TYPES = 'event_types',
+    EVENTS = 'events',
 }
 
 export enum AssetStatusUpdateMethod {
@@ -144,8 +146,8 @@ const globalConfig: GlobalConfig = {
             'last_updated',
             'last_location_updated',
         ],
-        LOG_SETTING: LogLevels.DEBUG,
         CREATE_NEW_ASSET_IF_MISSING: false,
+        LOG_SETTING:LogLevels.DEBUG
     },
     UPDATE_ASSET_STATUS_OPTIONS: {
         UPDATE_METHOD: AssetStatusUpdateMethod.MERGE,

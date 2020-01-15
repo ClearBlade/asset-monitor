@@ -126,7 +126,6 @@ export function createAssetHistorySS({
 
         logger.publishLog(LogLevels.DEBUG, 'HistoryData ', assetHistoryItems);
         const assetHistoyCol = CbCollectionLib(CollectionName.ASSET_HISTORY);
-
         // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
         // @ts-ignore
         assetHistoyCol.cbCreatePromise({ item: assetHistoryItems }).then(successCb, failureCb);
@@ -149,7 +148,3 @@ export function createAssetHistorySS({
 
     messaging.subscribe(TOPIC, WaitLoop);
 }
-
-export const api = {
-    default: createAssetHistorySS,
-};

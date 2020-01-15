@@ -1,2 +1,2 @@
 import { TimeFrame } from './types';
-export declare function DoesTimeframeMatchRule(timeframe: TimeFrame): boolean;
+export declare function doesTimeframeMatchRule(timestamp: string, timeframe?: TimeFrame): boolean;

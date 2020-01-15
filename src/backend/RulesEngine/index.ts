@@ -1,93 +1,117 @@
-import '../../static/promise-polyfill';
-import 'core-js/features/map';
-import { Engine, Event, RuleProperties } from 'json-rules-engine';
-import { AllConditions, Rule, AllRulesEngineConditions, RulesEngineEvent, TimeFrame, Params, RuleInfo } from './types';
-import { ParseAndConvertConditions } from './convert-rule';
-import { DoesTimeframeMatchRule } from './timeframe';
-import { FireEventsAndActions } from './events';
-import { ProcessDurationIfExists } from './duration';
 import { Rules } from '../collection-schema/Rules';
+import { RulesEngine } from './RulesEngine';
+import { subscriber } from '../Normalizer';
 
-// @ts-ignore
-const log: { (s: any): void } = global.log;
-
-export class RulesEngine {
-    engine: Engine;
-    data: object;
-    constructor() {
-        Number.parseFloat = parseFloat;
-        const options = {
-            allowUndefinedFacts: true,
-        };
-        this.engine = new Engine([], options);
-        this.data = {};
-    }
-
-    addRule(rule: RuleProperties): void {
-        this.engine.addRule(rule);
-    }
-
-    convertRule(ruleData: Rules): Rule {
-        const name: string = ruleData.label;
-        const conditions: AllConditions = JSON.parse(ruleData.conditions);
-        let timeframe;
-        let actionIDs: Array<string> = [];
-        if (ruleData.timeframe !== '') {
-            timeframe = JSON.parse(ruleData.timeframe);
-        }
-        if (ruleData['action_ids'] !== '') {
-            actionIDs = JSON.parse(ruleData['action_ids']);
-        }
-        const rule: Rule = {
-            name: name,
-            conditions: {} as AllRulesEngineConditions,
-            event: {
-                type: name,
-                params: {
-                    eventTypeID: ruleData['event_type_id'],
-                    actionIDs: actionIDs,
-                    priority: ruleData.priority,
-                    severity: ruleData.severity,
-                    timeframe: timeframe,
-                    ruleID: ruleData['id'],
-                    ruleName: name,
-                },
-            } as RulesEngineEvent,
-        };
-        const ruleInfo: RuleInfo = {
-            name: name,
-            id: ruleData['id'],
-        };
-        ParseAndConvertConditions(ruleInfo, rule.conditions, conditions);
-        return rule;
-    }
-
-    run(facts: Record<string, any>) {
-        this.engine.run(facts).then(
-            results => {
-                processRuleResults(results.events[0], facts);
-                return results;
-            },
-            err => err.message,
-        );
-        // @ts-ignore
-        Promise.runQueue();
-    }
+interface RulesEngineAPI {
+    resp: CbServer.Resp;
+    fetchRulesForEngine: () => Promise<Rules[]>;
+    incomingDataTopics: string[];
+    actionTopic: string;
 }
 
-function processRuleResults(event: Event, facts: Record<string, any>): void {
-    if (event === undefined) {
-        // rule failed
-        log('Rule failed');
-        return;
+const RULES_UPDATED_TOPIC = 'rules_collection_updated';
+
+export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, actionTopic }: RulesEngineAPI): void {
+    const engine = new RulesEngine(actionTopic);
+    const messaging = ClearBlade.Messaging();
+
+    fetchRulesForEngine().then(rules => {
+        Promise.all(
+            rules.map(ruleData => {
+                const promise = engine
+                    .addRule(ruleData)
+                    .then(rule => rule.name)
+                    .catch(e => {
+                        //@ts-ignore
+                        log('Error adding rule: ' + JSON.stringify(e));
+                    });
+                Promise.runQueue();
+                return promise;
+            }),
+        )
+            .then(ruleNames => {
+                //@ts-ignore
+                log(`Successfully added rules: ${ruleNames.join(', ')}`);
+                subscribeAndInitialize();
+            })
+            .catch(e => {
+                //@ts-ignore
+                log(e);
+            });
+        Promise.runQueue();
+    });
+    Promise.runQueue();
+
+    function subscribeAndInitialize(): void {
+        Promise.all(
+            [...incomingDataTopics, RULES_UPDATED_TOPIC].map(topic => {
+                subscriber(topic);
+            }),
+        )
+            .then(() => {
+                initializeWhileLoop();
+            })
+            .catch(e => {
+                //@ts-ignore
+                log(`Subscription error: ${JSON.stringify(e)}`);
+            });
+        Promise.runQueue();
     }
-    const params: Params = event.params as Params;
-    if (params.timeframe !== undefined) {
-        if (!DoesTimeframeMatchRule(params.timeframe)) {
-            log('Cannot run rule because timeframe constraints failed: ' + event.type);
-            return;
+
+    function initializeWhileLoop(): void {
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+            messaging.waitForMessage([...incomingDataTopics, RULES_UPDATED_TOPIC], handleIncomingMessage);
         }
     }
-    FireEventsAndActions(params);
-    log('Rule success ' + JSON.stringify(event) + ' and ' + JSON.stringify(facts));
+
+    function handleIncomingMessage(err: boolean, msg: string, topic: string): void {
+        if (err) {
+            resp.error('Error calling waitForMessage ' + JSON.stringify(msg));
+        } else {
+            if (topic === RULES_UPDATED_TOPIC) {
+                handleRulesCollUpdate(msg);
+            } else {
+                let incomingData;
+                try {
+                    incomingData = JSON.parse(msg);
+                } catch (e) {
+                    resp.error('Invalid message structure: ' + JSON.stringify(e));
+                }
+                const fact = { incomingData };
+                engine
+                    .run(fact)
+                    .then(successMsg => {
+                        //@ts-ignore
+                        log(successMsg);
+                    })
+                    .catch(e => {
+                        resp.error(e);
+                    });
+                Promise.runQueue();
+            }
+        }
+    }
+
+    function handleRulesCollUpdate(msg: string): void {
+        let parsedMessage;
+        try {
+            parsedMessage = JSON.parse(msg);
+        } catch (e) {
+            resp.error('Invalid message structure for update rules collection: ' + JSON.stringify(e));
+        }
+        switch (parsedMessage.type) {
+            case 'CREATE':
+                engine.addRule(parsedMessage.data);
+                break;
+            case 'UPDATE':
+                engine.editRule(parsedMessage.data);
+                break;
+            case 'DELETE':
+                engine.deleteRule(parsedMessage.data.id);
+                break;
+            default:
+                return;
+        }
+    }
 }

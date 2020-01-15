@@ -1,6 +1,5 @@
-import { string } from 'prop-types';
+import { CollectionName } from '../../global-config';
 
-/////////////////////////////////////////////////////////////////////////////////////
 // Time Frames
 
 export enum TimeFrameTypes {
@@ -25,7 +24,7 @@ export interface TimeFrame {
     days: Array<Days>;
 }
 
-export const DaysOfTheWeek: Array<string> = [
+export const DaysOfTheWeek: Array<Days> = [
     Days.SUNDAY,
     Days.MONDAY,
     Days.TUESDAY,
@@ -35,7 +34,6 @@ export const DaysOfTheWeek: Array<string> = [
     Days.SATURDAY,
 ];
 
-/////////////////////////////////////////////////////////////////////////////////////
 // Duration
 
 export enum DurationUnits {
@@ -50,7 +48,6 @@ export interface Duration {
     unit: DurationUnits;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////
 // Special Case Operators (true/false/inside/outside)
 
 export interface OperatorAndValue {
@@ -70,7 +67,6 @@ export function GetOperatorAndValue(op: string, val: string | number | boolean):
     }
 }
 
-/////////////////////////////////////////////////////////////////////////////////////
 // Conditions (ClearBlade conditions format)
 
 export enum ConditionalOperators {
@@ -104,34 +100,15 @@ export interface Condition {
     relationship: Relationship;
 }
 
-export type AllConditions = {
-    [x in ConditionalOperators]: Array<Condition | AllConditions>;
+export type ConditionArray = Array<Condition | Conditions>;
+
+export type Conditions = {
+    [x in ConditionalOperators]?: ConditionArray;
 };
 
-/////////////////////////////////////////////////////////////////////////////////////
-// Rules Engine Condition Format (json-rules-engine format)
+// Rules Engine Event Params (json-rules-engine format)
 
-export enum RulesEngineConditionalOperators {
-    AND = 'all',
-    OR = 'any',
-}
-
-export interface RulesEngineEvent {
-    type: string;
-    params: Params;
-}
-
-export interface RulesEngineCondition {
-    fact: string;
-    operator: string;
-    value: boolean | number | string;
-}
-
-export type AllRulesEngineConditions = {
-    [x in RulesEngineConditionalOperators]: Array<RulesEngineCondition | AllRulesEngineConditions>;
-};
-
-export interface Params {
+export interface RuleParams {
     eventTypeID: string;
     actionIDs: Array<string>;
     priority: number;
@@ -141,13 +118,11 @@ export interface Params {
     ruleName: string;
 }
 
-export interface Rule {
-    name: string;
-    conditions: AllRulesEngineConditions;
-    event: RulesEngineEvent;
-}
+// Condition Params
 
-export interface RuleInfo {
-    name: string;
+export interface StateParams {
     id: string;
+    attribute: string;
+    collection: CollectionName;
+    type: string;
 }

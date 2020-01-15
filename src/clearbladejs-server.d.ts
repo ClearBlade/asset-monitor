@@ -124,17 +124,17 @@ declare namespace CbServer {
         collectionID: string;
     }
 
-    interface CollectionSchema {
+    type CollectionSchema<T extends {} = {}> = T & {
         item_id: string;
-    }
+    };
 
-    interface CollectionFetchData {
-        DATA: Array<CollectionSchema>;
+    type CollectionFetchData<T extends {} = {}> = T & {
+        DATA: Array<CollectionSchema<T>>;
         CURRENTPAGE: number;
         NEXTPAGEURL: string | null;
         PREVPAGEURL: string | null;
         TOTAL: number;
-    }
+    };
 
     type collectionFetchCallback = (err: boolean, data: CollectionFetchData) => void;
 
