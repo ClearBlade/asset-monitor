@@ -1,6 +1,6 @@
 import { normalizeData } from '.';
 
-let incomingData = {
+const incomingData = {
     id: 'yash_deviceid',
     type: 'testing',
     'locationCoordinate.x': 555.333,
@@ -8,7 +8,7 @@ let incomingData = {
     goal: 'Incoming from CMX normalizer topic',
 };
 
-let config = {
+const config = {
     location_x: 'locationCoordinate.x',
     location_y: 'locationCoordinate.y',
     location_z: 'locationCoordinate.z',
@@ -21,10 +21,10 @@ let config = {
     last_updated: 'lastSeen',
     last_location_updated: 'lastSeen',
     id: 'id',
-    type:'type'
+    type:'type',
 };
 
-let output = [
+const output = [
     {
         location_x: 555.333,
         location_y: undefined,

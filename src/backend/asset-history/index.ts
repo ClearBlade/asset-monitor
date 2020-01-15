@@ -4,12 +4,12 @@ import { AssetHistory } from '../collection-schema/AssetHistory';
 import { CbCollectionLib } from '../collection-lib';
 import { Logger } from '../Logger';
 import { Topics, getAssetIdFromTopic } from '../Util';
-import { CreateAssetHistoryOptions } from '../global-config'
+import { CreateAssetHistoryOptions } from '../global-config';
 
 interface CreateAssetHistoryConfig {
     req: CbServer.BasicReq;
     resp: CbServer.Resp;
-    options?:CreateAssetHistoryOptions;
+    options?: CreateAssetHistoryOptions;
 }
 
 const defaultOptions = {
@@ -85,7 +85,7 @@ export function createAssetHistorySS({
 
         const historyData: Array<AssetHistory> = [];
         const currDate = new Date().toISOString();
-        const keysToStore = (customDataKeysToStore.length > 0)? customDataKeysToStore: Object.keys(customData);
+        const keysToStore = (customDataKeysToStore.length > 0) ? customDataKeysToStore : Object.keys(customData);
         
         for (const key of keysToStore) {
             historyData.push({

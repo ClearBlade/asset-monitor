@@ -147,7 +147,7 @@ const globalConfig: GlobalConfig = {
             'last_location_updated',
         ],
         CREATE_NEW_ASSET_IF_MISSING: false,
-        LOG_SETTING:LogLevels.DEBUG
+        LOG_SETTING:LogLevels.DEBUG,
     },
     UPDATE_ASSET_STATUS_OPTIONS: {
         UPDATE_METHOD: AssetStatusUpdateMethod.MERGE,
