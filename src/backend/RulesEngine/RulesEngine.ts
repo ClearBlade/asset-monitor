@@ -153,57 +153,73 @@ function handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResul
     }
 }
 
+function buildFact(entityData: Asset | Areas, incomingData: WithParsedCustomData): WithParsedCustomData {
+    let withParsedCustomData: WithParsedCustomData = {
+        // parse custom_data
+        ...entityData,
+        custom_data: JSON.parse((entityData.custom_data as string) || '{}'),
+    };
+    if (entityData.id === incomingData.id) {
+        // if this one is the same as asset that triggered engine
+        withParsedCustomData = {
+            ...withParsedCustomData,
+            ...incomingData,
+            custom_data: {
+                ...withParsedCustomData.custom_data,
+                ...incomingData.custom_data,
+            },
+        };
+    }
+    return withParsedCustomData;
+}
+
+function collectAndBuildFact(
+    almanac: Almanac,
+    data: FactData,
+    params: StateParams,
+    incomingData: WithParsedCustomData,
+): Promise<FactData> {
+    return new Promise(res => {
+        if (data) {
+            res(data);
+        }
+        // custom data has not been fetched for asset
+        const collection = CbCollectionLib(params.collection);
+        const query = ClearBlade.Query({ collectionName: params.collection });
+        if (params.id === incomingData.id) {
+            query.equalTo('id', params.id);
+        } else {
+            query.equalTo('type', params.type);
+        }
+        const promise = collection
+            .cbFetchPromise({ query })
+            .then((data: CbServer.CollectionFetchData<Asset | Areas>) => {
+                let initialData; // the fact who started all this mess
+                for (let i = 0; i < data.DATA.length; i++) {
+                    const entityData = data.DATA[i];
+                    const fact = buildFact(entityData, incomingData);
+                    if (params.id === entityData.id) {
+                        // if this one is the same as asset that triggered fact
+                        initialData = { ...fact };
+                    }
+                    almanac.addRuntimeFact(entityData.id as string, { data: fact }); // add fact for id
+                }
+                res({ data: initialData } as FactData); // resolve the initial fact's value
+            });
+        Promise.runQueue();
+        return promise;
+    });
+}
+
 function handleStateCondition(params: StateParams, almanac: Almanac): Promise<FactData> {
     const promise = almanac.factValue<WithParsedCustomData>('incomingData').then(incomingData => {
         const isIncoming = params.id === incomingData.id;
         const isDifferentType = params.type !== incomingData.type;
         if (isIncoming || isDifferentType) {
-            const promise = almanac.factValue(params.id).then(data => {
-                return (
-                    data ||
-                    new Promise(res => {
-                        // custom data has not been fetched for asset
-                        const collection = CbCollectionLib(params.collection);
-                        const query = ClearBlade.Query({ collectionName: params.collection });
-                        if (params.id === incomingData.id) {
-                            query.equalTo('id', params.id);
-                        } else {
-                            query.equalTo('type', params.type);
-                        }
-                        const promise = collection
-                            .cbFetchPromise({ query })
-                            .then((data: CbServer.CollectionFetchData<Asset | Areas>) => {
-                                let initialData; // the fact who started all this mess
-                                for (let i = 0; i < data.DATA.length; i++) {
-                                    const entityData = data.DATA[i];
-                                    let withParsedCustomData: WithParsedCustomData = {
-                                        // parse custom_data
-                                        ...entityData,
-                                        custom_data: JSON.parse((entityData.custom_data as string) || '{}'),
-                                    };
-                                    if (entityData.id === incomingData.id) {
-                                        // if this one is the same as asset that triggered engine
-                                        withParsedCustomData = {
-                                            ...withParsedCustomData,
-                                            ...incomingData,
-                                            custom_data: {
-                                                ...withParsedCustomData.custom_data,
-                                                ...incomingData.custom_data,
-                                            },
-                                        };
-                                    }
-                                    if (params.id === entityData.id) {
-                                        // if this one is the same as asset that triggered fact
-                                        initialData = { ...withParsedCustomData };
-                                    }
-                                    almanac.addRuntimeFact(entityData.id as string, { data: withParsedCustomData }); // add fact for id
-                                }
-                                res({ data: initialData }); // resolve the initial fact's value
-                            });
-                        Promise.runQueue();
-                        return promise;
-                    })
-                );
+            const promise = almanac.factValue<FactData>(params.id).then(data => {
+                return collectAndBuildFact(almanac, data, params, incomingData).then(builtFact => {
+                    return builtFact;
+                });
             });
             Promise.runQueue();
             return promise;

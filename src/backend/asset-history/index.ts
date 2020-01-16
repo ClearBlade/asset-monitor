@@ -14,13 +14,13 @@ interface CreateAssetHistoryConfig {
 
 const defaultOptions = {
     standardKeysToStore: GC.ASSET_HISTORY_CONFIG.standardKeysToStore,
-    customDataKeysToStore:GC.ASSET_HISTORY_CONFIG.customDataKeysToStore,
-    LOG_SETTING : GC.ASSET_HISTORY_CONFIG.LOG_SETTING,
+    customDataKeysToStore: GC.ASSET_HISTORY_CONFIG.customDataKeysToStore,
+    LOG_SETTING: GC.ASSET_HISTORY_CONFIG.LOG_SETTING,
 };
 export function createAssetHistorySS({
     req,
     resp,
-    options:{
+    options: {
         standardKeysToStore = defaultOptions.standardKeysToStore,
         customDataKeysToStore = defaultOptions.customDataKeysToStore,
         LOG_SETTING = defaultOptions.LOG_SETTING,
@@ -85,8 +85,8 @@ export function createAssetHistorySS({
 
         const historyData: Array<AssetHistory> = [];
         const currDate = new Date().toISOString();
-        const keysToStore = (customDataKeysToStore.length > 0) ? customDataKeysToStore : Object.keys(customData);
-        
+        const keysToStore = customDataKeysToStore.length > 0 ? customDataKeysToStore : Object.keys(customData);
+
         for (const key of keysToStore) {
             historyData.push({
                 ...getEmptyAssetHistoryObject(),
