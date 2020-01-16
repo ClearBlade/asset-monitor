@@ -1,10 +1,10 @@
-import { GC, CollectionName } from '../global-config';
+import { GC, CollectionName, UpdateAssetLocationOptions, LogLevels } from '../global-config';
 import { Asset } from '../collection-schema/Assets';
 import { CbCollectionLib } from '../collection-lib';
 import { Logger } from '../Logger';
 import { Topics, getAssetIdFromTopic } from '../Util';
 
-interface UpdateAssetLocationOptions {
+interface UpdateAssetLocationDataOptions {
     fetchedData: CbServer.CollectionSchema;
     incomingMsg: Asset;
 }
@@ -12,15 +12,33 @@ interface UpdateAssetLocationOptions {
 interface UpdateAssetLocationConfig {
     req: CbServer.BasicReq;
     resp: CbServer.Resp;
+    options?: UpdateAssetLocationOptions;
 }
 
-export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
-    const TOPIC = '$share/UpdateLocationGroup/' + Topics.DBUpdateAssetLocation('+');
-    const SERVICE_INSTANCE_ID = config.req.service_instance_id;
+const defaultOptions = {
+    KEYS_TO_UPDATE: GC.UPDATE_ASSET_LOCATION_OPTIONS.KEYS_TO_UPDATE,
+    LOG_SETTING: GC.UPDATE_ASSET_LOCATION_OPTIONS.LOG_SETTING,
+    CREATE_NEW_ASSET_IF_MISSING: GC.UPDATE_ASSET_LOCATION_OPTIONS.CREATE_NEW_ASSET_IF_MISSING,
+};
 
-    ClearBlade.init({ request: config.req });
+export function updateAssetLocationSS({
+    req,
+    resp,
+    options: {
+        KEYS_TO_UPDATE = defaultOptions.KEYS_TO_UPDATE,
+        LOG_SETTING = defaultOptions.LOG_SETTING,
+        CREATE_NEW_ASSET_IF_MISSING = defaultOptions.CREATE_NEW_ASSET_IF_MISSING,
+    } = defaultOptions,
+}: UpdateAssetLocationConfig): void {
+    const TOPIC = '$share/UpdateLocationGroup/' + Topics.DBUpdateAssetLocation('+');
+    const SERVICE_INSTANCE_ID = req.service_instance_id;
+
+    ClearBlade.init({ request: req });
     const messaging = ClearBlade.Messaging();
-    const logger = Logger({ name: 'updateAssetLocationSS' });
+    const logger = Logger({ name: 'updateAssetLocationSS', logSetting: LOG_SETTING });
+
+    //TODO default params in function
+    //settings = settings || GC.UPDATE_ASSET_LOCATION_SETTINGS;
 
     function successCb(value: unknown): void {
         logger.publishLog(GC.LOG_LEVEL.SUCCESS, 'Succeeded ', value);
@@ -30,7 +48,7 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
         logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed ', reason);
     }
 
-    function updateAssetLocation(assetsOpts: UpdateAssetLocationOptions): Promise<unknown> {
+    function updateAssetLocation(assetsOpts: UpdateAssetLocationDataOptions): Promise<unknown> {
         const currentState = assetsOpts.fetchedData;
         const incomingMsg = assetsOpts.incomingMsg;
         const assetsCol = CbCollectionLib(CollectionName.ASSETS);
@@ -45,8 +63,9 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
         );
         const changes: Asset = {};
 
-        for (let i = 0; i < GC.UPDATE_ASSET_LOCATION_CONFIG.keysToUpdate.length; i++) {
-            const curKey = GC.UPDATE_ASSET_LOCATION_CONFIG.keysToUpdate[i];
+        for (let i = 0; KEYS_TO_UPDATE && i < KEYS_TO_UPDATE.length; i++) {
+            const curKey = KEYS_TO_UPDATE[i];
+
             // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
             // @ts-ignore
             changes[curKey as keyof Asset] = incomingMsg[curKey as keyof typeof incomingMsg];
@@ -91,8 +110,8 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
 
     function HandleMessage(err: boolean, msg: string, topic: string): void {
         if (err) {
-            logger.publishLog(GC.LOG_LEVEL.ERROR, ' Failed to wait for message: ', err, ' ', msg, '  ', topic);
-            config.resp.error('Failed to wait for message: ' + err + ' ' + msg + '    ' + topic);
+            logger.publishLog(LogLevels.ERROR, ' Failed to wait for message: ', err, ' ', msg, '  ', topic);
+            resp.error('Failed to wait for message: ' + err + ' ' + msg + '    ' + topic);
         }
 
         let incomingMsg: Asset;
@@ -121,8 +140,12 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
                     const fetchedData = data.DATA[0];
                     updateAssetLocation({ fetchedData, incomingMsg }).then(successCb, failureCb);
                 } else if (data.DATA.length === 0) {
-                    createAsset(assetID, incomingMsg).then(successCb, failureCb);
-                    logger.publishLog(GC.LOG_LEVEL.ERROR, 'ERROR: ', " Asset doesn't exist so, ignoring: ", data);
+                    if (CREATE_NEW_ASSET_IF_MISSING) {
+                        createAsset(assetID, incomingMsg).then(successCb, failureCb);
+                        logger.publishLog(LogLevels.DEBUG, "Creating Asset since it doesn't exist");
+                    } else {
+                        logger.publishLog(LogLevels.ERROR, 'ERROR: ', " Asset doesn't exist so, ignoring: ", data);
+                    }
                 } else {
                     logger.publishLog(
                         GC.LOG_LEVEL.ERROR,
@@ -133,8 +156,8 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
                 }
             })
             .catch(function(reason) {
-                logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed to fetch: ', reason);
-                config.resp.error('Failed to fetch asset: ' + reason);
+                logger.publishLog(LogLevels.ERROR, 'Failed to fetch: ', reason);
+                resp.error('Failed to fetch asset: ' + reason);
             });
 
         Promise.runQueue();
@@ -142,8 +165,8 @@ export function updateAssetLocationSS(config: UpdateAssetLocationConfig): void {
 
     function WaitLoop(err: boolean, data: string | null): void {
         if (err) {
-            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Subscribe failed for: ', SERVICE_INSTANCE_ID, ': ', data);
-            config.resp.error(data);
+            logger.publishLog(LogLevels.ERROR, 'Subscribe failed for: ', SERVICE_INSTANCE_ID, ': ', data);
+            resp.error(data);
         }
         logger.publishLog(GC.LOG_LEVEL.SUCCESS, 'Subscribed to Shared Topic. Starting Loop.');
 

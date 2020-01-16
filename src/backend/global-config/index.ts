@@ -38,26 +38,32 @@ export type IKeyForStatusUpdate = Array<string>;
 
 export type AssetHistoryConfig = Array<string>;
 
-export interface UpdateAssetLocationConfig {
-    keysToUpdate: IKeyForLocationUpdate;
-    createNewAssetifMissing: boolean;
+export interface UpdateAssetLocationOptions {
+    KEYS_TO_UPDATE?: IKeyForLocationUpdate;
+    LOG_SETTING?: LogLevels;
+    CREATE_NEW_ASSET_IF_MISSING?: boolean;
 }
 
-export interface UpdateAssetStatusConfig {
-    keysToUpdate: IKeyForStatusUpdate;
-    updateMethod: AssetStatusUpdateMethod;
+export interface UpdateAssetStatusOptions {
+    LOG_SETTING: LogLevels;
+    UPDATE_METHOD: AssetStatusUpdateMethod;
 }
 
+export interface CreateAssetHistoryOptions {
+    standardKeysToStore: Array<string>;
+    customDataKeysToStore: Array<string>;
+    LOG_SETTING?: LogLevels;
+}
 export interface GlobalConfig {
     LOG_LEVEL: LogLevel;
     LOG_SETTING: LogLevels;
     CUSTOM_CONFIGS: {
         [key: string]: NormalizerDeviceMap;
     };
-    ASSET_HISTORY_CONFIG: AssetHistoryConfig;
+    ASSET_HISTORY_CONFIG: CreateAssetHistoryOptions;
     NORMALIZER_PUB_CONFIG: NormalizerPublishConfig;
-    UPDATE_ASSET_LOCATION_CONFIG: UpdateAssetLocationConfig;
-    UPDATE_ASSET_STATUS_CONFIG: UpdateAssetStatusConfig;
+    UPDATE_ASSET_LOCATION_OPTIONS: UpdateAssetLocationOptions;
+    UPDATE_ASSET_STATUS_OPTIONS: UpdateAssetStatusOptions;
 }
 
 const globalConfig: GlobalConfig = {
@@ -69,11 +75,16 @@ const globalConfig: GlobalConfig = {
     },
     LOG_SETTING: LogLevels.DEBUG,
     CUSTOM_CONFIGS: {},
-    ASSET_HISTORY_CONFIG: ['location_x', 'location_y', 'location_z'],
+    ASSET_HISTORY_CONFIG: {
+        standardKeysToStore: ['location_x', 'location_y', 'location_z'],
+        customDataKeysToStore: [],
+        LOG_SETTING: LogLevels.DEBUG,
+    },
     NORMALIZER_PUB_CONFIG: {
         locationConfig: {
             topicFn: Topics.DBUpdateAssetLocation,
             keysToPublish: [
+                'id',
                 'location_x',
                 'location_y',
                 'location_z',
@@ -87,11 +98,29 @@ const globalConfig: GlobalConfig = {
         },
         statusConfig: {
             topicFn: Topics.DBUpdateAssetStatus,
-            keysToPublish: ['last_updated', 'custom_data', 'type'],
+            keysToPublish: ['custom_data', 'id', 'type'],
         },
         historyConfig: {
             topicFn: Topics.AssetHistory,
             keysToPublish: [
+                'id',
+                'location_x',
+                'location_y',
+                'location_z',
+                'location_unit',
+                'location_type',
+                'latitude',
+                'longitude',
+                'last_updated',
+                'last_location_updated',
+                'custom_data',
+                'type',
+            ],
+        },
+        rulesConfig: {
+            topicFn: Topics.RulesAssetLocation,
+            keysToPublish: [
+                'id',
                 'location_x',
                 'location_y',
                 'location_z',
@@ -106,8 +135,8 @@ const globalConfig: GlobalConfig = {
             ],
         },
     },
-    UPDATE_ASSET_LOCATION_CONFIG: {
-        keysToUpdate: [
+    UPDATE_ASSET_LOCATION_OPTIONS: {
+        KEYS_TO_UPDATE: [
             'location_x',
             'location_y',
             'location_z',
@@ -118,11 +147,12 @@ const globalConfig: GlobalConfig = {
             'last_updated',
             'last_location_updated',
         ],
-        createNewAssetifMissing: false,
+        CREATE_NEW_ASSET_IF_MISSING: false,
+        LOG_SETTING:LogLevels.DEBUG,
     },
-    UPDATE_ASSET_STATUS_CONFIG: {
-        keysToUpdate: ['last_updated', 'custom_data'],
-        updateMethod: AssetStatusUpdateMethod.MERGE,
+    UPDATE_ASSET_STATUS_OPTIONS: {
+        UPDATE_METHOD: AssetStatusUpdateMethod.MERGE,
+        LOG_SETTING: LogLevels.DEBUG,
     },
 };
 
