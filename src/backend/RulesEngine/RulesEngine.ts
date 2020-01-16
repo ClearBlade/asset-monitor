@@ -15,12 +15,13 @@ import {
 import { StateParams, TimeFrame } from './types';
 import { parseAndConvertConditions } from './convert-rule';
 import { doesTimeframeMatchRule } from './timeframe';
-import { processEvent, Entities } from './events';
+import { processEvent } from './events';
 // import { ProcessDurationIfExists } from './duration';
 import { Rules } from '../collection-schema/Rules';
 import { CbCollectionLib } from '../collection-lib';
 import { Areas } from '../collection-schema/Areas';
 import { Asset } from '../collection-schema/Assets';
+import { Entities } from './async';
 
 interface WithParsedCustomData extends Asset {
     custom_data: Record<string, object>;

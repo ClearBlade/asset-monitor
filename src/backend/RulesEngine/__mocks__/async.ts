@@ -26,6 +26,18 @@ export function createEvent(): Promise<undefined> {
     });
 }
 
+export function createEventHistoryItem(): Promise<undefined> {
+    return new Promise(resolve => {
+        resolve();
+    });
+}
+
+export function shouldCreateEvent(): Promise<boolean> {
+    return new Promise(resolve => {
+        resolve(true);
+    });
+}
+
 const assets: Array<CbServer.CollectionSchema<Asset>> = [
     {
         custom_data: {},
