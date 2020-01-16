@@ -2,7 +2,7 @@ import { GC, CollectionName, UpdateAssetLocationOptions, LogLevels } from '../gl
 import { Asset } from '../collection-schema/Assets';
 import { CbCollectionLib } from '../collection-lib';
 import { Logger } from '../Logger';
-import { Topics, getAssetIdFromTopic } from '../Util';
+import { Topics } from '../Util';
 
 interface UpdateAssetLocationDataOptions {
     fetchedData: CbServer.CollectionSchema;
@@ -35,7 +35,8 @@ export function updateAssetLocationSS({
 
     ClearBlade.init({ request: req });
     const messaging = ClearBlade.Messaging();
-    const logger = Logger({ name: 'updateAssetLocationSS', logSetting: LOG_SETTING });
+    
+    const logger = Logger({ name: 'AssetLocationSSLib', logSetting: LOG_SETTING });
 
     //TODO default params in function
     //settings = settings || GC.UPDATE_ASSET_LOCATION_SETTINGS;
@@ -123,11 +124,16 @@ export function updateAssetLocationSS({
             return;
         }
 
-        const assetID = getAssetIdFromTopic(topic);
-
+        // Update for Jim/Ryan; Might fail for AD if used directly..
+        //const assetID = getAssetIdFromTopic(topic);
+        let assetID = '';
+        if(incomingMsg["id"]){
+            assetID = incomingMsg["id"];
+        }
+        
         if (!assetID) {
-            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Invalid topic received: ', topic);
-            return;
+            logger.publishLog(LogLevels.ERROR, 'Invalid message received, key: id missing in the payload ', topic, incomingMsg);
+            resp.error('Invalid message received, key: id missing in the payload '+ topic);
         }
 
         const fetchQuery = ClearBlade.Query({ collectionName: CollectionName.ASSETS }).equalTo('id', assetID);

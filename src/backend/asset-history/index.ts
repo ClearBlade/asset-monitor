@@ -3,7 +3,7 @@ import { Asset } from '../collection-schema/Assets';
 import { AssetHistory } from '../collection-schema/AssetHistory';
 import { CbCollectionLib } from '../collection-lib';
 import { Logger } from '../Logger';
-import { Topics, getAssetIdFromTopic } from '../Util';
+import { Topics } from '../Util';
 import { CreateAssetHistoryOptions } from '../global-config';
 
 interface CreateAssetHistoryConfig {
@@ -31,7 +31,7 @@ export function createAssetHistorySS({
 
     ClearBlade.init({ request: req });
     const messaging = ClearBlade.Messaging();
-    const logger = Logger({ name: 'createAssetHistorySS', logSetting: LOG_SETTING });
+    const logger = Logger({ name: 'AssetHistorySSLib', logSetting: LOG_SETTING });
 
     function successCb(value: unknown): void {
         logger.publishLog(LogLevels.SUCCESS, 'AssetHistory Creation Succeeded ', value);
@@ -115,9 +115,18 @@ export function createAssetHistorySS({
             return;
         }
         let assetHistoryItems: Array<AssetHistory> = [];
-        const assetID = getAssetIdFromTopic(topic);
+        // Update for Jim/Ryan; Might fail for AD if used directly..
+        //const assetID = getAssetIdFromTopic(topic);
+        
+        let assetID = '';
+        
+        if(parsedMsg["id"]){
+            assetID = parsedMsg["id"];
+        }
+        
         if (!assetID) {
-            logger.publishLog(LogLevels.ERROR, 'Invalid topic received: ' + topic);
+            logger.publishLog(LogLevels.ERROR, 'Invalid message received, key: id missing in the payload ', topic, parsedMsg);
+            resp.error('Invalid message received, key: id missing in the payload '+ topic);
         }
 
         const standardHistoryData = createStandardHistoryData(assetID, parsedMsg);
