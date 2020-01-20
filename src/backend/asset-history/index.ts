@@ -1,29 +1,32 @@
-import { GC, CollectionName, LogLevels } from '../global-config';
+import { GC, CollectionName, LogLevels, KeyStorageSettings, CreateAssetHistoryOptions } from '../global-config';
 import { Asset } from '../collection-schema/Assets';
 import { AssetHistory } from '../collection-schema/AssetHistory';
 import { CbCollectionLib } from '../collection-lib';
 import { Logger } from '../Logger';
 import { Topics } from '../Util';
-import { CreateAssetHistoryOptions } from '../global-config';
-
 interface CreateAssetHistoryConfig {
     req: CbServer.BasicReq;
     resp: CbServer.Resp;
     options?: CreateAssetHistoryOptions;
 }
 
+
 const defaultOptions = {
-    standardKeysToStore: GC.ASSET_HISTORY_CONFIG.standardKeysToStore,
-    customDataKeysToStore:GC.ASSET_HISTORY_CONFIG.customDataKeysToStore,
-    LOG_SETTING : GC.ASSET_HISTORY_CONFIG.LOG_SETTING,
+    STANDARD_KEYS_TO_STORE: GC.ASSET_HISTORY_CONFIG.STANDARD_KEYS_TO_STORE,
+    CUSTOM_DATA_KEYS_TO_STORE: GC.ASSET_HISTORY_CONFIG.CUSTOM_DATA_KEYS_TO_STORE,
+    STANDARD_KEY_STORAGE_SETTING: GC.ASSET_HISTORY_CONFIG.STANDARD_KEY_STORAGE_SETTING,
+    CUSTOM_DATA_KEY_STORAGE_SETTING: GC.ASSET_HISTORY_CONFIG.CUSTOM_DATA_KEY_STORAGE_SETTING,
+    LOG_SETTING: GC.ASSET_HISTORY_CONFIG.LOG_SETTING,
 };
 export function createAssetHistorySS({
     req,
     resp,
     options:{
-        standardKeysToStore = defaultOptions.standardKeysToStore,
-        customDataKeysToStore = defaultOptions.customDataKeysToStore,
+        STANDARD_KEYS_TO_STORE = defaultOptions.STANDARD_KEYS_TO_STORE,
+        CUSTOM_DATA_KEYS_TO_STORE = defaultOptions.CUSTOM_DATA_KEYS_TO_STORE,
         LOG_SETTING = defaultOptions.LOG_SETTING,
+        CUSTOM_DATA_KEY_STORAGE_SETTING = defaultOptions.CUSTOM_DATA_KEY_STORAGE_SETTING,
+        STANDARD_KEY_STORAGE_SETTING = defaultOptions.STANDARD_KEY_STORAGE_SETTING,
     } = defaultOptions,
 }: CreateAssetHistoryConfig): void {
     const TOPIC = '$share/AssetHistoryGroup/' + Topics.HistoryAssetLocation('+');
@@ -49,6 +52,7 @@ export function createAssetHistorySS({
             status_change: false,
             attribute_value: '',
             attribute_name: '',
+            asset_type:'',
         };
     }
 
@@ -56,28 +60,52 @@ export function createAssetHistorySS({
         const assetHistoryItems: Array<AssetHistory> = [];
         const currDate = new Date().toISOString();
 
-        for (let i = 0; i < standardKeysToStore.length; i++) {
+        if (
+            STANDARD_KEY_STORAGE_SETTING === KeyStorageSettings.NO ||
+            STANDARD_KEY_STORAGE_SETTING === KeyStorageSettings.ALL
+        ) {
+            return [];
+        }
+        //Implied the setting is CUSTOM
+        if(STANDARD_KEYS_TO_STORE && STANDARD_KEYS_TO_STORE.length <= 0){
+            return [];
+        }
+        logger.publishLog(LogLevels.DEBUG, 'STANDARD_KEYS_TO_STORE Data: ', STANDARD_KEYS_TO_STORE);
+
+        for (let i = 0; i < STANDARD_KEYS_TO_STORE.length; i++) {
             const currItem = getEmptyAssetHistoryObject();
-            const attributeName = standardKeysToStore[i];
-            if (parsedMsg[attributeName as keyof Asset]) {
+            const attributeName = STANDARD_KEYS_TO_STORE[i];
+            const attributeValue = parsedMsg[attributeName as keyof Asset];
+            if (typeof attributeValue !== 'undefined') {
                 currItem['asset_id'] = assetID;
                 currItem['attribute_name'] = attributeName;
                 // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
                 // @ts-ignore
-                currItem['attribute_value'] = parsedMsg[attributeName as keyof Asset];
+                currItem['attribute_value'] = attributeValue;
                 currItem['change_date'] = parsedMsg.last_updated || currDate;
                 currItem['location_change'] = true;
                 currItem['status_change'] = false;
-
+                currItem['asset_type'] = parsedMsg.type;
                 assetHistoryItems.push(currItem);
             }
         }
+        
+        logger.publishLog(LogLevels.DEBUG, 'StandardKeys Parsed Data: ', assetHistoryItems);
+
         return assetHistoryItems;
     }
 
     function createCustomHistoryData(assetID: string, parsedMsg: Asset): Array<AssetHistory> {
         const customData = parsedMsg['custom_data'];
 
+        if (
+            CUSTOM_DATA_KEY_STORAGE_SETTING === KeyStorageSettings.NO ||
+            (CUSTOM_DATA_KEY_STORAGE_SETTING === KeyStorageSettings.CUSTOM &&
+                CUSTOM_DATA_KEYS_TO_STORE && CUSTOM_DATA_KEYS_TO_STORE.length <= 0)
+        ) {
+            return [];
+        }
+        
         if (!customData) {
             logger.publishLog(LogLevels.DEBUG, 'Custom Data Missing: ', customData);
             return [];
@@ -85,18 +113,22 @@ export function createAssetHistorySS({
 
         const historyData: Array<AssetHistory> = [];
         const currDate = new Date().toISOString();
-        const keysToStore = (customDataKeysToStore.length > 0) ? customDataKeysToStore : Object.keys(customData);
+        const keysToStore = (CUSTOM_DATA_KEY_STORAGE_SETTING === KeyStorageSettings.ALL) ? Object.keys(customData):CUSTOM_DATA_KEYS_TO_STORE ;
         
         for (const key of keysToStore) {
-            historyData.push({
-                ...getEmptyAssetHistoryObject(),
-                change_date: currDate,
-                attribute_name: key,
-                asset_id: assetID,
-                attribute_value: customData[key as keyof typeof customData],
-                location_change: false,
-                status_change: true,
-            });
+            if(key){
+                historyData.push({
+                    ...getEmptyAssetHistoryObject(),
+                    change_date: parsedMsg.last_updated || currDate,
+                    attribute_name: key,
+                    asset_id: assetID,
+                    attribute_value: customData[key as keyof typeof customData],
+                    location_change: false,
+                    status_change: true,
+                    asset_type: parsedMsg.type,
+                });
+            }
+            
         }
         return historyData;
     }
@@ -104,7 +136,6 @@ export function createAssetHistorySS({
     function HandleMessage(err: boolean, msg: string, topic: string): void {
         if (err) {
             logger.publishLog(LogLevels.ERROR, 'Failed to wait for message: ', err, ' ', msg, '  ', topic);
-            resp.error('Failed to wait for message: ' + err + ' ' + msg + '    ' + topic);
         }
 
         let parsedMsg: Asset;
@@ -134,6 +165,12 @@ export function createAssetHistorySS({
         assetHistoryItems = assetHistoryItems.concat(createCustomHistoryData(assetID, parsedMsg));
 
         logger.publishLog(LogLevels.DEBUG, 'HistoryData ', assetHistoryItems);
+        
+        if(assetHistoryItems.length < 1){
+            logger.publishLog(LogLevels.DEBUG, 'No data to store for asset-history');
+            return ;
+        }
+
         const assetHistoyCol = CbCollectionLib(CollectionName.ASSET_HISTORY);
         // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
         // @ts-ignore
