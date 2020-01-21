@@ -102,7 +102,7 @@ export const Topics = {
     ListenAllAssetsStatus: (): string => `_monitor/_asset/+/status`,
 };
 
-//depreacted ... 
+//depreacted ...
 export function getAssetIdFromTopic(topic: string): string {
     const splitTopic = topic.split('/');
     if (splitTopic.length != 7) {

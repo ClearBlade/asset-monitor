@@ -10,7 +10,6 @@ interface CreateAssetHistoryConfig {
     options?: CreateAssetHistoryOptions;
 }
 
-
 const defaultOptions = {
     STANDARD_KEYS_TO_STORE: GC.ASSET_HISTORY_CONFIG.STANDARD_KEYS_TO_STORE,
     CUSTOM_DATA_KEYS_TO_STORE: GC.ASSET_HISTORY_CONFIG.CUSTOM_DATA_KEYS_TO_STORE,
@@ -21,7 +20,7 @@ const defaultOptions = {
 export function createAssetHistorySS({
     req,
     resp,
-    options:{
+    options: {
         STANDARD_KEYS_TO_STORE = defaultOptions.STANDARD_KEYS_TO_STORE,
         CUSTOM_DATA_KEYS_TO_STORE = defaultOptions.CUSTOM_DATA_KEYS_TO_STORE,
         LOG_SETTING = defaultOptions.LOG_SETTING,
@@ -52,7 +51,7 @@ export function createAssetHistorySS({
             status_change: false,
             attribute_value: '',
             attribute_name: '',
-            asset_type:'',
+            asset_type: '',
         };
     }
 
@@ -67,7 +66,7 @@ export function createAssetHistorySS({
             return [];
         }
         //Implied the setting is CUSTOM
-        if(STANDARD_KEYS_TO_STORE && STANDARD_KEYS_TO_STORE.length <= 0){
+        if (STANDARD_KEYS_TO_STORE && STANDARD_KEYS_TO_STORE.length <= 0) {
             return [];
         }
         logger.publishLog(LogLevels.DEBUG, 'STANDARD_KEYS_TO_STORE Data: ', STANDARD_KEYS_TO_STORE);
@@ -89,7 +88,7 @@ export function createAssetHistorySS({
                 assetHistoryItems.push(currItem);
             }
         }
-        
+
         logger.publishLog(LogLevels.DEBUG, 'StandardKeys Parsed Data: ', assetHistoryItems);
 
         return assetHistoryItems;
@@ -101,11 +100,12 @@ export function createAssetHistorySS({
         if (
             CUSTOM_DATA_KEY_STORAGE_SETTING === KeyStorageSettings.NO ||
             (CUSTOM_DATA_KEY_STORAGE_SETTING === KeyStorageSettings.CUSTOM &&
-                CUSTOM_DATA_KEYS_TO_STORE && CUSTOM_DATA_KEYS_TO_STORE.length <= 0)
+                CUSTOM_DATA_KEYS_TO_STORE &&
+                CUSTOM_DATA_KEYS_TO_STORE.length <= 0)
         ) {
             return [];
         }
-        
+
         if (!customData) {
             logger.publishLog(LogLevels.DEBUG, 'Custom Data Missing: ', customData);
             return [];
@@ -113,10 +113,13 @@ export function createAssetHistorySS({
 
         const historyData: Array<AssetHistory> = [];
         const currDate = new Date().toISOString();
-        const keysToStore = (CUSTOM_DATA_KEY_STORAGE_SETTING === KeyStorageSettings.ALL) ? Object.keys(customData):CUSTOM_DATA_KEYS_TO_STORE ;
-        
+        const keysToStore =
+            CUSTOM_DATA_KEY_STORAGE_SETTING === KeyStorageSettings.ALL
+                ? Object.keys(customData)
+                : CUSTOM_DATA_KEYS_TO_STORE;
+
         for (const key of keysToStore) {
-            if(key){
+            if (key) {
                 historyData.push({
                     ...getEmptyAssetHistoryObject(),
                     change_date: parsedMsg.last_updated || currDate,
@@ -128,7 +131,6 @@ export function createAssetHistorySS({
                     asset_type: parsedMsg.type,
                 });
             }
-            
         }
         return historyData;
     }
@@ -148,16 +150,21 @@ export function createAssetHistorySS({
         let assetHistoryItems: Array<AssetHistory> = [];
         // Update for Jim/Ryan; Might fail for AD if used directly..
         //const assetID = getAssetIdFromTopic(topic);
-        
+
         let assetID = '';
-        
-        if(parsedMsg["id"]){
-            assetID = parsedMsg["id"];
+
+        if (parsedMsg['id']) {
+            assetID = parsedMsg['id'];
         }
-        
+
         if (!assetID) {
-            logger.publishLog(LogLevels.ERROR, 'Invalid message received, key: id missing in the payload ', topic, parsedMsg);
-            resp.error('Invalid message received, key: id missing in the payload '+ topic);
+            logger.publishLog(
+                LogLevels.ERROR,
+                'Invalid message received, key: id missing in the payload ',
+                topic,
+                parsedMsg,
+            );
+            resp.error('Invalid message received, key: id missing in the payload ' + topic);
         }
 
         const standardHistoryData = createStandardHistoryData(assetID, parsedMsg);
@@ -165,10 +172,10 @@ export function createAssetHistorySS({
         assetHistoryItems = assetHistoryItems.concat(createCustomHistoryData(assetID, parsedMsg));
 
         logger.publishLog(LogLevels.DEBUG, 'HistoryData ', assetHistoryItems);
-        
-        if(assetHistoryItems.length < 1){
+
+        if (assetHistoryItems.length < 1) {
             logger.publishLog(LogLevels.DEBUG, 'No data to store for asset-history');
-            return ;
+            return;
         }
 
         const assetHistoyCol = CbCollectionLib(CollectionName.ASSET_HISTORY);

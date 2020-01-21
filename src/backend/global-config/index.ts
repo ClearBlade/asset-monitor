@@ -50,9 +50,9 @@ export interface UpdateAssetStatusOptions {
 }
 
 export enum KeyStorageSettings {
-    NO = "no",
-    ALL = "all",
-    CUSTOM = "custom",
+    NO = 'no',
+    ALL = 'all',
+    CUSTOM = 'custom',
 }
 export interface CreateAssetHistoryOptions {
     STANDARD_KEYS_TO_STORE: Array<string>;

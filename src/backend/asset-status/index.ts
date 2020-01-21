@@ -91,13 +91,18 @@ export function updateAssetStatusSS({
         // Update for Jim/Ryan; Might fail for AD if used directly..
         //const assetID = getAssetIdFromTopic(topic);
         let assetID = '';
-        if(jsonMessage["id"]){
-            assetID = jsonMessage["id"];
+        if (jsonMessage['id']) {
+            assetID = jsonMessage['id'];
         }
-        
+
         if (!assetID) {
-            logger.publishLog(LogLevels.ERROR, 'Invalid message received, key: id missing in the payload ', topic, jsonMessage);
-            resp.error('Invalid message received, key: id missing in the payload '+ topic);
+            logger.publishLog(
+                LogLevels.ERROR,
+                'Invalid message received, key: id missing in the payload ',
+                topic,
+                jsonMessage,
+            );
+            resp.error('Invalid message received, key: id missing in the payload ' + topic);
         }
         if (UPDATE_METHOD === AssetStatusUpdateMethod.MERGE) {
             MergeAsset(assetID, jsonMessage).catch(failureCb);

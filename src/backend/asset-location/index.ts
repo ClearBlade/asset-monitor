@@ -35,7 +35,7 @@ export function updateAssetLocationSS({
 
     ClearBlade.init({ request: req });
     const messaging = ClearBlade.Messaging();
-    
+
     const logger = Logger({ name: 'AssetLocationSSLib', logSetting: LOG_SETTING });
 
     //TODO default params in function
@@ -126,12 +126,17 @@ export function updateAssetLocationSS({
 
         // Update for Jim/Ryan; Might fail for AD if used directly..
         //const assetID = getAssetIdFromTopic(topic);
-        if (typeof incomingMsg["id"] === 'undefined') {
-            logger.publishLog(LogLevels.ERROR, 'Invalid message received, key: id missing in the payload ', topic, incomingMsg);
+        if (typeof incomingMsg['id'] === 'undefined') {
+            logger.publishLog(
+                LogLevels.ERROR,
+                'Invalid message received, key: id missing in the payload ',
+                topic,
+                incomingMsg,
+            );
             return;
         }
 
-        let assetID = incomingMsg['id'];
+        const assetID = incomingMsg['id'];
 
         const fetchQuery = ClearBlade.Query({ collectionName: CollectionName.ASSETS }).equalTo('id', assetID);
         const assetsCol = CbCollectionLib(CollectionName.ASSETS);
@@ -150,7 +155,7 @@ export function updateAssetLocationSS({
                         logger.publishLog(LogLevels.DEBUG, 'DEBUG: ', " Asset doesn't exist so, ignoring: ", data);
                     }
                 } else {
-                    logger.publishLog(LogLevels.ERROR,'ERROR: Multiple Assets with same assetId exists: ', data);
+                    logger.publishLog(LogLevels.ERROR, 'ERROR: Multiple Assets with same assetId exists: ', data);
                 }
             })
             .catch(function(reason) {

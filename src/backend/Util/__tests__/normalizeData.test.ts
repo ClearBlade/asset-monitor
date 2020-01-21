@@ -21,7 +21,7 @@ const config = {
     last_updated: 'lastSeen',
     last_location_updated: 'lastSeen',
     id: 'id',
-    type:'type',
+    type: 'type',
 };
 
 const output = [
@@ -38,7 +38,7 @@ const output = [
         last_updated: undefined,
         last_location_updated: undefined,
         id: 'yash_deviceid',
-        type:'testing',
+        type: 'testing',
         custom_data: {
             something: 'is up',
             goal: 'Incoming from CMX normalizer topic',

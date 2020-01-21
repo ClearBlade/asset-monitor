@@ -74,7 +74,7 @@ export function normalizer(config: NormalizerConfig): void {
 
     logger.publishLog(LogLevels.DEBUG, 'Normalizer SERVICE_INSTANCE_ID:: ' + SERVICE_INSTANCE_ID);
 
-    let subscribePromises: Promise<unknown>[] = [];
+    const subscribePromises: Promise<unknown>[] = [];
     for (let i = 0, l = config.topics.length; i < l; i++) {
         subscribePromises.push(subscriber(config.topics[i]));
     }
