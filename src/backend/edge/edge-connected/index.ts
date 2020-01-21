@@ -1,3 +1,5 @@
+import { DEFAULT_EDGE_RELAY_CACHE_NAME, DEFAULT_EDGE_RELAY_CACHE_COLLECTION_NAME } from '../shared';
+
 interface RelayCacheRecord {
     item_id: string;
     topic: string;
@@ -15,8 +17,8 @@ interface EdgeConnectedConfig {
 function edgeConnected({
     resp,
     req,
-    cacheName = 'edgeDataSharedCache',
-    collectionName = 'edge_relay_cache',
+    cacheName = DEFAULT_EDGE_RELAY_CACHE_NAME,
+    collectionName = DEFAULT_EDGE_RELAY_CACHE_COLLECTION_NAME,
 }: EdgeConnectedConfig): void {
     //We don't want this service to run on the platform
     if (!ClearBlade.isEdge()) {

@@ -305,6 +305,10 @@ declare namespace CbServer {
         publish(topic: string, payload: string | ArrayBuffer): void;
         subscribe(topic: string, callback: CbCallback<string | null>): void;
         waitForMessage(topics: Array<string>, wfmCallback: WaitForMessageCallback): void;
+        setTimeout(timeout: number, topic: string, data: string, cb: CbCallback<string>): void;
+        cancelCBTimeout(id: string, cb: CbCallback<string>): void;
+        setInterval(timeout: number, topic: string, data: string, iterations: number, cb: CbCallback<string>): void;
+        cancelCBInterval(id: string, cb: CbCallback<string>): void;
     }
 
     type MessagingOptions = {};

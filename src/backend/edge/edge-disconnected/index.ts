@@ -1,10 +1,12 @@
+import { DEFAULT_EDGE_RELAY_CACHE_NAME } from '../shared';
+
 interface EdgeDisconnectedConfig {
     req: CbServer.BasicReq;
     resp: CbServer.Resp;
-    cacheName: string;
+    cacheName?: string;
 }
 
-function edgeDisconnected({ req, resp, cacheName = 'edgeDataSharedCache' }: EdgeDisconnectedConfig): void {
+function edgeDisconnected({ req, resp, cacheName = DEFAULT_EDGE_RELAY_CACHE_NAME }: EdgeDisconnectedConfig): void {
     //We don't want this service to run on the platform
     if (!ClearBlade.isEdge()) {
         resp.success('Execution environment is not ClearBlade Edge, exiting.');
