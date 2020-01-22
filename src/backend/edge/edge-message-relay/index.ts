@@ -35,9 +35,10 @@ function edgeMessageRelay({
     const messaging = ClearBlade.Messaging();
 
     const cache = ClearBlade.Cache(cacheName);
-
     const intervalTopic = 'interval/edgeMessageRelay';
     let intervalID: string;
+
+    const CACHE_ITEM_NAME = "edgeIsConnected";
     const CACHE_TTL_INTERVAL = 1800; //seconds
 
     const TOPICS = [intervalTopic];
@@ -114,14 +115,8 @@ function edgeMessageRelay({
 
         switch (topic) {
             case intervalTopic:
-                //Refresh the cache TTL by setting a dummy value
-                cache.set('ttlRefresh', false, (err, data) => {
-                    if (err) {
-                        log('edgeMessageRelay - Error updating ttlRefresh in shared cache:' + JSON.stringify(data));
-                    } else {
-                        log('edgeMessageRelay - Shared cache ttlRefresh updated.');
-                    }
-                });
+                //Refresh the cache by reading the current value and writing it back
+                refreshSharedCacheItem(CACHE_ITEM_NAME);
                 break;
             default:
                 if (topic === '$share/EdgeRelayGroup/' + Topics.DBUpdateAssetLocation(assetId)) {
@@ -158,6 +153,33 @@ function edgeMessageRelay({
                     }
                 }
         }
+    }
+
+    function getSharedCacheItem(itemName: string, callback: CbServer.CbCallback) {
+        cache.get(itemName, (err, data)=>{
+            callback(err, <CbServer.Resp> data);
+        });
+    }
+    
+    function setSharedCacheItem(itemName: string, itemValue: any){
+        cache.set(itemName, itemValue, (err, data)=>{
+            if (err) {
+                log("Error updating shared cache: " + JSON.stringify(data));
+            } else {
+                log("Shared cache updated: edgeIsConnected = true");
+            }
+        });
+    }
+    
+    
+    function refreshSharedCacheItem(itemName: string) {
+        getSharedCacheItem(itemName, (err: boolean, data: CbServer.Resp)=>{
+            if (err) {
+                log("Error retrieving from shared cache: " + JSON.stringify(data));
+            } else {
+                setSharedCacheItem(itemName, data);
+            }
+        })
     }
 
     function relayMessage(msg: string, topic: string): void {
@@ -199,11 +221,14 @@ function edgeMessageRelay({
     }
 
     function cancelInterval(): void {
-        messaging.cancelCBInterval(intervalID, function(err, data) {
+		messaging.cancelCBInterval(intervalID, function (err, data) {
             if (err) {
-                log('edgeMessageRelay - Error cancelling interval: ' + JSON.stringify(data));
+                log("Error cancelling interval: " + JSON.stringify(data));
+                resp.error("Error invoking cancelCBInterval: " + JSON.stringify(data));
             }
-        });
+            log("Interval cancelled, exiting...");
+            resp.success("Interval canceled: " + JSON.stringify(data));
+        })
     }
 
     Promise.all(subscribePromises)
