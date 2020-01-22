@@ -38,7 +38,7 @@ function edgeMessageRelay({
     const intervalTopic = 'interval/edgeMessageRelay';
     let intervalID: string;
 
-    const CACHE_ITEM_NAME = "edgeIsConnected";
+    const CACHE_ITEM_NAME = 'edgeIsConnected';
     const CACHE_TTL_INTERVAL = 1800; //seconds
 
     const TOPICS = [intervalTopic];
@@ -155,31 +155,30 @@ function edgeMessageRelay({
         }
     }
 
-    function getSharedCacheItem(itemName: string, callback: CbServer.CbCallback) {
-        cache.get(itemName, (err, data)=>{
-            callback(err, <CbServer.Resp> data);
+    function getSharedCacheItem(itemName: string, callback: CbServer.CbCallback): void {
+        cache.get(itemName, (err, data) => {
+            callback(err, data as CbServer.Resp);
         });
     }
-    
-    function setSharedCacheItem(itemName: string, itemValue: any){
-        cache.set(itemName, itemValue, (err, data)=>{
+
+    function setSharedCacheItem(itemName: string, itemValue: string | boolean | number | object): void {
+        cache.set(itemName, itemValue, (err, data) => {
             if (err) {
-                log("Error updating shared cache: " + JSON.stringify(data));
+                log('Error updating shared cache: ' + JSON.stringify(data));
             } else {
-                log("Shared cache updated: edgeIsConnected = true");
+                log('Shared cache updated: edgeIsConnected = true');
             }
         });
     }
-    
-    
-    function refreshSharedCacheItem(itemName: string) {
-        getSharedCacheItem(itemName, (err: boolean, data: CbServer.Resp)=>{
+
+    function refreshSharedCacheItem(itemName: string): void {
+        getSharedCacheItem(itemName, (err: boolean, data: CbServer.Resp) => {
             if (err) {
-                log("Error retrieving from shared cache: " + JSON.stringify(data));
+                log('Error retrieving from shared cache: ' + JSON.stringify(data));
             } else {
                 setSharedCacheItem(itemName, data);
             }
-        })
+        });
     }
 
     function relayMessage(msg: string, topic: string): void {
@@ -221,14 +220,14 @@ function edgeMessageRelay({
     }
 
     function cancelInterval(): void {
-		messaging.cancelCBInterval(intervalID, function (err, data) {
+        messaging.cancelCBInterval(intervalID, function(err, data) {
             if (err) {
-                log("Error cancelling interval: " + JSON.stringify(data));
-                resp.error("Error invoking cancelCBInterval: " + JSON.stringify(data));
+                log('Error cancelling interval: ' + JSON.stringify(data));
+                resp.error('Error invoking cancelCBInterval: ' + JSON.stringify(data));
             }
-            log("Interval cancelled, exiting...");
-            resp.success("Interval canceled: " + JSON.stringify(data));
-        })
+            log('Interval cancelled, exiting...');
+            resp.success('Interval canceled: ' + JSON.stringify(data));
+        });
     }
 
     Promise.all(subscribePromises)
