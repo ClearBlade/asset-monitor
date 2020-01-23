@@ -3,9 +3,35 @@ import { processEvent } from '../events';
 import { EventSchema } from '../../collection-schema/Events';
 import * as uuid from 'uuid/v4';
 import { Entities, SplitEntities } from '../async';
+import { RuleParams } from '../types';
+
 jest.mock('../async');
 jest.mock('uuid/v4');
 const { entitiesAreEqual } = jest.requireActual('../async');
+
+const mockedTimestamp = '2020-01-07T21:58:20.610Z';
+const mockedUUID = 'UUID';
+
+describe('Events For Rules', () => {
+    jest.spyOn(Date.prototype, 'toISOString').mockReturnValue(mockedTimestamp);
+    // @ts-ignore
+    uuid.mockImplementation(() => mockedUUID);
+    it('entity check returns true if entities are equal', () => {
+        expect(entitiesAreEqual(existingEventMatch, incomingEvent)).toBe(true);
+    });
+
+    it('entity check returns false if entities are not equal', () => {
+        expect(entitiesAreEqual(existingEventUnmatch, incomingEvent)).toBe(false);
+    });
+
+    it('processEvent processes event correctly after async calls', () => {
+        return processEvent(event.params as RuleParams, entities, '', entities.entityOne as Entities).then(
+            eventResult => {
+                expect(eventResult).toEqual(finishedEvent);
+            },
+        );
+    });
+});
 
 const event: Event = {
     type: 'Test Event',
@@ -31,9 +57,6 @@ const entities: Entities = {
         polygon: '[]',
     },
 };
-
-const mockedTimestamp = '2020-01-07T21:58:20.610Z';
-const mockedUUID = 'UUID';
 
 const finishedEvent: EventSchema = {
     last_updated: mockedTimestamp,
@@ -69,22 +92,3 @@ const incomingEvent: SplitEntities = {
         entityThree: entities.entityThree,
     },
 };
-
-describe('Events For Rules', () => {
-    jest.spyOn(Date.prototype, 'toISOString').mockReturnValue(mockedTimestamp);
-    // @ts-ignore
-    uuid.mockImplementation(() => mockedUUID);
-    it('entity check returns true if entities are equal', () => {
-        expect(entitiesAreEqual(existingEventMatch, incomingEvent)).toBe(true);
-    });
-
-    it('entity check returns false if entities are not equal', () => {
-        expect(entitiesAreEqual(existingEventUnmatch, incomingEvent)).toBe(false);
-    });
-
-    it('processEvent processes event correctly after async calls', () => {
-        return processEvent(event, entities, '', entities.entityOne as Entities).then(eventResult => {
-            expect(eventResult).toEqual(finishedEvent);
-        });
-    });
-});

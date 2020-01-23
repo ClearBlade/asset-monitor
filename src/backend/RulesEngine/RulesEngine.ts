@@ -1,38 +1,19 @@
 import '../../static/promise-polyfill';
 import 'core-js/features/map';
-import {
-    Engine,
-    Event,
-    TopLevelCondition,
-    Almanac,
-    AllConditions,
-    AnyConditions,
-    NestedCondition,
-    ConditionProperties,
-    RuleResult,
-    Rule,
-} from 'json-rules-engine';
-import { StateParams, TimeFrame } from './types';
+import { Engine, Event, TopLevelCondition, Almanac, RuleResult, Rule } from 'json-rules-engine';
+import { StateParams, TimeFrame, AreaParams, EntityTypes, RuleParams } from './types';
 import { parseAndConvertConditions } from './convert-rule';
 import { doesTimeframeMatchRule } from './timeframe';
-import { processEvent } from './events';
+import { processEvent, processSuccessfulEvents } from './events';
 // import { ProcessDurationIfExists } from './duration';
 import { Rules } from '../collection-schema/Rules';
-import { CbCollectionLib } from '../collection-lib';
-import { Areas } from '../collection-schema/Areas';
-import { Asset } from '../collection-schema/Assets';
 import { Entities } from './async';
-
-interface WithParsedCustomData extends Asset {
-    custom_data: Record<string, object>;
-}
+import { WithParsedCustomData, FactData, collectAndBuildFact, processRule } from './utils';
+import { CollectionName } from '../global-config';
+import { processDuration } from './duration';
 
 interface IncomingFact {
     incomingData: WithParsedCustomData;
-}
-
-interface FactData {
-    data: WithParsedCustomData;
 }
 
 export class RulesEngine {
@@ -47,6 +28,7 @@ export class RulesEngine {
             allowUndefinedFacts: true,
         })
             .addFact('state', (params, almanac) => handleStateCondition(params as StateParams, almanac))
+            .addFact('area', (params, almanac) => handleAreaCondition(params as AreaParams, almanac))
             .on('success', (event, almanac, ruleResult) =>
                 handleRuleSuccess(event, almanac, ruleResult, this.actionTopic),
             );
@@ -135,91 +117,49 @@ function handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResul
     // @ts-ignore json-rule-engine types does not include factMap
     const incomingData = almanac.factMap.get('incomingData').value;
     const timeframe = (event.params as Record<string, string | TimeFrame>).timeframe;
-    if (doesTimeframeMatchRule(incomingData.timestamp, timeframe as TimeFrame)) {
-        const triggers = getTriggerIds(
-            (ruleResult.conditions as AllConditions).all
-                ? (ruleResult.conditions as AllConditions).all
-                : (ruleResult.conditions as AnyConditions).any,
-            [],
-        );
-        const entities: Entities = triggers.reduce((acc: object, trigger: string) => {
-            // @ts-ignore json-rule-engine types does not include factMap
-            acc[trigger] = almanac.factMap.get(trigger).value.data;
-            return acc;
-        }, {});
-        // @ts-ignore
-        log('Processing rule for successful event: ' + JSON.stringify(ruleResult));
-        processEvent(event, entities, actionTopic, incomingData);
-    }
-}
-
-function buildFact(entityData: Asset | Areas, incomingData: WithParsedCustomData): WithParsedCustomData {
-    let withParsedCustomData: WithParsedCustomData = {
-        // parse custom_data
-        ...entityData,
-        custom_data: JSON.parse((entityData.custom_data as string) || '{}'),
-    };
-    if (entityData.id === incomingData.id) {
-        // if this one is the same as asset that triggered engine
-        withParsedCustomData = {
-            ...withParsedCustomData,
-            ...incomingData,
-            custom_data: {
-                ...withParsedCustomData.custom_data,
-                ...incomingData.custom_data,
-            },
-        };
-    }
-    return withParsedCustomData;
-}
-
-function collectAndBuildFact(
-    almanac: Almanac,
-    data: FactData,
-    params: StateParams,
-    incomingData: WithParsedCustomData,
-): Promise<FactData> {
-    return new Promise(res => {
-        if (data) {
-            res(data);
-        }
-        // custom data has not been fetched for asset
-        const collection = CbCollectionLib(params.collection);
-        const query = ClearBlade.Query({ collectionName: params.collection });
-        if (params.id === incomingData.id) {
-            query.equalTo('id', params.id);
-        } else {
-            query.equalTo('type', params.type);
-        }
-        const promise = collection
-            .cbFetchPromise({ query })
-            .then((data: CbServer.CollectionFetchData<Asset | Areas>) => {
-                let initialData; // the fact who started all this mess
-                for (let i = 0; i < data.DATA.length; i++) {
-                    const entityData = data.DATA[i];
-                    const fact = buildFact(entityData, incomingData);
-                    if (params.id === entityData.id) {
-                        // if this one is the same as asset that triggered fact
-                        initialData = { ...fact };
-                    }
-                    almanac.addRuntimeFact(entityData.id as string, { data: fact }); // add fact for id
-                }
-                res({ data: initialData } as FactData); // resolve the initial fact's value
-            });
-        Promise.runQueue();
-        return promise;
+    const processedRule = processRule(incomingData.id, ruleResult.conditions, {
+        conditionIds: [],
+        hasDuration: false,
+        hasSuccessfulResult: false,
     });
+    const entities: Entities = processedRule.conditionIds.reduce((acc: object, trigger: string) => {
+        // @ts-ignore json-rule-engine types does not include factMap
+        acc[trigger] = almanac.factMap.get(trigger).value.data;
+        return acc;
+    }, {});
+    // @ts-ignore
+    log('Processing rule for successful event: ' + JSON.stringify(ruleResult));
+    if (processedRule.hasDuration) {
+        processDuration(
+            ruleResult.conditions,
+            timeframe as TimeFrame,
+            event.params as RuleParams,
+            entities,
+            actionTopic,
+            incomingData,
+        );
+    } else if (doesTimeframeMatchRule(incomingData.timestamp, timeframe as TimeFrame)) {
+        processSuccessfulEvents(ruleResult.conditions, event.params as RuleParams, entities, actionTopic, incomingData);
+    }
 }
 
-function handleStateCondition(params: StateParams, almanac: Almanac): Promise<FactData> {
+function handleAreaCondition(params: AreaParams, almanac: Almanac): Promise<FactData> {
     const promise = almanac.factValue<WithParsedCustomData>('incomingData').then(incomingData => {
-        const isIncoming = params.id === incomingData.id;
-        const isDifferentType = params.type !== incomingData.type;
+        const incomingIsAsset = incomingData.entityType === EntityTypes.ASSET;
+        const isIncoming = incomingIsAsset ? incomingData.id === params.id : incomingData.id === params.id2;
+        const isDifferentType = incomingIsAsset
+            ? incomingData.type !== params.type
+            : incomingData.type !== params.type2;
         if (isIncoming || isDifferentType) {
             const promise = almanac.factValue<FactData>(params.id).then(data => {
-                return collectAndBuildFact(almanac, data, params, incomingData).then(builtFact => {
-                    return builtFact;
-                });
+                return (
+                    data ||
+                    collectAndBuildFact(almanac, params.id, params.type, CollectionName.ASSETS, incomingData).then(
+                        builtFact => {
+                            return builtFact;
+                        },
+                    )
+                );
             });
             Promise.runQueue();
             return promise;
@@ -229,15 +169,22 @@ function handleStateCondition(params: StateParams, almanac: Almanac): Promise<Fa
     return promise as Promise<FactData>;
 }
 
-function getTriggerIds(conditions: NestedCondition[], ids: string[]): string[] {
-    for (let i = 0; i < conditions.length; i++) {
-        const firstKey = Object.keys(conditions[i])[0];
-        if (firstKey === 'all' || firstKey === 'any') {
-            getTriggerIds(conditions[i][firstKey as keyof TopLevelCondition], ids);
-            // @ts-ignore json-rule-engine types does not include result
-        } else if (conditions[i].result) {
-            ids.push(((conditions[i] as ConditionProperties).params as Record<string, string>).id);
+function handleStateCondition(params: StateParams, almanac: Almanac): Promise<FactData> {
+    const promise = almanac.factValue<WithParsedCustomData>('incomingData').then(incomingData => {
+        const isIncoming = params.id === incomingData.id;
+        const isDifferentType = params.type !== incomingData.type;
+        if (isIncoming || isDifferentType) {
+            const promise = almanac.factValue<FactData>(params.id).then(data => {
+                return (
+                    data ||
+                    // custom data has not been fetched for asset
+                    collectAndBuildFact(almanac, params.id, params.type, params.collection, incomingData)
+                );
+            });
+            Promise.runQueue();
+            return promise;
         }
-    }
-    return ids;
+    });
+    Promise.runQueue();
+    return promise as Promise<FactData>;
 }

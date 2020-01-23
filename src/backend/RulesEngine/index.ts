@@ -1,6 +1,7 @@
 import { Rules } from '../collection-schema/Rules';
 import { RulesEngine } from './RulesEngine';
 import { subscriber } from '../Normalizer';
+import { EntityTypes } from './types';
 
 interface RulesEngineAPI {
     resp: CbServer.Resp;
@@ -74,7 +75,10 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
             } else {
                 let incomingData;
                 try {
-                    incomingData = JSON.parse(msg);
+                    incomingData = {
+                        ...JSON.parse(msg),
+                        entityType: topic.includes('_assets') ? EntityTypes.ASSET : EntityTypes.AREA,
+                    };
                 } catch (e) {
                     resp.error('Invalid message structure: ' + JSON.stringify(e));
                 }

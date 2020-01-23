@@ -1,6 +1,6 @@
 import { RuleParams } from './types';
 import '../../static/promise-polyfill';
-import { Event } from 'json-rules-engine';
+import { Event, TopLevelCondition } from 'json-rules-engine';
 import {
     getActionByID,
     getStateForEvent,
@@ -13,6 +13,14 @@ import {
 import * as uuid from 'uuid/v4';
 import { EventSchema } from '../collection-schema/Events';
 import { Areas } from '../collection-schema/Areas';
+
+// export function processSuccessfulEvents(
+//     conditions: TopLevelCondition,
+//     ruleParams: RuleParams,
+//     entities: Entities,
+//     actionTopic: string,
+//     trigger: Entities,
+// ) {}
 
 function getSplitEntities(entities: Entities): SplitEntities {
     return Object.keys(entities).reduce(
@@ -32,12 +40,12 @@ function getSplitEntities(entities: Entities): SplitEntities {
 }
 
 export function processEvent(
-    event: Event,
+    ruleParams: RuleParams,
     entities: Entities,
     actionTopic: string,
     trigger: Entities,
 ): Promise<EventSchema> {
-    const { eventTypeID, actionIDs, priority, severity, ruleID } = event.params as RuleParams;
+    const { eventTypeID, actionIDs, priority, severity, ruleID } = ruleParams;
     const splitEntities = getSplitEntities(entities);
     const promise = shouldCreateEvent(ruleID, splitEntities).then(should => {
         if (should) {
@@ -66,8 +74,8 @@ export function processEvent(
                         transition_attribute: 'state',
                     }).then(() => {
                         if (actionTopic) {
-                            for (let i = 0; i < (event.params as RuleParams).actionIDs.length; i++) {
-                                performAction((event.params as RuleParams).actionIDs[i], item, actionTopic, trigger);
+                            for (let i = 0; i < ruleParams.actionIDs.length; i++) {
+                                performAction(ruleParams.actionIDs[i], item, actionTopic, trigger);
                             }
                         }
                         return item;

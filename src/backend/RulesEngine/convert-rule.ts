@@ -1,4 +1,12 @@
-import { Condition, ConditionalOperators, EntityTypes, Conditions, ConditionArray } from './types';
+import {
+    Condition,
+    ConditionalOperators,
+    EntityTypes,
+    Conditions,
+    ConditionArray,
+    Duration,
+    DurationUnits,
+} from './types';
 import '../../static/promise-polyfill';
 import { getAllAreasForType, getAllAssetsForType } from './async';
 import { TopLevelCondition, AnyConditions, AllConditions, ConditionProperties } from 'json-rules-engine';
@@ -11,6 +19,21 @@ function getCollectionName(entityType: EntityTypes): EntityTypes {
             return EntityTypes.AREA;
         default:
             return entityType as EntityTypes;
+    }
+}
+
+function calculateDuration(duration: Duration): number {
+    switch (duration.unit) {
+        case DurationUnits.SECONDS:
+            return duration.value * 1000;
+        case DurationUnits.MINUTES:
+            return duration.value * 60000;
+        case DurationUnits.HOURS:
+            return duration.value * 3600000;
+        case DurationUnits.DAYS:
+            return duration.value * 86400000;
+        default:
+            return 0;
     }
 }
 
@@ -27,6 +50,7 @@ function getConditionProps(id: string, condition: Condition, isPartOfType?: bool
                     attribute: relationship.attribute,
                     collection: getCollectionName(entity.entity_type),
                     type: isPartOfType ? entity.id : null,
+                    duration: calculateDuration(relationship.duration),
                 },
                 path: `.data.custom_data.${relationship.attribute}`,
                 value: relationship.value,
