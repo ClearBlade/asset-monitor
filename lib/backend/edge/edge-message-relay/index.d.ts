@@ -1,4 +1,4 @@
-import '../static/promise-polyfill/index.js';
+import '../../../static/promise-polyfill';
 interface EdgeMessageRelayConfig {
     req: CbServer.BasicReq;
     resp: CbServer.Resp;
