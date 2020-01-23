@@ -1,4 +1,4 @@
-import '../static/promise-polyfill/index.js';
+import '../../../static/promise-polyfill';
 import { subscriber } from '../../Normalizer';
 import { Topics, getAssetIdFromTopic } from '../../Util';
 import { DEFAULT_EDGE_RELAY_CACHE_NAME, DEFAULT_EDGE_RELAY_CACHE_COLLECTION_NAME } from '../shared';
