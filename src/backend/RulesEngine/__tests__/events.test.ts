@@ -72,7 +72,8 @@ const incomingEvent: SplitEntities = {
 
 describe('Events For Rules', () => {
     jest.spyOn(Date.prototype, 'toISOString').mockReturnValue(mockedTimestamp);
-    // @ts-ignore
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+    // @ts-ignore jest types don't include mockImplementation
     uuid.mockImplementation(() => mockedUUID);
     it('entity check returns true if entities are equal', () => {
         expect(entitiesAreEqual(existingEventMatch, incomingEvent)).toBe(true);
