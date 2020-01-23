@@ -3,7 +3,7 @@ export interface LogLevel {
     [key: string]: LogLevels;
 }
 export interface NormalizerDeviceMap {
-    [index: string]: string;
+    [index: string]: string | object;
 }
 export declare enum LogLevels {
     INFO = "info",
