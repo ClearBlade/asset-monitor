@@ -23,6 +23,7 @@ type IKeysToPublish = Array<string>;
 export interface PublishConfig {
     topicFn: (assetID: string) => string;
     keysToPublish: IKeysToPublish;
+    shouldPublishAsset?: (asset: Asset) => boolean;
 }
 
 export function subscriber(topic: string): Promise<unknown> {
@@ -50,7 +51,10 @@ export function publisher(assets: Array<Asset>, pubConfig: PublishConfig): void 
             // @ts-ignore
             pubData[value] = assets[i][value];
         });
-        messaging.publish(topic, JSON.stringify(pubData));
+
+        if (typeof pubConfig.shouldPublishAsset === 'undefined' || pubConfig.shouldPublishAsset(pubData)) {
+            messaging.publish(topic, JSON.stringify(pubData));
+        }
     }
 }
 
