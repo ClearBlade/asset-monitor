@@ -101,6 +101,6 @@ Make changes to the src/ folder and then run `npm run build`. Update package ver
 ## How to push a new NPM version
 
 1. Commit your changes to src
-2. Create a new npm version - `npm version [—no-commit-hooks] <major|minor|patch>`
+2. Create a new npm version - `npm version [-—no-commit-hooks] <major|minor|patch>`
 3. Publish the new version to npm - `npm publish`
 4. Commit the changes from the build and push to master
