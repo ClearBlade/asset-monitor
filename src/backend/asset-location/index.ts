@@ -2,7 +2,7 @@ import { GC, CollectionName, UpdateAssetLocationOptions, LogLevels } from '../gl
 import { Asset } from '../collection-schema/Assets';
 import { CbCollectionLib } from '../collection-lib';
 import { Logger } from '../Logger';
-import { Topics, getAssetIdFromTopic } from '../Util';
+import { Topics } from '../Util';
 
 interface UpdateAssetLocationDataOptions {
     fetchedData: CbServer.CollectionSchema;
@@ -35,17 +35,18 @@ export function updateAssetLocationSS({
 
     ClearBlade.init({ request: req });
     const messaging = ClearBlade.Messaging();
-    const logger = Logger({ name: 'updateAssetLocationSS', logSetting: LOG_SETTING });
+
+    const logger = Logger({ name: 'AssetLocationSSLib', logSetting: LOG_SETTING });
 
     //TODO default params in function
     //settings = settings || GC.UPDATE_ASSET_LOCATION_SETTINGS;
 
     function successCb(value: unknown): void {
-        logger.publishLog(GC.LOG_LEVEL.SUCCESS, 'Succeeded ', value);
+        logger.publishLog(LogLevels.SUCCESS, 'Succeeded ', value);
     }
 
     function failureCb(reason: unknown): void {
-        logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed ', reason);
+        logger.publishLog(LogLevels.ERROR, 'Failed ', reason);
     }
 
     function updateAssetLocation(assetsOpts: UpdateAssetLocationDataOptions): Promise<unknown> {
@@ -53,7 +54,7 @@ export function updateAssetLocationSS({
         const incomingMsg = assetsOpts.incomingMsg;
         const assetsCol = CbCollectionLib(CollectionName.ASSETS);
 
-        logger.publishLog(GC.LOG_LEVEL.DEBUG, 'DEBUG: ', 'In Update Asset Location');
+        logger.publishLog(LogLevels.DEBUG, 'DEBUG: ', 'In Update Asset Location');
         if (!currentState.item_id) {
             return Promise.reject('Item Id is missing');
         }
@@ -78,14 +79,14 @@ export function updateAssetLocationSS({
 
         //DEV_TODO comment the logs once the entire flow works or
         // just change the LOG_LEVEL to info in the custom_config
-        logger.publishLog(GC.LOG_LEVEL.DEBUG, 'DEBUG: logging changes: ', changes);
+        logger.publishLog(LogLevels.DEBUG, 'DEBUG: logging changes: ', changes);
         // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
         // @ts-ignore
         return assetsCol.cbUpdatePromise({ query, changes });
     }
 
     function createAsset(assetID: string, assetData: Asset): Promise<unknown> {
-        logger.publishLog(GC.LOG_LEVEL.DEBUG, 'DEBUG: ', 'in Create Asset');
+        logger.publishLog(LogLevels.DEBUG, 'DEBUG: ', 'in Create Asset');
 
         const assetsCol = CbCollectionLib(CollectionName.ASSETS);
         const newAsset = assetData;
@@ -100,7 +101,7 @@ export function updateAssetLocationSS({
         try {
             newAsset['custom_data'] = JSON.stringify(assetData['custom_data']);
         } catch (e) {
-            logger.publishLog(GC.LOG_LEVEL.ERROR, 'ERROR: ', SERVICE_INSTANCE_ID, ': Failed to stringify ', e);
+            logger.publishLog(LogLevels.ERROR, 'ERROR: ', SERVICE_INSTANCE_ID, ': Failed to stringify ', e);
             return Promise.reject('Failed to stringify ' + e);
         }
         // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
@@ -118,17 +119,24 @@ export function updateAssetLocationSS({
         try {
             incomingMsg = JSON.parse(msg);
         } catch (e) {
-            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Failed parse the message: ', e);
+            logger.publishLog(LogLevels.ERROR, 'Failed parse the message: ', e);
             // service can exit here if we add resp.error(""), right now it fails silently by just publishing on error topic
             return;
         }
 
-        const assetID = getAssetIdFromTopic(topic);
-
-        if (!assetID) {
-            logger.publishLog(GC.LOG_LEVEL.ERROR, 'Invalid topic received: ', topic);
+        // Update for Jim/Ryan; Might fail for AD if used directly..
+        //const assetID = getAssetIdFromTopic(topic);
+        if (typeof incomingMsg['id'] === 'undefined') {
+            logger.publishLog(
+                LogLevels.ERROR,
+                'Invalid message received, key: id missing in the payload ',
+                topic,
+                incomingMsg,
+            );
             return;
         }
+
+        const assetID = incomingMsg['id'];
 
         const fetchQuery = ClearBlade.Query({ collectionName: CollectionName.ASSETS }).equalTo('id', assetID);
         const assetsCol = CbCollectionLib(CollectionName.ASSETS);
@@ -144,20 +152,15 @@ export function updateAssetLocationSS({
                         createAsset(assetID, incomingMsg).then(successCb, failureCb);
                         logger.publishLog(LogLevels.DEBUG, "Creating Asset since it doesn't exist");
                     } else {
-                        logger.publishLog(LogLevels.ERROR, 'ERROR: ', " Asset doesn't exist so, ignoring: ", data);
+                        logger.publishLog(LogLevels.DEBUG, 'DEBUG: ', " Asset doesn't exist so, ignoring: ", data);
                     }
                 } else {
-                    logger.publishLog(
-                        GC.LOG_LEVEL.ERROR,
-                        'ERROR: ',
-                        ' Multiple Assets with same assetId exists: ',
-                        data,
-                    );
+                    logger.publishLog(LogLevels.ERROR, 'ERROR: Multiple Assets with same assetId exists: ', data);
                 }
             })
             .catch(function(reason) {
                 logger.publishLog(LogLevels.ERROR, 'Failed to fetch: ', reason);
-                resp.error('Failed to fetch asset: ' + reason);
+                //resp.error('Failed to fetch asset: ' + reason);
             });
 
         Promise.runQueue();
@@ -168,7 +171,7 @@ export function updateAssetLocationSS({
             logger.publishLog(LogLevels.ERROR, 'Subscribe failed for: ', SERVICE_INSTANCE_ID, ': ', data);
             resp.error(data);
         }
-        logger.publishLog(GC.LOG_LEVEL.SUCCESS, 'Subscribed to Shared Topic. Starting Loop.');
+        logger.publishLog(LogLevels.SUCCESS, 'Subscribed to Shared Topic. Starting Loop.');
 
         // eslint-disable-next-line no-constant-condition
         while (true) {
