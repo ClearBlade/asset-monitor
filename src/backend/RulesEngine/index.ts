@@ -22,7 +22,6 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
                     .addRule(ruleData)
                     .then(rule => rule.name)
                     .catch(e => {
-                        //@ts-ignore
                         log('Error adding rule: ' + JSON.stringify(e));
                     });
                 Promise.runQueue();
@@ -30,12 +29,10 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
             }),
         )
             .then(ruleNames => {
-                //@ts-ignore
                 log(`Successfully added rules: ${ruleNames.join(', ')}`);
                 subscribeAndInitialize();
             })
             .catch(e => {
-                //@ts-ignore
                 log(e);
             });
         Promise.runQueue();
@@ -52,7 +49,6 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
                 initializeWhileLoop();
             })
             .catch(e => {
-                //@ts-ignore
                 log(`Subscription error: ${JSON.stringify(e)}`);
             });
         Promise.runQueue();
@@ -82,7 +78,6 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
                 engine
                     .run(fact)
                     .then(successMsg => {
-                        //@ts-ignore
                         log(successMsg);
                     })
                     .catch(e => {
