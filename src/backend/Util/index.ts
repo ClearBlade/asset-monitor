@@ -117,6 +117,10 @@ export function isEmpty(str: string): boolean {
     return !str || 0 === str.length;
 }
 
+/**
+ * This function is used to check if the normalizedData is valid for the topics whose processing is handled by the libraries in this package
+ * @param normalizedData
+ */
 export function isNormalizedDataValid(normalizedData: Array<Asset>): boolean {
     if (!(normalizedData instanceof Array) || normalizedData.length == 0) {
         return false;

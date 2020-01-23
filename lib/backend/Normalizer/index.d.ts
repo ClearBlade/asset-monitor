@@ -15,6 +15,7 @@ declare type IKeysToPublish = Array<string>;
 export interface PublishConfig {
     topicFn: (assetID: string) => string;
     keysToPublish: IKeysToPublish;
+    shouldPublishAsset?: (asset: Asset) => boolean;
 }
 export declare function subscriber(topic: string): Promise<unknown>;
 export declare function publisher(assets: Array<Asset>, pubConfig: PublishConfig): void;

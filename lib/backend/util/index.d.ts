@@ -22,4 +22,8 @@ export declare const Topics: {
 };
 export declare function getAssetIdFromTopic(topic: string): string;
 export declare function isEmpty(str: string): boolean;
+/**
+ * This function is used to check if the normalizedData is valid for the topics whose processing is handled by the libraries in this package
+ * @param normalizedData
+ */
 export declare function isNormalizedDataValid(normalizedData: Array<Asset>): boolean;
