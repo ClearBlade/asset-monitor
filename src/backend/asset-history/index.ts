@@ -78,8 +78,6 @@ export function createAssetHistorySS({
             if (typeof attributeValue !== 'undefined') {
                 currItem['asset_id'] = assetID;
                 currItem['attribute_name'] = attributeName;
-                // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-                // @ts-ignore
                 currItem['attribute_value'] = attributeValue;
                 currItem['change_date'] = parsedMsg.last_updated || currDate;
                 currItem['location_change'] = true;
@@ -179,9 +177,10 @@ export function createAssetHistorySS({
         }
 
         const assetHistoyCol = CbCollectionLib(CollectionName.ASSET_HISTORY);
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-        // @ts-ignore
-        assetHistoyCol.cbCreatePromise({ item: assetHistoryItems }).then(successCb, failureCb);
+
+        assetHistoyCol
+            .cbCreatePromise({ item: assetHistoryItems as Record<string, unknown>[] })
+            .then(successCb, failureCb);
 
         Promise.runQueue();
     }

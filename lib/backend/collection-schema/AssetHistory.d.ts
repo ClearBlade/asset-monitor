@@ -4,7 +4,7 @@ export interface AssetHistory {
     asset_id?: string;
     asset_type?: string;
     status_change?: boolean;
-    attribute_value?: string;
+    attribute_value?: string | number | object;
     attribute_name?: string;
 }
 export declare type AssetHistorySchema = AssetHistory & CbServer.CollectionSchema;
