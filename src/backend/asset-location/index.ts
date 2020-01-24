@@ -62,14 +62,13 @@ export function updateAssetLocationSS({
             'item_id',
             currentState.item_id,
         );
-        const changes: Asset = {};
+
+        const changes: Record<string, unknown> = {};
 
         for (let i = 0; KEYS_TO_UPDATE && i < KEYS_TO_UPDATE.length; i++) {
             const curKey = KEYS_TO_UPDATE[i];
 
-            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-            // @ts-ignore
-            changes[curKey as keyof Asset] = incomingMsg[curKey as keyof typeof incomingMsg];
+            changes[curKey] = incomingMsg[curKey as keyof typeof incomingMsg];
         }
 
         //DEV_TODO: optional/debatable, setting the date
@@ -80,8 +79,7 @@ export function updateAssetLocationSS({
         //DEV_TODO comment the logs once the entire flow works or
         // just change the LOG_LEVEL to info in the custom_config
         logger.publishLog(LogLevels.DEBUG, 'DEBUG: logging changes: ', changes);
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-        // @ts-ignore
+
         return assetsCol.cbUpdatePromise({ query, changes });
     }
 
@@ -104,9 +102,8 @@ export function updateAssetLocationSS({
             logger.publishLog(LogLevels.ERROR, 'ERROR: ', SERVICE_INSTANCE_ID, ': Failed to stringify ', e);
             return Promise.reject('Failed to stringify ' + e);
         }
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-        // @ts-ignore
-        return assetsCol.cbCreatePromise({ item: [newAsset] });
+
+        return assetsCol.cbCreatePromise({ item: [newAsset] as Record<string, unknown>[] });
     }
 
     function HandleMessage(err: boolean, msg: string, topic: string): void {
@@ -120,7 +117,7 @@ export function updateAssetLocationSS({
             incomingMsg = JSON.parse(msg);
         } catch (e) {
             logger.publishLog(LogLevels.ERROR, 'Failed parse the message: ', e);
-            // service can exit here if we add resp.error(""), right now it fails silently by just publishing on error topic
+
             return;
         }
 
@@ -160,7 +157,6 @@ export function updateAssetLocationSS({
             })
             .catch(function(reason) {
                 logger.publishLog(LogLevels.ERROR, 'Failed to fetch: ', reason);
-                //resp.error('Failed to fetch asset: ' + reason);
             });
 
         Promise.runQueue();

@@ -23,6 +23,7 @@ type IKeysToPublish = Array<string>;
 export interface PublishConfig {
     topicFn: (assetID: string) => string;
     keysToPublish: IKeysToPublish;
+    shouldPublishAsset?: (asset: Asset) => boolean;
 }
 
 export function subscriber(topic: string): Promise<unknown> {
@@ -44,13 +45,14 @@ export function publisher(assets: Array<Asset>, pubConfig: PublishConfig): void 
     for (let i = 0, l = assets.length; i < l; i++) {
         const assetID = assets[i].id;
         const topic = pubConfig.topicFn(assetID as string);
-        const pubData: Asset = {};
+        const pubData: Record<string, unknown> = {};
         pubConfig.keysToPublish.forEach(function(value) {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-            // @ts-ignore
-            pubData[value] = assets[i][value];
+            pubData[value as keyof Asset] = assets[i][value as keyof Asset];
         });
-        messaging.publish(topic, JSON.stringify(pubData));
+
+        if (typeof pubConfig.shouldPublishAsset === 'undefined' || pubConfig.shouldPublishAsset(pubData)) {
+            messaging.publish(topic, JSON.stringify(pubData));
+        }
     }
 }
 

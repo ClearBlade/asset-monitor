@@ -17,7 +17,9 @@ export function cbifyData(input: FlattenedObject, normalizerConfig: NormalizerDe
     });
 
     //Process the custom_data structure
-    cbfiedData['custom_data'] = input;
+    if (typeof cbfiedData['custom_data'] === 'undefined') {
+        cbfiedData['custom_data'] = input;
+    }
 
     return cbfiedData;
 }
@@ -102,7 +104,7 @@ export const Topics = {
     ListenAllAssetsStatus: (): string => `_monitor/_asset/+/status`,
 };
 
-//depreacted ...
+//deprecated ...
 export function getAssetIdFromTopic(topic: string): string {
     const splitTopic = topic.split('/');
     if (splitTopic.length != 7) {
@@ -115,6 +117,10 @@ export function isEmpty(str: string): boolean {
     return !str || 0 === str.length;
 }
 
+/**
+ * This function is used to check if the normalizedData is valid for the topics whose processing is handled by the libraries in this package
+ * @param normalizedData
+ */
 export function isNormalizedDataValid(normalizedData: Array<Asset>): boolean {
     if (!(normalizedData instanceof Array) || normalizedData.length == 0) {
         return false;
