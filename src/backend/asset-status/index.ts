@@ -28,8 +28,8 @@ export function updateAssetStatusSS({
     const logger = Logger({ name: 'AssetStatusSSLib', logSetting: LOG_SETTING });
     const messaging = ClearBlade.Messaging();
 
-    function failureCb(reason: unknown): void {
-        logger.publishLog(LogLevels.ERROR, 'Failed ', reason);
+    function failureCb(error: Error): void {
+        logger.publishLog(LogLevels.ERROR, 'Failed ', error.message);
     }
 
     function MergeAsset(assetID: string, msg: Asset): Promise<unknown> {
@@ -51,8 +51,8 @@ export function updateAssetStatusSS({
             try {
                 customData = JSON.parse(dataStr);
             } catch (e) {
-                logger.publishLog(LogLevels.ERROR, 'Failed while parsing: ', e);
-                return Promise.reject('Failed while parsing: ' + e);
+                logger.publishLog(LogLevels.ERROR, 'Failed while parsing: ', e.message);
+                return Promise.reject('Failed while parsing: ' + e.message);
             }
             const incomingCustomData = msg['custom_data'];
             for (const key of Object.keys(incomingCustomData as object)) {
@@ -81,7 +81,7 @@ export function updateAssetStatusSS({
         try {
             jsonMessage = JSON.parse(msg);
         } catch (e) {
-            logger.publishLog(LogLevels.ERROR, 'Failed while parsing: ', e);
+            logger.publishLog(LogLevels.ERROR, 'Failed while parsing: ', e.message);
             return;
         }
         // Update for Jim/Ryan; Might fail for AD if used directly..

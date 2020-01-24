@@ -142,7 +142,7 @@ export function createAssetHistorySS({
         try {
             parsedMsg = JSON.parse(msg);
         } catch (e) {
-            logger.publishLog(LogLevels.ERROR, 'Failed parse the message: ', e);
+            logger.publishLog(LogLevels.ERROR, 'Failed parse the message: ', e.message);
             return;
         }
         let assetHistoryItems: Array<AssetHistory> = [];

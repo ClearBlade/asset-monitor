@@ -99,7 +99,7 @@ export function updateAssetLocationSS({
         try {
             newAsset['custom_data'] = JSON.stringify(assetData['custom_data']);
         } catch (e) {
-            logger.publishLog(LogLevels.ERROR, 'ERROR: ', SERVICE_INSTANCE_ID, ': Failed to stringify ', e);
+            logger.publishLog(LogLevels.ERROR, 'ERROR: ', SERVICE_INSTANCE_ID, ': Failed to stringify ', e.message);
             return Promise.reject('Failed to stringify ' + e);
         }
 
@@ -116,7 +116,7 @@ export function updateAssetLocationSS({
         try {
             incomingMsg = JSON.parse(msg);
         } catch (e) {
-            logger.publishLog(LogLevels.ERROR, 'Failed parse the message: ', e);
+            logger.publishLog(LogLevels.ERROR, 'Failed parse the message: ', e.message);
 
             return;
         }
@@ -155,8 +155,8 @@ export function updateAssetLocationSS({
                     logger.publishLog(LogLevels.ERROR, 'ERROR: Multiple Assets with same assetId exists: ', data);
                 }
             })
-            .catch(function(reason) {
-                logger.publishLog(LogLevels.ERROR, 'Failed to fetch: ', reason);
+            .catch(function(error) {
+                logger.publishLog(LogLevels.ERROR, 'Failed to fetch: ', error.message);
             });
 
         Promise.runQueue();
