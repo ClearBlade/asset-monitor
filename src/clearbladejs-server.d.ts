@@ -86,7 +86,7 @@ declare namespace CbServer {
         getAllCollections(callback: CbCallback): void;
         http(): object;
         init(options: InitOptions | { request: BasicReq }): void;
-        isEdge(callback: CbCallback): boolean;
+        isEdge(): boolean;
         isCurrentUserAuthenticated(callback: CbCallback): void;
         isObjectEmpty(obj: object): boolean;
         Item(data: object, options: string | ItemOptions): Item;
@@ -103,6 +103,7 @@ declare namespace CbServer {
         registerUser(email: string, password: string, callback: CbCallback): void;
         setUser(email: string, authToken: string, userId: string): void;
         User(): AppUser;
+        Cache(name: string): Cache;
 
         createDevice(name: string, data: object, causeTrigger: boolean, callback: CbCallback): void;
         deleteDevice(name: string, causeTrigger: boolean, callback: CbCallback): void;
@@ -224,7 +225,7 @@ declare namespace CbServer {
         matches(field: string, pattern: QueryValue): QueryObj;
         or(query: QueryObj): QueryObj;
         setPage(pageSize: number, pageNum: number): QueryObj;
-        fetch(callback: CbCallback): QueryObj;
+        fetch<T = {}>(callback: CbCallback<CollectionFetchData<T>>): QueryObj;
         update(changes: object, callback: CbCallback): QueryObj;
         columns(columnsArray: string[]): QueryObj;
         remove(callback: CbCallback): QueryObj;
@@ -304,6 +305,10 @@ declare namespace CbServer {
         publish(topic: string, payload: string | ArrayBuffer): void;
         subscribe(topic: string, callback: CbCallback<string | null>): void;
         waitForMessage(topics: Array<string>, wfmCallback: WaitForMessageCallback): void;
+        setTimeout(timeout: number, topic: string, data: string, cb: CbCallback<string>): void;
+        cancelCBTimeout(id: string, cb: CbCallback<string>): void;
+        setInterval(timeout: number, topic: string, data: string, iterations: number, cb: CbCallback<string>): void;
+        cancelCBInterval(id: string, cb: CbCallback<string>): void;
     }
 
     type MessagingOptions = {};
@@ -369,6 +374,16 @@ declare namespace CbServer {
 
         Update(options: object, callback: CbCallback): void;
         Delete(callback: CbCallback): void;
+    }
+
+    interface Cache {
+        get(key: string, cb: CbCallback<unknown>): void;
+        set(key: string, val: unknown, cb: CbCallback<string>): void;
+        setnx(key: string, val: unknown, cb: CbCallback<string>): void;
+        setMultiple(val: Record<string, unknown>, cb: CbCallback<string>): void;
+        getAll(cb: CbCallback<unknown>): void;
+        delete(key: string, cb: CbCallback<string>): void;
+        flush(cb: CbCallback<string>): void;
     }
 }
 

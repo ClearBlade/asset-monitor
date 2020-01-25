@@ -3,7 +3,7 @@ export interface LogLevel {
     [key: string]: LogLevels;
 }
 export interface NormalizerDeviceMap {
-    [index: string]: string;
+    [index: string]: string | object;
 }
 export declare enum LogLevels {
     INFO = "info",
@@ -37,10 +37,17 @@ export interface UpdateAssetStatusOptions {
     LOG_SETTING: LogLevels;
     UPDATE_METHOD: AssetStatusUpdateMethod;
 }
+export declare enum KeyStorageSettings {
+    NO = "no",
+    ALL = "all",
+    CUSTOM = "custom"
+}
 export interface CreateAssetHistoryOptions {
-    standardKeysToStore: Array<string>;
-    customDataKeysToStore: Array<string>;
+    STANDARD_KEYS_TO_STORE: Array<string>;
+    CUSTOM_DATA_KEYS_TO_STORE: Array<string>;
     LOG_SETTING?: LogLevels;
+    STANDARD_KEY_STORAGE_SETTING: KeyStorageSettings;
+    CUSTOM_DATA_KEY_STORAGE_SETTING: KeyStorageSettings;
 }
 export interface GlobalConfig {
     LOG_LEVEL: LogLevel;

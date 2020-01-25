@@ -2,29 +2,64 @@ import { processRule } from '../utils';
 
 describe('Duration For Rules', () => {
     it('processes a rule after run failure with duration', () => {
-        expect(
-            processRule(
-                [incoming.FAILED_WITH_DURATION],
-                {
-                    conditionIds: [],
-                    hasDuration: false,
-                    hasSuccessfulResult: false,
-                },
-                0,
-                'all',
-            ),
-        ).toEqual(results.FAILED_WITH_DURATION);
+        const processedRule = processRule(
+            [incoming.FAILED_WITH_DURATION],
+            {
+                conditionIds: [],
+                hasDuration: false,
+                hasSuccessfulResult: false,
+            },
+            [],
+        );
+        expect({
+            ...processedRule,
+            conditionIds: new Set(processedRule.conditionIds), // Set allows order of root array not to matter
+        }).toEqual({
+            ...results.FAILED_WITH_DURATION,
+            conditionIds: new Set(results.FAILED_WITH_DURATION.conditionIds),
+        });
     });
-    // it('processes a rule after run success the with duration', () => {
-    //     expect(processRule(incoming.FAILED_WITH_DURATION)).toEqual(results.FAILED_WITH_DURATION);
-    // });
 });
 
 const incoming = {
     FAILED_WITH_DURATION: {
         all: [
             {
-                all: [
+                any: [
+                    {
+                        fact: 'state',
+                        operator: 'equal',
+                        params: {
+                            id: 'testAsset5',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: 'yacht',
+                            duration: 30000,
+                        },
+                        factResult: 75,
+                        result: false,
+                        path: '.data.custom_data.speed',
+                        value: 70,
+                    },
+                    {
+                        fact: 'state',
+                        operator: 'equal',
+                        params: {
+                            id: 'testAsset6',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: 'yacht',
+                            duration: 30000,
+                        },
+                        factResult: 80,
+                        result: false,
+                        path: '.data.custom_data.speed',
+                        value: 70,
+                    },
+                ],
+            },
+            {
+                any: [
                     {
                         any: [
                             {
@@ -91,40 +126,6 @@ const incoming = {
                                 value: 60,
                             },
                         ],
-                    },
-                ],
-            },
-            {
-                any: [
-                    {
-                        fact: 'state',
-                        operator: 'equal',
-                        params: {
-                            id: 'testAsset5',
-                            attribute: 'speed',
-                            collection: 'assets',
-                            type: 'yacht',
-                            duration: 30000,
-                        },
-                        factResult: 75,
-                        result: false,
-                        path: '.data.custom_data.speed',
-                        value: 70,
-                    },
-                    {
-                        fact: 'state',
-                        operator: 'equal',
-                        params: {
-                            id: 'testAsset6',
-                            attribute: 'speed',
-                            collection: 'assets',
-                            type: 'yacht',
-                            duration: 30000,
-                        },
-                        factResult: 80,
-                        result: false,
-                        path: '.data.custom_data.speed',
-                        value: 70,
                     },
                 ],
             },

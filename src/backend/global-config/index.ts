@@ -6,7 +6,7 @@ export interface LogLevel {
 }
 
 export interface NormalizerDeviceMap {
-    [index: string]: string;
+    [index: string]: string | object;
 }
 
 export enum LogLevels {
@@ -49,10 +49,17 @@ export interface UpdateAssetStatusOptions {
     UPDATE_METHOD: AssetStatusUpdateMethod;
 }
 
+export enum KeyStorageSettings {
+    NO = 'no',
+    ALL = 'all',
+    CUSTOM = 'custom',
+}
 export interface CreateAssetHistoryOptions {
-    standardKeysToStore: Array<string>;
-    customDataKeysToStore: Array<string>;
+    STANDARD_KEYS_TO_STORE: Array<string>;
+    CUSTOM_DATA_KEYS_TO_STORE: Array<string>;
     LOG_SETTING?: LogLevels;
+    STANDARD_KEY_STORAGE_SETTING: KeyStorageSettings;
+    CUSTOM_DATA_KEY_STORAGE_SETTING: KeyStorageSettings;
 }
 export interface GlobalConfig {
     LOG_LEVEL: LogLevel;
@@ -76,9 +83,11 @@ const globalConfig: GlobalConfig = {
     LOG_SETTING: LogLevels.DEBUG,
     CUSTOM_CONFIGS: {},
     ASSET_HISTORY_CONFIG: {
-        standardKeysToStore: ['location_x', 'location_y', 'location_z'],
-        customDataKeysToStore: [],
+        STANDARD_KEYS_TO_STORE: ['location_x', 'location_y', 'location_z'],
+        CUSTOM_DATA_KEYS_TO_STORE: [],
         LOG_SETTING: LogLevels.DEBUG,
+        STANDARD_KEY_STORAGE_SETTING: KeyStorageSettings.CUSTOM,
+        CUSTOM_DATA_KEY_STORAGE_SETTING: KeyStorageSettings.ALL,
     },
     NORMALIZER_PUB_CONFIG: {
         locationConfig: {

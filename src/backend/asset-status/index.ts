@@ -1,7 +1,7 @@
 import { GC, CollectionName, UpdateAssetStatusOptions, LogLevels, AssetStatusUpdateMethod } from '../global-config';
 import { CbCollectionLib } from '../collection-lib';
 import { Logger } from '../Logger';
-import { getAssetIdFromTopic, Topics } from '../Util';
+import { Topics } from '../Util';
 import { Asset } from '../collection-schema/Assets';
 
 interface UpdateAssetStatusConfig {
@@ -25,7 +25,7 @@ export function updateAssetStatusSS({
     ClearBlade.init({ request: req });
 
     const TOPIC = '$share/AssetStatusGroup/' + Topics.DBUpdateAssetStatus('+');
-    const logger = Logger({ name: 'updateAssetStatusSS', logSetting: LOG_SETTING });
+    const logger = Logger({ name: 'AssetStatusSSLib', logSetting: LOG_SETTING });
     const messaging = ClearBlade.Messaging();
 
     function failureCb(reason: unknown): void {
@@ -88,11 +88,21 @@ export function updateAssetStatusSS({
             logger.publishLog(LogLevels.ERROR, 'Failed while parsing: ', e);
             return;
         }
+        // Update for Jim/Ryan; Might fail for AD if used directly..
+        //const assetID = getAssetIdFromTopic(topic);
+        let assetID = '';
+        if (jsonMessage['id']) {
+            assetID = jsonMessage['id'];
+        }
 
-        const assetID = getAssetIdFromTopic(topic);
         if (!assetID) {
-            logger.publishLog(LogLevels.ERROR, 'Invalid topic received: ', topic);
-            resp.error('Invalid topic received: ' + topic);
+            logger.publishLog(
+                LogLevels.ERROR,
+                'Invalid message received, key: id missing in the payload ',
+                topic,
+                jsonMessage,
+            );
+            resp.error('Invalid message received, key: id missing in the payload ' + topic);
         }
         if (UPDATE_METHOD === AssetStatusUpdateMethod.MERGE) {
             MergeAsset(assetID, jsonMessage).catch(failureCb);

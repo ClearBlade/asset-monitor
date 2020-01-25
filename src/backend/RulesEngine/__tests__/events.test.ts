@@ -92,3 +92,25 @@ const incomingEvent: SplitEntities = {
         entityThree: entities.entityThree,
     },
 };
+
+describe('Events For Rules', () => {
+    jest.spyOn(Date.prototype, 'toISOString').mockReturnValue(mockedTimestamp);
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+    // @ts-ignore jest types don't include mockImplementation
+    uuid.mockImplementation(() => mockedUUID);
+    it('entity check returns true if entities are equal', () => {
+        expect(entitiesAreEqual(existingEventMatch, incomingEvent)).toBe(true);
+    });
+
+    it('entity check returns false if entities are not equal', () => {
+        expect(entitiesAreEqual(existingEventUnmatch, incomingEvent)).toBe(false);
+    });
+
+    it('processEvent processes event correctly after async calls', () => {
+        return processEvent(event.params as RuleParams, entities, '', entities.entityOne as Entities).then(
+            eventResult => {
+                expect(eventResult).toEqual(finishedEvent);
+            },
+        );
+    });
+});

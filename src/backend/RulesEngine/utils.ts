@@ -76,75 +76,101 @@ export function buildFact(entityData: Asset | Areas, incomingData: WithParsedCus
     return withParsedCustomData;
 }
 
+// for processing rules after engine completes
+
 interface ProcessedRule {
     conditionIds: Array<string[]>;
     hasDuration: boolean;
     hasSuccessfulResult: boolean;
 }
 
-function processRelevantFact(
-    fact: ConditionProperties,
-    processedRule: ProcessedRule,
-    parentLength: number,
-    parentOperator: 'any' | 'all',
-): void {
-    console.log('fact', fact);
-    console.log('ids', processedRule.conditionIds);
-    console.log('parentLength', parentLength);
-    console.log('parentOp', parentOperator);
+function isValidFact(fact: ConditionProperties, processedRule: ProcessedRule): string | undefined {
     const params = fact.params as Record<string, string>;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
     // @ts-ignore json-rule-engine types does not include result
-    if (fact.result) {
-        processedRule.hasSuccessfulResult = true;
-        for (let i = 0; i < processedRule.conditionIds.length; i++) {
-            if (processedRule.conditionIds[i].indexOf(params.id) === -1) {
-                processedRule.conditionIds[i].push(params.id);
+    if (fact.factResult) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore json-rule-engine types does not include result
+        if (fact.result) {
+            processedRule.hasSuccessfulResult = true;
+            if (params.duration) {
+                processedRule.hasDuration = true;
             }
-        }
-        if (params.duration) {
+        } else if (params.duration) {
             processedRule.hasDuration = true;
         }
-    } else if (params.duration) {
-        processedRule.hasDuration = true;
-        for (let i = 0; i < processedRule.conditionIds.length; i++) {
-            if (processedRule.conditionIds[i].indexOf(params.id) === -1) {
-                processedRule.conditionIds[i].push(params.id);
+        return params.id;
+    }
+}
+
+function validateAndFilterFacts(facts: ConditionProperties[], processedRule: ProcessedRule): string[] {
+    const validIds = [];
+    const factLength = facts.length;
+    for (let i = factLength - 1; i >= 0; i--) {
+        const validId = isValidFact(facts[i], processedRule);
+        if (validId) {
+            validIds.push(validId);
+        } else {
+            facts.pop();
+        }
+    }
+    return validIds;
+}
+
+function processFacts(facts: ConditionProperties[], processedRule: ProcessedRule, parentOperator: 'all' | 'any'): void {
+    const validIds = validateAndFilterFacts(facts, processedRule);
+    if (parentOperator === 'all') {
+        if (!processedRule.conditionIds.length) {
+            processedRule.conditionIds = [validIds];
+        } else {
+            for (let i = 0; i < validIds.length; i++) {
+                for (let j = 0; j < processedRule.conditionIds.length; j++) {
+                    processedRule.conditionIds[j].push(validIds[i]);
+                }
+            }
+        }
+    } else {
+        if (!processedRule.conditionIds.length) {
+            processedRule.conditionIds = validIds.map(id => [id]);
+        } else {
+            for (let k = 0; k < validIds.length; k++) {
+                const idsLength = processedRule.conditionIds.length;
+                for (let n = 0; n < idsLength; n++) {
+                    if (k === 0) {
+                        processedRule.conditionIds[n].push(validIds[k]);
+                    } else {
+                        const modified = [...processedRule.conditionIds[n]];
+                        modified[modified.length - 1] = validIds[k];
+                        processedRule.conditionIds.push(modified);
+                    }
+                }
             }
         }
     }
-    console.log('fact processed', processedRule.conditionIds);
+    console.log('fact group processed', processedRule.conditionIds);
 }
 
 export function processRule(
     conditions: Array<TopLevelCondition | ConditionProperties>,
     processedRule: ProcessedRule,
-    parentLength: number,
-    parentOperator: 'any' | 'all',
+    parentOperators: Array<'any' | 'all'>,
 ): ProcessedRule {
     for (let i = 0; i < conditions.length; i++) {
-        const firstKey = Object.keys(conditions[i])[0];
-        if (firstKey === 'all') {
-            processRule(
-                conditions[i][firstKey as keyof TopLevelCondition],
-                processedRule,
-                (conditions[i][firstKey as keyof TopLevelCondition] as Array<TopLevelCondition | ConditionProperties>)
-                    .length,
-                'all',
-            );
-        } else if (firstKey === 'any') {
-            processRule(
-                conditions[i][firstKey as keyof TopLevelCondition],
-                processedRule,
-                (conditions[i][firstKey as keyof TopLevelCondition] as Array<TopLevelCondition | ConditionProperties>)
-                    .length,
-                'any',
-            );
-            // @ts-ignore json-rule-engine types does not include factResult
-        } else if (conditions[i].factResult) {
-            processRelevantFact(conditions[i] as ConditionProperties, processedRule, parentLength, parentOperator);
+        const operatorKey = conditions[i]['any' as keyof TopLevelCondition]
+            ? 'any'
+            : conditions[i]['all' as keyof TopLevelCondition]
+            ? 'all'
+            : '';
+        if (operatorKey === 'all' || operatorKey === 'any') {
+            processRule(conditions[i][operatorKey as keyof TopLevelCondition], processedRule, [
+                ...parentOperators,
+                operatorKey,
+            ]);
         } else {
-            conditions.splice(i, 1);
+            processFacts(conditions as ConditionProperties[], processedRule, parentOperators);
+            break;
         }
     }
+    processedRule.conditionIds.map(array => array.sort());
     return processedRule;
 }
