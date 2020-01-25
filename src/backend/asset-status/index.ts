@@ -32,7 +32,7 @@ export function updateAssetStatusSS({
         logger.publishLog(LogLevels.ERROR, 'Failed ', reason);
     }
 
-    function MergeAsset(assetID: string, msg: Record<string, any>): Promise<unknown> {
+    function MergeAsset(assetID: string, msg: Asset): Promise<unknown> {
         const assetsCol = CbCollectionLib(CollectionName.ASSETS);
         const assetFetchQuery = ClearBlade.Query({ collectionName: CollectionName.ASSETS }).equalTo('id', assetID);
         const promise = assetsCol.cbFetchPromise({ query: assetFetchQuery }).then(function(data) {
@@ -46,9 +46,7 @@ export function updateAssetStatusSS({
                 return Promise.reject(' Multiple Assets found for id ' + assetID);
             }
 
-            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-            // @ts-ignore
-            const dataStr = data.DATA[0]['custom_data'];
+            const dataStr = (data.DATA[0] as Asset)['custom_data'] as string;
             let customData;
             try {
                 customData = JSON.parse(dataStr);
@@ -57,8 +55,8 @@ export function updateAssetStatusSS({
                 return Promise.reject('Failed while parsing: ' + e);
             }
             const incomingCustomData = msg['custom_data'];
-            for (const key of Object.keys(incomingCustomData)) {
-                customData[key] = incomingCustomData[key];
+            for (const key of Object.keys(incomingCustomData as object)) {
+                customData[key] = (incomingCustomData as Record<string, unknown>)[key];
             }
 
             const currDate = new Date().toISOString();
@@ -66,9 +64,7 @@ export function updateAssetStatusSS({
             const statusChanges: Asset = { custom_data: JSON.stringify(customData), last_updated: currDate };
             return assetsCol.cbUpdatePromise({
                 query: assetsQuery,
-                // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-                // @ts-ignore
-                changes: statusChanges,
+                changes: statusChanges as Record<string, unknown>,
             });
         });
 
