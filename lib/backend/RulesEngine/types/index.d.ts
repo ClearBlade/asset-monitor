@@ -78,4 +78,11 @@ export interface StateParams {
     attribute: string;
     collection: CollectionName;
     type: string;
+    duration?: number;
+}
+export interface AreaParams {
+    id: string;
+    type: string;
+    id2: string;
+    type2: string;
 }

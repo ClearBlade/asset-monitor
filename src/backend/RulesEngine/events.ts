@@ -1,6 +1,5 @@
 import { RuleParams } from './types';
 import '../../static/promise-polyfill';
-import { Event, TopLevelCondition } from 'json-rules-engine';
 import {
     getActionByID,
     getStateForEvent,
@@ -13,14 +12,25 @@ import {
 import * as uuid from 'uuid/v4';
 import { EventSchema } from '../collection-schema/Events';
 import { Areas } from '../collection-schema/Areas';
+import { doesTimeframeMatchRule } from './timeframe';
 
-// export function processSuccessfulEvents(
-//     conditions: TopLevelCondition,
-//     ruleParams: RuleParams,
-//     entities: Entities,
-//     actionTopic: string,
-//     trigger: Entities,
-// ) {}
+export function processSuccessfulEvents(
+    combinations: Array<string[]>,
+    ruleParams: RuleParams,
+    entities: Entities,
+    actionTopic: string,
+    trigger: Entities,
+): void {
+    if (doesTimeframeMatchRule(new Date().toISOString(), ruleParams.timeframe)) {
+        for (let i = 0; i < combinations.length; i++) {
+            const filteredEntities = combinations[i].reduce((acc: Entities, id: string) => {
+                acc[id] = entities[id];
+                return acc;
+            }, {});
+            processEvent(ruleParams, filteredEntities, actionTopic, trigger);
+        }
+    }
+}
 
 function getSplitEntities(entities: Entities): SplitEntities {
     return Object.keys(entities).reduce(

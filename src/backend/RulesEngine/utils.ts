@@ -1,16 +1,10 @@
-import {
-    Almanac,
-    NestedCondition,
-    TopLevelCondition,
-    ConditionProperties,
-    AllConditions,
-    AnyConditions,
-} from 'json-rules-engine';
+import { Almanac, TopLevelCondition, ConditionProperties } from 'json-rules-engine';
 import { Asset } from '../collection-schema/Assets';
 import { CollectionName } from '../global-config';
 import { CbCollectionLib } from '../collection-lib';
 import { Areas } from '../collection-schema/Areas';
-import { EntityTypes, RuleParams, StateParams } from './types';
+import { EntityTypes } from './types';
+import { Entities } from './async';
 
 export interface WithParsedCustomData extends Asset {
     custom_data: Record<string, object>;
@@ -76,12 +70,26 @@ export function buildFact(entityData: Asset | Areas, incomingData: WithParsedCus
     return withParsedCustomData;
 }
 
+export function aggregateFactMap(almanac: Almanac, conditionIds: Array<string[]>): Entities {
+    return conditionIds.reduce((acc: Entities, combination: string[]) => {
+        for (let i = 0; i < combination.length; i++) {
+            if (!acc[combination[i]]) {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+                // @ts-ignore json-rule-engine types does not include factMap
+                acc[combination[i]] = almanac.factMap.get(combination[i]).value.data;
+            }
+        }
+        return acc;
+    }, {});
+}
+
 // for processing rules after engine completes
 
 interface ProcessedRule {
     conditionIds: Array<string[]>;
     hasDuration: boolean;
     hasSuccessfulResult: boolean;
+    numValidCombination: number;
 }
 
 function isValidFact(fact: ConditionProperties, processedRule: ProcessedRule): string | undefined {
@@ -96,10 +104,11 @@ function isValidFact(fact: ConditionProperties, processedRule: ProcessedRule): s
             if (params.duration) {
                 processedRule.hasDuration = true;
             }
+            return params.id;
         } else if (params.duration) {
             processedRule.hasDuration = true;
+            return params.id;
         }
-        return params.id;
     }
 }
 
@@ -122,16 +131,21 @@ function processFacts(facts: ConditionProperties[], processedRule: ProcessedRule
     if (parentOperator === 'all') {
         if (!processedRule.conditionIds.length) {
             processedRule.conditionIds = [validIds];
+            processedRule.numValidCombination = processedRule.conditionIds[0].length;
         } else {
             for (let i = 0; i < validIds.length; i++) {
                 for (let j = 0; j < processedRule.conditionIds.length; j++) {
                     processedRule.conditionIds[j].push(validIds[i]);
+                    if (processedRule.conditionIds[j].length > processedRule.numValidCombination) {
+                        processedRule.numValidCombination = processedRule.conditionIds[j].length;
+                    }
                 }
             }
         }
     } else {
         if (!processedRule.conditionIds.length) {
             processedRule.conditionIds = validIds.map(id => [id]);
+            processedRule.numValidCombination = validIds.length ? 1 : 0;
         } else {
             for (let k = 0; k < validIds.length; k++) {
                 const idsLength = processedRule.conditionIds.length;
@@ -143,17 +157,19 @@ function processFacts(facts: ConditionProperties[], processedRule: ProcessedRule
                         modified[modified.length - 1] = validIds[k];
                         processedRule.conditionIds.push(modified);
                     }
+                    if (processedRule.conditionIds[n].length > processedRule.numValidCombination) {
+                        processedRule.numValidCombination = processedRule.conditionIds[n].length;
+                    }
                 }
             }
         }
     }
-    console.log('fact group processed', processedRule.conditionIds);
 }
 
 export function processRule(
     conditions: Array<TopLevelCondition | ConditionProperties>,
     processedRule: ProcessedRule,
-    parentOperators: Array<'any' | 'all'>,
+    parentOperator: 'any' | 'all',
 ): ProcessedRule {
     for (let i = 0; i < conditions.length; i++) {
         const operatorKey = conditions[i]['any' as keyof TopLevelCondition]
@@ -162,12 +178,9 @@ export function processRule(
             ? 'all'
             : '';
         if (operatorKey === 'all' || operatorKey === 'any') {
-            processRule(conditions[i][operatorKey as keyof TopLevelCondition], processedRule, [
-                ...parentOperators,
-                operatorKey,
-            ]);
+            processRule(conditions[i][operatorKey as keyof TopLevelCondition], processedRule, operatorKey);
         } else {
-            processFacts(conditions as ConditionProperties[], processedRule, parentOperators);
+            processFacts(conditions as ConditionProperties[], processedRule, parentOperator);
             break;
         }
     }

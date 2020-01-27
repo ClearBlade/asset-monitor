@@ -14,6 +14,7 @@ const mockedUUID = 'UUID';
 
 describe('Events For Rules', () => {
     jest.spyOn(Date.prototype, 'toISOString').mockReturnValue(mockedTimestamp);
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
     // @ts-ignore
     uuid.mockImplementation(() => mockedUUID);
     it('entity check returns true if entities are equal', () => {

@@ -1,27 +1,16 @@
 import '../../static/promise-polyfill';
 import 'core-js/features/map';
-import {
-    Engine,
-    Event,
-    TopLevelCondition,
-    Almanac,
-    AllConditions,
-    AnyConditions,
-    NestedCondition,
-    ConditionProperties,
-    RuleResult,
-    Rule,
-} from 'json-rules-engine';
-import { StateParams, TimeFrame } from './types';
+import { Engine, Event, TopLevelCondition, Almanac, RuleResult, Rule } from 'json-rules-engine';
+import { StateParams, RuleParams } from './types';
 import { parseAndConvertConditions } from './convert-rule';
-import { doesTimeframeMatchRule } from './timeframe';
-import { processEvent } from './events';
+import { processSuccessfulEvents } from './events';
 // import { ProcessDurationIfExists } from './duration';
 import { Rules } from '../collection-schema/Rules';
 import { CbCollectionLib } from '../collection-lib';
 import { Areas } from '../collection-schema/Areas';
 import { Asset } from '../collection-schema/Assets';
-import { Entities } from './async';
+import { processRule, aggregateFactMap } from './utils';
+import { processDuration } from './duration';
 
 interface WithParsedCustomData extends Asset {
     custom_data: Record<string, object>;
@@ -129,25 +118,28 @@ export class RulesEngine {
 }
 
 function handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResult, actionTopic: string): void {
+    log('Processing rule for successful event: ' + JSON.stringify(ruleResult));
     // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
     // @ts-ignore json-rule-engine types does not include factMap
     const incomingData = almanac.factMap.get('incomingData').value;
-    const timeframe = (event.params as Record<string, string | TimeFrame>).timeframe;
-    if (doesTimeframeMatchRule(incomingData.timestamp, timeframe as TimeFrame)) {
-        const triggers = getTriggerIds(
-            (ruleResult.conditions as AllConditions).all
-                ? (ruleResult.conditions as AllConditions).all
-                : (ruleResult.conditions as AnyConditions).any,
-            [],
-        );
-        const entities: Entities = triggers.reduce((acc: object, trigger: string) => {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-            // @ts-ignore json-rule-engine types does not include factMap
-            acc[trigger] = almanac.factMap.get(trigger).value.data;
-            return acc;
-        }, {});
-        log('Processing rule for successful event: ' + JSON.stringify(ruleResult));
-        processEvent(event, entities, actionTopic, incomingData);
+    const processedResults = processRule(
+        [ruleResult.conditions],
+        {
+            conditionIds: [],
+            hasDuration: false,
+            hasSuccessfulResult: false,
+            numValidCombination: 0,
+        },
+        'all',
+    );
+    const entities = aggregateFactMap(almanac, processedResults.conditionIds);
+    if (processedResults.hasDuration) {
+        processDuration();
+    } else {
+        const validCombinations = processedResults.conditionIds.filter(combo => {
+            return combo.length === processedResults.numValidCombination;
+        });
+        processSuccessfulEvents(validCombinations, event.params as RuleParams, entities, actionTopic, incomingData);
     }
 }
 
@@ -225,18 +217,4 @@ function handleStateCondition(params: StateParams, almanac: Almanac): Promise<Fa
     });
     Promise.runQueue();
     return promise as Promise<FactData>;
-}
-
-function getTriggerIds(conditions: NestedCondition[], ids: string[]): string[] {
-    for (let i = 0; i < conditions.length; i++) {
-        const firstKey = Object.keys(conditions[i])[0];
-        if (firstKey === 'all' || firstKey === 'any') {
-            getTriggerIds(conditions[i][firstKey as keyof TopLevelCondition], ids);
-            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-            // @ts-ignore json-rule-engine types does not include result
-        } else if (conditions[i].result) {
-            ids.push(((conditions[i] as ConditionProperties).params as Record<string, string>).id);
-        }
-    }
-    return ids;
 }

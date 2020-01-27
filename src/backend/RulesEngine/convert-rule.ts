@@ -22,7 +22,7 @@ function getCollectionName(entityType: EntityTypes): EntityTypes {
     }
 }
 
-function calculateDuration(duration: Duration): number {
+function calculateDuration(duration: Duration): number | null {
     switch (duration.unit) {
         case DurationUnits.SECONDS:
             return duration.value * 1000;
@@ -33,7 +33,7 @@ function calculateDuration(duration: Duration): number {
         case DurationUnits.DAYS:
             return duration.value * 86400000;
         default:
-            return 0;
+            return null;
     }
 }
 
