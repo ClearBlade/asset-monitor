@@ -38,6 +38,9 @@ export class RulesEngine {
             .addFact('state', (params, almanac) => handleStateCondition(params as StateParams, almanac))
             .on('success', (event, almanac, ruleResult) =>
                 handleRuleSuccess(event, almanac, ruleResult, this.actionTopic),
+            )
+            .on('failure', (event, almanac, ruleResult) =>
+                handleRuleFailure(event, almanac, ruleResult, this.actionTopic),
             );
     }
 
@@ -117,6 +120,10 @@ export class RulesEngine {
     }
 }
 
+function handleRuleFailure(event: Event, almanac: Almanac, ruleResult: RuleResult, actionTopic: string): void {
+    log('failed rule ' + JSON.stringify(ruleResult));
+}
+
 function handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResult, actionTopic: string): void {
     log('Processing rule for successful event: ' + JSON.stringify(ruleResult));
     // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
@@ -176,10 +183,10 @@ function collectAndBuildFact(
         // custom data has not been fetched for asset
         const collection = CbCollectionLib(params.collection);
         const query = ClearBlade.Query({ collectionName: params.collection });
-        if (params.id === incomingData.id) {
-            query.equalTo('id', params.id);
-        } else {
+        if (params.type) {
             query.equalTo('type', params.type);
+        } else {
+            query.equalTo('id', params.id);
         }
         const promise = collection
             .cbFetchPromise({ query })

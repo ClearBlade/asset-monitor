@@ -22,19 +22,22 @@ function getCollectionName(entityType: EntityTypes): EntityTypes {
     }
 }
 
-function calculateDuration(duration: Duration): number | null {
-    switch (duration.unit) {
-        case DurationUnits.SECONDS:
-            return duration.value * 1000;
-        case DurationUnits.MINUTES:
-            return duration.value * 60000;
-        case DurationUnits.HOURS:
-            return duration.value * 3600000;
-        case DurationUnits.DAYS:
-            return duration.value * 86400000;
-        default:
-            return null;
+function calculateDuration(duration: Duration): number {
+    if (duration) {
+        switch (duration.unit) {
+            case DurationUnits.SECONDS:
+                return duration.value * 1000;
+            case DurationUnits.MINUTES:
+                return duration.value * 60000;
+            case DurationUnits.HOURS:
+                return duration.value * 3600000;
+            case DurationUnits.DAYS:
+                return duration.value * 86400000;
+            default:
+                return 0;
+        }
     }
+    return 0;
 }
 
 function getConditionProps(id: string, condition: Condition, isPartOfType?: boolean): ConditionProperties {
