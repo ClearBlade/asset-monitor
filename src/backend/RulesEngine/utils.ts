@@ -3,7 +3,7 @@ import { Asset } from '../collection-schema/Assets';
 import { CollectionName } from '../global-config';
 import { CbCollectionLib } from '../collection-lib';
 import { Areas } from '../collection-schema/Areas';
-import { EntityTypes } from './types';
+import { EntityTypes, Condition } from './types';
 import { Entities } from './async';
 
 export interface WithParsedCustomData extends Asset {
@@ -70,13 +70,13 @@ export function buildFact(entityData: Asset | Areas, incomingData: WithParsedCus
     return withParsedCustomData;
 }
 
-export function aggregateFactMap(almanac: Almanac, conditionIds: Array<string[]>): Entities {
-    return conditionIds.reduce((acc: Entities, combination: string[]) => {
+export function aggregateFactMap(almanac: Almanac, conditionIds: Array<ProcessedCondition[]>): Entities {
+    return conditionIds.reduce((acc: Entities, combination: ProcessedCondition[]) => {
         for (let i = 0; i < combination.length; i++) {
-            if (!acc[combination[i]]) {
+            if (!acc[combination[i].id]) {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
                 // @ts-ignore json-rule-engine types does not include factMap
-                acc[combination[i]] = almanac.factMap.get(combination[i]).value.data;
+                acc[combination[i].id] = almanac.factMap.get(combination[i].id).value.data;
             }
         }
         return acc;
@@ -85,38 +85,37 @@ export function aggregateFactMap(almanac: Almanac, conditionIds: Array<string[]>
 
 // for processing rules after engine completes
 
-interface ProcessedRule {
-    conditionIds: Array<string[]>;
-    hasDuration: boolean;
-    hasSuccessfulResult: boolean;
-    numValidCombination: number;
+interface ProcessedCondition {
+    id: string;
+    result: boolean;
+    duration: number;
 }
 
-function isValidFact(fact: ConditionProperties, processedRule: ProcessedRule): string | undefined {
-    const params = fact.params as Record<string, string>;
+type ProcessedRule = Array<ProcessedCondition[]>;
+
+function buildProcessedCondition(fact: ConditionProperties): ProcessedCondition {
+    return {
+        id: (fact.params as Record<string, string>).id,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore json-rule-engine types does not include result
+        result: fact.result,
+        duration: (fact.params as Record<string, number>).duration,
+    };
+}
+
+function isValidFact(fact: ConditionProperties): ProcessedCondition | undefined {
     // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
     // @ts-ignore json-rule-engine types does not include result
     if (fact.factResult) {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-        // @ts-ignore json-rule-engine types does not include result
-        if (fact.result) {
-            processedRule.hasSuccessfulResult = true;
-            if (params.duration) {
-                processedRule.hasDuration = true;
-            }
-            return params.id;
-        } else if (params.duration) {
-            processedRule.hasDuration = true;
-            return params.id;
-        }
+        return buildProcessedCondition(fact);
     }
 }
 
-function validateAndFilterFacts(facts: ConditionProperties[], processedRule: ProcessedRule): string[] {
+function validateAndFilterFacts(facts: ConditionProperties[]): ProcessedCondition[] {
     const validIds = [];
     const factLength = facts.length;
     for (let i = factLength - 1; i >= 0; i--) {
-        const validId = isValidFact(facts[i], processedRule);
+        const validId = isValidFact(facts[i]);
         if (validId) {
             validIds.push(validId);
         } else {
@@ -127,43 +126,39 @@ function validateAndFilterFacts(facts: ConditionProperties[], processedRule: Pro
 }
 
 function processFacts(facts: ConditionProperties[], processedRule: ProcessedRule, parentOperator: 'all' | 'any'): void {
-    const validIds = validateAndFilterFacts(facts, processedRule);
+    console.log('facts', facts);
+    console.log('parent op', parentOperator);
+    console.log('pre processed facts', processedRule);
+    const validIds = validateAndFilterFacts(facts);
     if (parentOperator === 'all') {
-        if (!processedRule.conditionIds.length) {
-            processedRule.conditionIds = [validIds];
-            processedRule.numValidCombination = processedRule.conditionIds[0].length;
+        if (!processedRule.length) {
+            processedRule = [validIds];
         } else {
             for (let i = 0; i < validIds.length; i++) {
-                for (let j = 0; j < processedRule.conditionIds.length; j++) {
-                    processedRule.conditionIds[j].push(validIds[i]);
-                    if (processedRule.conditionIds[j].length > processedRule.numValidCombination) {
-                        processedRule.numValidCombination = processedRule.conditionIds[j].length;
-                    }
+                for (let j = 0; j < processedRule.length; j++) {
+                    processedRule[j].push(validIds[i]);
                 }
             }
         }
     } else {
-        if (!processedRule.conditionIds.length) {
-            processedRule.conditionIds = validIds.map(id => [id]);
-            processedRule.numValidCombination = validIds.length ? 1 : 0;
+        if (!processedRule.length) {
+            processedRule = validIds.map(id => [id]);
         } else {
             for (let k = 0; k < validIds.length; k++) {
-                const idsLength = processedRule.conditionIds.length;
+                const idsLength = processedRule.length;
                 for (let n = 0; n < idsLength; n++) {
                     if (k === 0) {
-                        processedRule.conditionIds[n].push(validIds[k]);
+                        processedRule[n].push(validIds[k]);
                     } else {
-                        const modified = [...processedRule.conditionIds[n]];
+                        const modified = [...processedRule[n]];
                         modified[modified.length - 1] = validIds[k];
-                        processedRule.conditionIds.push(modified);
-                    }
-                    if (processedRule.conditionIds[n].length > processedRule.numValidCombination) {
-                        processedRule.numValidCombination = processedRule.conditionIds[n].length;
+                        processedRule.push(modified);
                     }
                 }
             }
         }
     }
+    console.log('post process facts', processedRule);
 }
 
 export function processRule(
@@ -177,13 +172,17 @@ export function processRule(
             : conditions[i]['all' as keyof TopLevelCondition]
             ? 'all'
             : '';
-        if (operatorKey === 'all' || operatorKey === 'any') {
+        if (operatorKey === 'all') {
+            processRule(conditions[i][operatorKey as keyof TopLevelCondition], processedRule, operatorKey);
+        } else if (operatorKey === 'any') {
+            for (let j = 0; j < conditions[i][operatorKey as keyof TopLevelCondition].length; j++) {
+                processedRule.push([]);
+            }
             processRule(conditions[i][operatorKey as keyof TopLevelCondition], processedRule, operatorKey);
         } else {
             processFacts(conditions as ConditionProperties[], processedRule, parentOperator);
             break;
         }
     }
-    processedRule.conditionIds.map(array => array.sort());
     return processedRule;
 }

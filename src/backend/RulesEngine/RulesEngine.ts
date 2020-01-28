@@ -4,13 +4,12 @@ import { Engine, Event, TopLevelCondition, Almanac, RuleResult, Rule } from 'jso
 import { StateParams, RuleParams } from './types';
 import { parseAndConvertConditions } from './convert-rule';
 import { processSuccessfulEvents } from './events';
-// import { ProcessDurationIfExists } from './duration';
 import { Rules } from '../collection-schema/Rules';
 import { CbCollectionLib } from '../collection-lib';
 import { Areas } from '../collection-schema/Areas';
 import { Asset } from '../collection-schema/Assets';
 import { processRule, aggregateFactMap } from './utils';
-import { processDuration } from './duration';
+import { processDurations } from './duration';
 
 interface WithParsedCustomData extends Asset {
     custom_data: Record<string, object>;
@@ -129,19 +128,17 @@ function handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResul
     // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
     // @ts-ignore json-rule-engine types does not include factMap
     const incomingData = almanac.factMap.get('incomingData').value;
-    const processedResults = processRule(
-        [ruleResult.conditions],
-        {
-            conditionIds: [],
-            hasDuration: false,
-            hasSuccessfulResult: false,
-            numValidCombination: 0,
-        },
-        'all',
-    );
-    const entities = aggregateFactMap(almanac, processedResults.conditionIds);
+    const processedResults = processRule([ruleResult.conditions], 'all');
+    const entities = aggregateFactMap(almanac, processedResults.combinations);
     if (processedResults.hasDuration) {
-        processDuration();
+        processDurations(
+            processedResults.conditionIds,
+            ruleResult.conditions,
+            event.params as RuleParams,
+            entities,
+            actionTopic,
+            incomingData,
+        );
     } else {
         const validCombinations = processedResults.conditionIds.filter(combo => {
             return combo.length === processedResults.numValidCombination;

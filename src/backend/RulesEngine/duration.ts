@@ -1,35 +1,37 @@
-// import { Duration, TimeFrame, RuleParams } from './types';
-// import { TopLevelCondition, Event } from 'json-rules-engine';
-// import { Entities } from './async';
-// import { FactData } from './utils';
+import { RuleParams } from './types';
+import { TopLevelCondition } from 'json-rules-engine';
+import { Entities } from './async';
+import { FactData, ProcessedCondition } from './utils';
 
-// interface Duration {
-//     duration: number;
-// }
+interface Timer {
+    duration: number;
+}
 
-// type Durations = {
-//     [x in string]: Duration;
-// };
+type Timers = {
+    [x in string]: Timer;
+};
 
-// const cache: Durations = {};
+const timerStore: Timers = {};
 
-// function getKey(ruleId: string, entities: Entities): string {
-//     return `${ruleId}_${JSON.stringify(Object.keys(entities).sort())}`;
-// }
+function getKey(ruleId: string, ids: string[]): string {
+    return `${ruleId}_${JSON.stringify(ids)}`;
+}
 
-export function processDuration(): void {
-    // conditions: TopLevelCondition,
-    // timeframe: TimeFrame,
-    // ruleParams: RuleParams,
-    // entities: Entities,
-    // actionTopic: string,
-    // incomingData: FactData,
-    // const key: string = getKey(ruleParams.ruleID, entities);
-    // if (cache[key]) {
-    //     // timer(s) already running
-    // } else {
-    //     cache[key] = {
-    //         entities,
-    //     };
-    // }
+export function processDurations(
+    validCombinations: Array<ProcessedCondition[]>,
+    conditions: TopLevelCondition,
+    ruleParams: RuleParams,
+    entities: Entities,
+    actionTopic: string,
+    incomingData: FactData,
+): void {
+    for (let i = 0; i < validCombinations.length; i++) {
+        const key = getKey(ruleParams.ruleID, validCombinations[i]);
+        if (timerStore[key]) {
+            // update values
+        } else {
+            // create new key
+            // include:
+        }
+    }
 }

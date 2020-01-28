@@ -2,129 +2,39 @@ import { processRule } from '../utils';
 
 describe('Duration For Rules', () => {
     it('processes a basic rule after run failure with duration', () => {
-        const processedRule = processRule(
-            [incoming.FAILED_WITH_DURATION],
-            {
-                conditionIds: [],
-                hasDuration: false,
-                hasSuccessfulResult: false,
-                numValidCombination: 0,
-            },
-            'all',
-        );
-        expect({
-            ...processedRule,
-            conditionIds: new Set(processedRule.conditionIds), // Set allows order of root array not to matter
-        }).toEqual({
-            ...results.FAILED_WITH_DURATION,
-            conditionIds: new Set(results.FAILED_WITH_DURATION.conditionIds),
-        });
+        const processedRule = processRule([incoming.FAILED_WITH_DURATION], [], 'all');
+        expect(processedRule).toEqual(results.FAILED_WITH_DURATION);
     });
 
     it('processes a basic rule after run failure without duration', () => {
-        const processedRule = processRule(
-            [incoming.FAILED_WITHOUT_DURATION],
-            {
-                conditionIds: [],
-                hasDuration: false,
-                hasSuccessfulResult: false,
-                numValidCombination: 0,
-            },
-            'all',
-        );
-        expect({
-            ...processedRule,
-            conditionIds: new Set(processedRule.conditionIds), // Set allows order of root array not to matter
-        }).toEqual({
-            ...results.FAILED_WITHOUT_DURATION,
-            conditionIds: new Set(results.FAILED_WITHOUT_DURATION.conditionIds),
-        });
+        const processedRule = processRule([incoming.FAILED_WITHOUT_DURATION], [], 'all');
+        expect(processedRule).toEqual(results.FAILED_WITHOUT_DURATION);
     });
 
     it('processes a split rule after run failure without duration', () => {
-        const processedRule = processRule(
-            [incoming.SPLIT_FAILED_WITHOUT_DURATION],
-            {
-                conditionIds: [],
-                hasDuration: false,
-                hasSuccessfulResult: false,
-                numValidCombination: 0,
-            },
-            'all',
-        );
-        expect({
-            ...processedRule,
-            conditionIds: new Set(processedRule.conditionIds), // Set allows order of root array not to matter
-        }).toEqual({
-            ...results.SPLIT_FAILED_WITHOUT_DURATION,
-            conditionIds: new Set(results.SPLIT_FAILED_WITHOUT_DURATION.conditionIds),
-        });
+        const processedRule = processRule([incoming.SPLIT_FAILED_WITHOUT_DURATION], [], 'all');
+        expect(processedRule).toEqual(results.SPLIT_FAILED_WITHOUT_DURATION);
     });
 
     it('processes a split rule after run failure with duration', () => {
-        const processedRule = processRule(
-            [incoming.SPLIT_FAILED_WITH_DURATION],
-            {
-                conditionIds: [],
-                hasDuration: false,
-                hasSuccessfulResult: false,
-                numValidCombination: 0,
-            },
-            'all',
-        );
-        expect({
-            ...processedRule,
-            conditionIds: new Set(processedRule.conditionIds), // Set allows order of root array not to matter
-        }).toEqual({
-            ...results.SPLIT_FAILED_WITH_DURATION,
-            conditionIds: new Set(results.SPLIT_FAILED_WITH_DURATION.conditionIds),
-        });
+        const processedRule = processRule([incoming.SPLIT_FAILED_WITH_DURATION], [], 'all');
+        expect(processedRule).toEqual(results.SPLIT_FAILED_WITH_DURATION);
     });
 
     it('processes a nested rule after run failure with duration', () => {
-        const processedRule = processRule(
-            [incoming.NESTED_FAILED_WITH_DURATION],
-            {
-                conditionIds: [],
-                hasDuration: false,
-                hasSuccessfulResult: false,
-                numValidCombination: 0,
-            },
-            'all',
-        );
-        expect({
-            ...processedRule,
-            conditionIds: new Set(processedRule.conditionIds), // Set allows order of root array not to matter
-        }).toEqual({
-            ...results.NESTED_FAILED_WITH_DURATION,
-            conditionIds: new Set(results.NESTED_FAILED_WITH_DURATION.conditionIds),
-        });
+        const processedRule = processRule([incoming.NESTED_FAILED_WITH_DURATION], [], 'all');
+        expect(processedRule).toEqual(results.NESTED_FAILED_WITH_DURATION);
     });
 
     it('processes a nested rule after run failure without duration', () => {
-        const processedRule = processRule(
-            [incoming.NESTED_FAILED_WITHOUT_DURATION],
-            {
-                conditionIds: [],
-                hasDuration: false,
-                hasSuccessfulResult: false,
-                numValidCombination: 0,
-            },
-            'all',
-        );
-        expect({
-            ...processedRule,
-            conditionIds: new Set(processedRule.conditionIds), // Set allows order of root array not to matter
-        }).toEqual({
-            ...results.NESTED_FAILED_WITHOUT_DURATION,
-            conditionIds: new Set(results.NESTED_FAILED_WITHOUT_DURATION.conditionIds),
-        });
+        const processedRule = processRule([incoming.NESTED_FAILED_WITHOUT_DURATION], [], 'all');
+        expect(processedRule).toEqual(results.NESTED_FAILED_WITHOUT_DURATION);
     });
 });
 
 const incoming = {
     FAILED_WITHOUT_DURATION: {
-        all: [
+        any: [
             {
                 fact: 'state',
                 operator: 'equal',
@@ -192,7 +102,7 @@ const incoming = {
         ],
     },
     SPLIT_FAILED_WITH_DURATION: {
-        all: [
+        any: [
             {
                 all: [
                     {
@@ -228,7 +138,7 @@ const incoming = {
                 ],
             },
             {
-                any: [
+                all: [
                     {
                         fact: 'state',
                         operator: 'equal',
@@ -266,7 +176,7 @@ const incoming = {
     SPLIT_FAILED_WITHOUT_DURATION: {
         all: [
             {
-                all: [
+                any: [
                     {
                         fact: 'state',
                         operator: 'equal',
@@ -374,7 +284,7 @@ const incoming = {
             {
                 any: [
                     {
-                        any: [
+                        all: [
                             {
                                 fact: 'state',
                                 operator: 'equal',
@@ -407,7 +317,7 @@ const incoming = {
                         ],
                     },
                     {
-                        any: [
+                        all: [
                             {
                                 fact: 'state',
                                 operator: 'equal',
@@ -445,9 +355,9 @@ const incoming = {
         ],
     },
     NESTED_FAILED_WITHOUT_DURATION: {
-        all: [
+        any: [
             {
-                any: [
+                all: [
                     {
                         fact: 'state',
                         operator: 'equal',
@@ -481,7 +391,7 @@ const incoming = {
                 ],
             },
             {
-                any: [
+                all: [
                     {
                         any: [
                             {
@@ -556,48 +466,242 @@ const incoming = {
 };
 
 const results = {
-    FAILED_WITHOUT_DURATION: {
-        conditionIds: [['testAsset5']],
-        hasDuration: false,
-        hasSuccessfulResult: true,
-        numValidCombination: 1,
-    },
-    FAILED_WITH_DURATION: {
-        conditionIds: [['testAsset5', 'testAsset6']],
-        hasDuration: true,
-        hasSuccessfulResult: true,
-        numValidCombination: 2,
-    },
-    SPLIT_FAILED_WITH_DURATION: {
-        conditionIds: [
-            ['testAsset1', 'testAsset5', 'testAsset6'],
-            ['testAsset2', 'testAsset5', 'testAsset6'],
+    FAILED_WITHOUT_DURATION: [
+        [
+            {
+                id: 'testAsset6',
+                result: false,
+                duration: null,
+            },
         ],
-        hasDuration: true,
-        hasSuccessfulResult: true,
-        numValidCombination: 3,
-    },
-    SPLIT_FAILED_WITHOUT_DURATION: {
-        conditionIds: [['testAsset5']],
-        hasDuration: false,
-        hasSuccessfulResult: true,
-        numValidCombination: 1,
-    },
-    NESTED_FAILED_WITH_DURATION: {
-        conditionIds: [
-            ['testAsset1', 'testAsset3', 'testAsset5'],
-            ['testAsset1', 'testAsset3', 'testAsset6'],
-            ['testAsset1', 'testAsset4', 'testAsset5'],
-            ['testAsset1', 'testAsset4', 'testAsset6'],
+        [
+            {
+                id: 'testAsset5',
+                result: true,
+                duration: null,
+            },
         ],
-        hasDuration: true,
-        hasSuccessfulResult: true,
-        numValidCombination: 3,
-    },
-    NESTED_FAILED_WITHOUT_DURATION: {
-        conditionIds: [],
-        hasDuration: false,
-        hasSuccessfulResult: false,
-        numValidCombination: 0,
-    },
+    ],
+    FAILED_WITH_DURATION: [
+        [
+            {
+                id: 'testAsset6',
+                result: false,
+                duration: 30000,
+            },
+            {
+                id: 'testAsset5',
+                result: true,
+                duration: 30000,
+            },
+        ],
+    ],
+    SPLIT_FAILED_WITH_DURATION: [
+        [
+            {
+                id: 'testAsset6',
+                result: false,
+                duration: 30000,
+            },
+            {
+                id: 'testAsset5',
+                result: true,
+                duration: 30000,
+            },
+        ],
+        [
+            {
+                id: 'testAsset2',
+                result: false,
+                duration: 30000,
+            },
+            {
+                id: 'testAsset1',
+                result: false,
+                duration: 30000,
+            },
+        ],
+    ],
+    SPLIT_FAILED_WITHOUT_DURATION: [
+        [
+            {
+                id: 'testAsset6',
+                result: false,
+                duration: null,
+            },
+            {
+                id: 'testAsset2',
+                result: false,
+                duration: null,
+            },
+        ],
+        [
+            {
+                id: 'testAsset5',
+                result: true,
+                duration: null,
+            },
+            {
+                id: 'testAsset2',
+                result: false,
+                duration: null,
+            },
+        ],
+        [
+            {
+                id: 'testAsset6',
+                result: false,
+                duration: null,
+            },
+            {
+                id: 'testAsset1',
+                result: false,
+                duration: null,
+            },
+        ],
+        [
+            {
+                id: 'testAsset5',
+                result: true,
+                duration: null,
+            },
+            {
+                id: 'testAsset1',
+                result: false,
+                duration: null,
+            },
+        ],
+    ],
+    NESTED_FAILED_WITH_DURATION: [
+        [
+            {
+                id: 'testAsset5',
+                result: false,
+                duration: 10000,
+            },
+            {
+                id: 'testAsset1',
+                result: true,
+                duration: 10000,
+            },
+            {
+                id: 'testAsset2',
+                result: false,
+                duration: 10000,
+            },
+        ],
+        [
+            {
+                id: 'testAsset5',
+                result: false,
+                duration: 10000,
+            },
+            {
+                id: 'testAsset3',
+                result: false,
+                duration: 20000,
+            },
+            {
+                id: 'testAsset4',
+                result: false,
+                duration: 20000,
+            },
+        ],
+        [
+            {
+                id: 'testAsset6',
+                result: false,
+                duration: 10000,
+            },
+            {
+                id: 'testAsset1',
+                result: true,
+                duration: 10000,
+            },
+            {
+                id: 'testAsset2',
+                result: false,
+                duration: 10000,
+            },
+        ],
+        [
+            {
+                id: 'testAsset6',
+                result: false,
+                duration: 10000,
+            },
+            {
+                id: 'testAsset3',
+                result: false,
+                duration: 20000,
+            },
+            {
+                id: 'testAsset4',
+                result: false,
+                duration: 20000,
+            },
+        ],
+    ],
+    NESTED_FAILED_WITHOUT_DURATION: [
+        [
+            {
+                id: 'testAsset6',
+                result: false,
+                duration: null,
+            },
+            {
+                id: 'testAsset5',
+                result: false,
+                duration: null,
+            },
+        ],
+        [
+            {
+                id: 'testAsset1',
+                result: false,
+                duration: null,
+            },
+            {
+                id: 'testAsset3',
+                result: false,
+                duration: null,
+            },
+        ],
+        [
+            {
+                id: 'testAsset1',
+                result: false,
+                duration: null,
+            },
+            {
+                id: 'testAsset4',
+                result: false,
+                duration: null,
+            },
+        ],
+        [
+            {
+                id: 'testAsset2',
+                result: false,
+                duration: null,
+            },
+            {
+                id: 'testAsset3',
+                result: false,
+                duration: null,
+            },
+        ],
+        [
+            {
+                id: 'testAsset2',
+                result: false,
+                duration: null,
+            },
+            {
+                id: 'testAsset4',
+                result: false,
+                duration: null,
+            },
+        ],
+    ],
 };
