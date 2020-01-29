@@ -1,7 +1,7 @@
 import { GC, CollectionName, UpdateAssetStatusOptions, LogLevels, AssetStatusUpdateMethod } from '../global-config';
 import { CbCollectionLib } from '../collection-lib';
 import { Logger } from '../Logger';
-import { Topics } from '../Util';
+import { Topics, getErrorMessage } from '../Util';
 import { Asset } from '../collection-schema/Assets';
 
 interface UpdateAssetStatusConfig {
@@ -28,8 +28,8 @@ export function updateAssetStatusSS({
     const logger = Logger({ name: 'AssetStatusSSLib', logSetting: LOG_SETTING });
     const messaging = ClearBlade.Messaging();
 
-    function failureCb(error: Error): void {
-        logger.publishLog(LogLevels.ERROR, 'Failed ', error.message);
+    function failureCb(reason: unknown): void {
+        logger.publishLog(LogLevels.ERROR, 'Failed ', getErrorMessage(reason));
     }
 
     function MergeAsset(assetID: string, msg: Asset): Promise<unknown> {

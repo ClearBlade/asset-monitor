@@ -3,7 +3,7 @@ import { Asset } from '../collection-schema/Assets';
 import { AssetHistory } from '../collection-schema/AssetHistory';
 import { CbCollectionLib } from '../collection-lib';
 import { Logger } from '../Logger';
-import { Topics } from '../Util';
+import { Topics, getErrorMessage } from '../Util';
 interface CreateAssetHistoryConfig {
     req: CbServer.BasicReq;
     resp: CbServer.Resp;
@@ -40,7 +40,7 @@ export function createAssetHistorySS({
     }
 
     function failureCb(reason: unknown): void {
-        logger.publishLog(LogLevels.ERROR, 'Failed ', reason);
+        logger.publishLog(LogLevels.ERROR, 'Failed ', getErrorMessage(reason));
     }
 
     function getEmptyAssetHistoryObject(): AssetHistory {
@@ -142,7 +142,7 @@ export function createAssetHistorySS({
         try {
             parsedMsg = JSON.parse(msg);
         } catch (e) {
-            logger.publishLog(LogLevels.ERROR, 'Failed parse the message: ', e.message);
+            logger.publishLog(LogLevels.ERROR, 'Failed parse the message: ', getErrorMessage(e));
             return;
         }
         let assetHistoryItems: Array<AssetHistory> = [];

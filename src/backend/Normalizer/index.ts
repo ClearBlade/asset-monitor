@@ -1,6 +1,7 @@
 import { Logger } from '../Logger';
 import { GC, LogLevels } from '../global-config';
 import { Asset } from '../collection-schema/Assets';
+import { getErrorMessage } from '../Util'
 import '../../static/promise-polyfill/index.js';
 
 export type MessageParser = (err: boolean, msg: string, topic: string) => Promise<Array<Asset>>;
@@ -81,8 +82,8 @@ export function normalizer(config: NormalizerConfig): void {
         subscribePromises.push(subscriber(config.topics[i]));
     }
 
-    function failureCb(error: Error): void {
-        logger.publishLog(LogLevels.ERROR, SERVICE_INSTANCE_ID, ': Failed ', error.message);
+    function failureCb(reason: unknown): void {
+        logger.publishLog(LogLevels.ERROR, SERVICE_INSTANCE_ID, ': Failed ', getErrorMessage(reason));
     }
 
     function HandleMessage(err: boolean, msg: string, topic: string): void {

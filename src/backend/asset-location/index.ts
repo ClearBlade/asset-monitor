@@ -2,7 +2,7 @@ import { GC, CollectionName, UpdateAssetLocationOptions, LogLevels } from '../gl
 import { Asset } from '../collection-schema/Assets';
 import { CbCollectionLib } from '../collection-lib';
 import { Logger } from '../Logger';
-import { Topics } from '../Util';
+import { Topics, getErrorMessage } from '../Util';
 
 interface UpdateAssetLocationDataOptions {
     fetchedData: CbServer.CollectionSchema;
@@ -100,7 +100,7 @@ export function updateAssetLocationSS({
             newAsset['custom_data'] = JSON.stringify(assetData['custom_data']);
         } catch (e) {
             logger.publishLog(LogLevels.ERROR, 'ERROR: ', SERVICE_INSTANCE_ID, ': Failed to stringify ', e.message);
-            return Promise.reject('Failed to stringify ' + e);
+            return Promise.reject('Failed to stringify ' + e.message);
         }
 
         return assetsCol.cbCreatePromise({ item: [newAsset] as Record<string, unknown>[] });
@@ -156,7 +156,7 @@ export function updateAssetLocationSS({
                 }
             })
             .catch(function(error) {
-                logger.publishLog(LogLevels.ERROR, 'Failed to fetch: ', error.message);
+                logger.publishLog(LogLevels.ERROR, 'Failed to fetch: ', getErrorMessage(error));
             });
 
         Promise.runQueue();
