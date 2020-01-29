@@ -3,6 +3,8 @@ import { Asset } from '../collection-schema/Assets';
 import { CbCollectionLib } from '../collection-lib';
 import { Logger } from '../Logger';
 import { Topics } from '../Util';
+import { bulkSubscriber } from '../Normalizer';
+import '../../static/promise-polyfill';
 
 interface UpdateAssetLocationDataOptions {
     fetchedData: CbServer.CollectionSchema;
@@ -31,7 +33,6 @@ export function updateAssetLocationSS({
     } = defaultOptions,
 }: UpdateAssetLocationConfig): void {
     const TOPIC = '$share/UpdateLocationGroup/' + Topics.DBUpdateAssetLocation('+');
-    const SERVICE_INSTANCE_ID = req.service_instance_id;
 
     ClearBlade.init({ request: req });
     const messaging = ClearBlade.Messaging();
@@ -99,7 +100,7 @@ export function updateAssetLocationSS({
         try {
             newAsset['custom_data'] = JSON.stringify(assetData['custom_data']);
         } catch (e) {
-            logger.publishLog(LogLevels.ERROR, 'ERROR: ', SERVICE_INSTANCE_ID, ': Failed to stringify ', e);
+            logger.publishLog(LogLevels.ERROR, 'ERROR Failed to stringify ', e);
             return Promise.reject('Failed to stringify ' + e);
         }
 
@@ -162,11 +163,7 @@ export function updateAssetLocationSS({
         Promise.runQueue();
     }
 
-    function WaitLoop(err: boolean, data: string | null): void {
-        if (err) {
-            logger.publishLog(LogLevels.ERROR, 'Subscribe failed for: ', SERVICE_INSTANCE_ID, ': ', data);
-            resp.error(data);
-        }
+    function WaitLoop(): void {
         logger.publishLog(LogLevels.SUCCESS, 'Subscribed to Shared Topic. Starting Loop.');
 
         // eslint-disable-next-line no-constant-condition
@@ -175,5 +172,13 @@ export function updateAssetLocationSS({
         }
     }
 
-    messaging.subscribe(TOPIC, WaitLoop);
+    bulkSubscriber([TOPIC, ...(!ClearBlade.isEdge() ? [TOPIC + '/_platform'] : [])])
+        .then(() => {
+            WaitLoop();
+        })
+        .catch(e => {
+            log(`Subscription error: ${JSON.stringify(e)}`);
+            resp.error(`Subscription error: ${JSON.stringify(e)}`);
+        });
+    Promise.runQueue();
 }
