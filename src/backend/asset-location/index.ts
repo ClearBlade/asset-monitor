@@ -172,7 +172,7 @@ export function updateAssetLocationSS({
         }
     }
 
-    bulkSubscriber([TOPIC, TOPIC + '/_platform'])
+    bulkSubscriber([TOPIC, ...(!ClearBlade.isEdge() ? [TOPIC + '/_platform'] : [])])
         .then(() => {
             WaitLoop();
         })
