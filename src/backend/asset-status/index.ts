@@ -25,6 +25,8 @@ export function updateAssetStatusSS({
     ClearBlade.init({ request: req });
 
     const TOPIC = '$share/AssetStatusGroup/' + Topics.DBUpdateAssetStatus('+');
+    const SERVICE_INSTANCE_ID = req.service_instance_id;
+
     const logger = Logger({ name: 'AssetStatusSSLib', logSetting: LOG_SETTING });
     const messaging = ClearBlade.Messaging();
 
