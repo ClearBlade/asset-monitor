@@ -40,6 +40,24 @@ export function subscriber(topic: string): Promise<unknown> {
     return promise;
 }
 
+export function bulkSubscriber(topics: string[]): Promise<unknown> {
+    return new Promise(function(resolve, reject) {
+        Promise.all(
+            topics.map(topic => {
+                subscriber(topic);
+            }),
+        )
+            .then(() => {
+                resolve();
+            })
+            .catch(e => {
+                log(`Subscription error: ${JSON.stringify(e)}`);
+                reject(new Error(e));
+            });
+        Promise.runQueue();
+    });
+}
+
 export function publisher(assets: Array<Asset>, pubConfig: PublishConfig): void {
     const messaging = ClearBlade.Messaging();
     for (let i = 0, l = assets.length; i < l; i++) {

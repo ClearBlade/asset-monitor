@@ -3,7 +3,7 @@ import { Asset } from '../collection-schema/Assets';
 import { CbCollectionLib } from '../collection-lib';
 import { Logger } from '../Logger';
 import { Topics } from '../Util';
-import { subscriber } from '../Normalizer';
+import { bulkSubscriber } from '../Normalizer';
 import '../../static/promise-polyfill';
 
 interface UpdateAssetLocationDataOptions {
@@ -172,21 +172,13 @@ export function updateAssetLocationSS({
         }
     }
 
-    function subscribeAndInitialize(topics: string[]): void {
-        Promise.all(
-            topics.map(topic => {
-                subscriber(topic);
-            }),
-        )
-            .then(() => {
-                WaitLoop();
-            })
-            .catch(e => {
-                log(`Subscription error: ${JSON.stringify(e)}`);
-                resp.error(`Subscription error: ${JSON.stringify(e)}`);
-            });
-        Promise.runQueue();
-    }
-
-    subscribeAndInitialize([TOPIC, TOPIC + '/_platform']);
+    bulkSubscriber([TOPIC, TOPIC + '/_platform'])
+        .then(() => {
+            WaitLoop();
+        })
+        .catch(e => {
+            log(`Subscription error: ${JSON.stringify(e)}`);
+            resp.error(`Subscription error: ${JSON.stringify(e)}`);
+        });
+    Promise.runQueue();
 }
