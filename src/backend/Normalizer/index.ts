@@ -1,7 +1,7 @@
 import { Logger } from '../Logger';
 import { GC, LogLevels } from '../global-config';
 import { Asset } from '../collection-schema/Assets';
-import { getErrorMessage } from '../Util'
+import { getErrorMessage } from '../Util';
 import '../../static/promise-polyfill/index.js';
 
 export type MessageParser = (err: boolean, msg: string, topic: string) => Promise<Array<Asset>>;
