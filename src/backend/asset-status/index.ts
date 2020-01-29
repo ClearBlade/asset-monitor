@@ -3,6 +3,8 @@ import { CbCollectionLib } from '../collection-lib';
 import { Logger } from '../Logger';
 import { Topics } from '../Util';
 import { Asset } from '../collection-schema/Assets';
+import { subscriber } from '../Normalizer';
+import '../../static/promise-polyfill';
 
 interface UpdateAssetStatusConfig {
     req: CbServer.BasicReq;
@@ -25,7 +27,6 @@ export function updateAssetStatusSS({
     ClearBlade.init({ request: req });
 
     const TOPIC = '$share/AssetStatusGroup/' + Topics.DBUpdateAssetStatus('+');
-    const SERVICE_INSTANCE_ID = req.service_instance_id;
 
     const logger = Logger({ name: 'AssetStatusSSLib', logSetting: LOG_SETTING });
     const messaging = ClearBlade.Messaging();
@@ -116,11 +117,7 @@ export function updateAssetStatusSS({
         Promise.runQueue();
     }
 
-    function WaitLoop(err: boolean, data: string | null): void {
-        if (err) {
-            logger.publishLog(LogLevels.ERROR, 'Subscribe failed ', data);
-            resp.error(data);
-        }
+    function WaitLoop(): void {
         logger.publishLog(LogLevels.SUCCESS, 'Subscribed to Shared Topic. Starting Loop.');
 
         // eslint-disable-next-line no-constant-condition
@@ -129,15 +126,21 @@ export function updateAssetStatusSS({
         }
     }
 
-    messaging.subscribe(TOPIC, (err, data) => {
-        if (err) {
-            logger.publishLog(LogLevels.ERROR, 'Subscribe failed for: ', SERVICE_INSTANCE_ID, ': ', data);
-            resp.error(data);
-        }
-        if (!ClearBlade.isEdge()) {
-            messaging.subscribe(TOPIC + '/_platform', WaitLoop);
-        } else {
-            WaitLoop(err, data);
-        }
-    });
+    function subscribeAndInitialize(topics: string[]): void {
+        Promise.all(
+            topics.map(topic => {
+                subscriber(topic);
+            }),
+        )
+            .then(() => {
+                WaitLoop();
+            })
+            .catch(e => {
+                log(`Subscription error: ${JSON.stringify(e)}`);
+                resp.error(`Subscription error: ${JSON.stringify(e)}`);
+            });
+        Promise.runQueue();
+    }
+
+    subscribeAndInitialize([TOPIC, TOPIC + '/_platform']);
 }
