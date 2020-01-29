@@ -175,5 +175,15 @@ export function updateAssetLocationSS({
         }
     }
 
-    messaging.subscribe(TOPIC, WaitLoop);
+    messaging.subscribe(TOPIC, (err, data) => {
+        if (err) {
+            logger.publishLog(LogLevels.ERROR, 'Subscribe failed for: ', SERVICE_INSTANCE_ID, ': ', data);
+            resp.error(data);
+        }
+        if (!ClearBlade.isEdge()) {
+            messaging.subscribe(TOPIC + '/_platform', WaitLoop);
+        } else {
+            WaitLoop(err, data);
+        }
+    });
 }

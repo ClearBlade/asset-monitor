@@ -4,6 +4,7 @@ import { AssetHistory } from '../collection-schema/AssetHistory';
 import { CbCollectionLib } from '../collection-lib';
 import { Logger } from '../Logger';
 import { Topics } from '../Util';
+
 interface CreateAssetHistoryConfig {
     req: CbServer.BasicReq;
     resp: CbServer.Resp;
@@ -198,5 +199,15 @@ export function createAssetHistorySS({
         }
     }
 
-    messaging.subscribe(TOPIC, WaitLoop);
+    messaging.subscribe(TOPIC, (err, data) => {
+        if (err) {
+            logger.publishLog(LogLevels.ERROR, 'Subscribe failed for: ', SERVICE_INSTANCE_ID, ': ', data);
+            resp.error(data);
+        }
+        if (!ClearBlade.isEdge()) {
+            messaging.subscribe(TOPIC + '/_platform', WaitLoop);
+        } else {
+            WaitLoop(err, data);
+        }
+    });
 }

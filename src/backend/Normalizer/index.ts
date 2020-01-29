@@ -31,7 +31,7 @@ export function subscriber(topic: string): Promise<unknown> {
     const promise = new Promise(function(resolve, reject) {
         messaging.subscribe(topic, function(err, data) {
             if (err) {
-                reject('Error with subscribing' + JSON.stringify(data));
+                reject('Error with subscribing: ' + JSON.stringify(data));
             } else {
                 resolve(data);
             }
