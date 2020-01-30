@@ -1,28 +1,28 @@
-import { processRule } from '../utils';
+import { processCondition } from '../utils';
 
 describe('Duration For Rules', () => {
     it('processes a basic rule after run failure with duration', () => {
-        const processedRule = processRule(incoming.FAILED_WITH_DURATION);
+        const processedRule = processCondition([incoming.FAILED_WITH_DURATION], [], 'all');
         expect(processedRule).toEqual(results.FAILED_WITH_DURATION);
     });
 
     it('processes a basic rule after run failure without duration', () => {
-        const processedRule = processRule(incoming.FAILED_WITHOUT_DURATION);
+        const processedRule = processCondition([incoming.FAILED_WITHOUT_DURATION], [], 'all');
         expect(processedRule).toEqual(results.FAILED_WITHOUT_DURATION);
     });
 
     it('processes a split rule after run failure without duration', () => {
-        const processedRule = processRule(incoming.SPLIT_FAILED_WITHOUT_DURATION);
+        const processedRule = processCondition([incoming.SPLIT_FAILED_WITHOUT_DURATION], [], 'all');
         expect(processedRule).toEqual(results.SPLIT_FAILED_WITHOUT_DURATION);
     });
 
     it('processes a split rule after run failure with duration', () => {
-        const processedRule = processRule(incoming.SPLIT_FAILED_WITH_DURATION);
+        const processedRule = processCondition([incoming.SPLIT_FAILED_WITH_DURATION], [], 'all');
         expect(processedRule).toEqual(results.SPLIT_FAILED_WITH_DURATION);
     });
 
     // it('processes a nested rule after run failure with duration', () => {
-    //     const processedRule = processRule(incoming.NESTED_FAILED_WITH_DURATION);
+    //     const processedRule = processCondition([incoming.NESTED_FAILED_WITH_DURATION], [], 'all');
     //     expect(processedRule).toEqual(results.NESTED_FAILED_WITH_DURATION);
     // });
 
