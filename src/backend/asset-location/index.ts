@@ -38,7 +38,7 @@ export function updateAssetLocationSS({
     ClearBlade.init({ request: req });
     const messaging = ClearBlade.Messaging();
 
-    const logger = Logger({ name: 'AssetLocationSSLib', logSetting: LOG_SETTING });
+    const logger = new Logger({ name: 'AssetLocationSSLib', logSetting: LOG_SETTING });
 
     //TODO default params in function
     //settings = settings || GC.UPDATE_ASSET_LOCATION_SETTINGS;

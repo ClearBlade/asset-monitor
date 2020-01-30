@@ -6,9 +6,11 @@ export interface NormalizerDeviceMap {
     [index: string]: string | object;
 }
 export declare enum LogLevels {
+    FATAL = "fatal",
+    ERROR = "error",
+    WARN = "warn",
     INFO = "info",
     DEBUG = "debug",
-    ERROR = "error",
     SUCCESS = "success"
 }
 export declare enum CollectionName {

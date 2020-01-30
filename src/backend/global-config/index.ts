@@ -12,20 +12,10 @@ export interface NormalizerDeviceMap {
 export enum LogLevels {
     FATAL = 'fatal',
     ERROR = 'error',
-    WARNING = 'warning',
+    WARN = 'warn',
     INFO = 'info',
     DEBUG = 'debug',
     SUCCESS = 'success',
-
-}
-
- { 
-  'fatal': 0, 
-  'error': 1, 
-  'warning': 2, 
-  "info": 3, 
-  "debug": 4,
-  "succes": 5
 }
 
 export enum CollectionName {

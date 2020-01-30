@@ -29,7 +29,7 @@ export function updateAssetStatusSS({
     const TOPIC = '$share/AssetStatusGroup/' + Topics.DBUpdateAssetStatus('+');
     const TOPICS = [TOPIC, ...(!ClearBlade.isEdge() ? [TOPIC + '/_platform'] : [])];
 
-    const logger = Logger({ name: 'AssetStatusSSLib', logSetting: LOG_SETTING });
+    const logger = new Logger({ name: 'AssetStatusSSLib', logSetting: LOG_SETTING });
     const messaging = ClearBlade.Messaging();
 
     function failureCb(error: Error): void {

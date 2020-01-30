@@ -36,7 +36,7 @@ export function createAssetHistorySS({
 
     ClearBlade.init({ request: req });
     const messaging = ClearBlade.Messaging();
-    const logger = Logger({ name: 'AssetHistorySSLib', logSetting: LOG_SETTING });
+    const logger = new Logger({ name: 'AssetHistorySSLib', logSetting: LOG_SETTING });
 
     function successCb(value: unknown): void {
         logger.publishLog(LogLevels.SUCCESS, 'AssetHistory Creation Succeeded ', value);
