@@ -3,7 +3,7 @@ import { Asset } from '../collection-schema/Assets';
 import { AssetHistory } from '../collection-schema/AssetHistory';
 import { CbCollectionLib } from '../collection-lib';
 import { Logger } from '../Logger';
-import { Topics } from '../Util';
+import { Topics, getErrorMessage } from '../Util';
 import { bulkSubscriber } from '../Normalizer';
 import '../../static/promise-polyfill';
 
@@ -32,6 +32,7 @@ export function createAssetHistorySS({
     } = defaultOptions,
 }: CreateAssetHistoryConfig): void {
     const TOPIC = '$share/AssetHistoryGroup/' + Topics.HistoryAssetLocation('+');
+    const TOPICS = [TOPIC, ...(!ClearBlade.isEdge() ? [TOPIC + '/_platform'] : [])];
 
     ClearBlade.init({ request: req });
     const messaging = ClearBlade.Messaging();
@@ -41,8 +42,8 @@ export function createAssetHistorySS({
         logger.publishLog(LogLevels.SUCCESS, 'AssetHistory Creation Succeeded ', value);
     }
 
-    function failureCb(reason: unknown): void {
-        logger.publishLog(LogLevels.ERROR, 'Failed ', reason);
+    function failureCb(error: Error): void {
+        logger.publishLog(LogLevels.ERROR, 'Failed ', getErrorMessage(error.message));
     }
 
     function getEmptyAssetHistoryObject(): AssetHistory {
@@ -144,13 +145,10 @@ export function createAssetHistorySS({
         try {
             parsedMsg = JSON.parse(msg);
         } catch (e) {
-            logger.publishLog(LogLevels.ERROR, 'Failed parse the message: ', e);
+            logger.publishLog(LogLevels.ERROR, 'Failed parse the message: ', e.message);
             return;
         }
         let assetHistoryItems: Array<AssetHistory> = [];
-        // Update for Jim/Ryan; Might fail for AD if used directly..
-        //const assetID = getAssetIdFromTopic(topic);
-
         let assetID = '';
 
         if (parsedMsg['id']) {
@@ -192,17 +190,17 @@ export function createAssetHistorySS({
 
         // eslint-disable-next-line no-constant-condition
         while (true) {
-            messaging.waitForMessage([TOPIC], HandleMessage);
+            messaging.waitForMessage(TOPICS, HandleMessage);
         }
     }
 
-    bulkSubscriber([TOPIC, ...(!ClearBlade.isEdge() ? [TOPIC + '/_platform'] : [])])
+    bulkSubscriber(TOPICS)
         .then(() => {
             WaitLoop();
         })
         .catch(e => {
-            log(`Subscription error: ${JSON.stringify(e)}`);
-            resp.error(`Subscription error: ${JSON.stringify(e)}`);
+            log(`Subscription error: ${e.message}`);
+            resp.error(`Subscription error: ${e.message}`);
         });
     Promise.runQueue();
 }

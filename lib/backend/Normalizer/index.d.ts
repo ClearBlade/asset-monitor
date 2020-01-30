@@ -18,6 +18,7 @@ export interface PublishConfig {
     shouldPublishAsset?: (asset: Asset) => boolean;
 }
 export declare function subscriber(topic: string): Promise<unknown>;
+export declare function bulkSubscriber(topics: string[]): Promise<unknown>;
 export declare function publisher(assets: Array<Asset>, pubConfig: PublishConfig): void;
 export declare function bulkPublisher(assets: Array<Asset>, normalizerPubConfig?: NormalizerPublishConfig): void;
 export declare function normalizer(config: NormalizerConfig): void;

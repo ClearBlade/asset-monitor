@@ -1,4 +1,5 @@
 import { UpdateAssetLocationOptions } from '../global-config';
+import '../../static/promise-polyfill';
 interface UpdateAssetLocationConfig {
     req: CbServer.BasicReq;
     resp: CbServer.Resp;

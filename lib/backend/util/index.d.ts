@@ -27,3 +27,4 @@ export declare function isEmpty(str: string): boolean;
  * @param normalizedData
  */
 export declare function isNormalizedDataValid(normalizedData: Array<Asset>): boolean;
+export declare function getErrorMessage(error: Error | string): string;

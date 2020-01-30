@@ -1,6 +1,7 @@
 import { Logger } from '../Logger';
 import { GC, LogLevels } from '../global-config';
 import { Asset } from '../collection-schema/Assets';
+import { getErrorMessage } from '../Util';
 import '../../static/promise-polyfill/index.js';
 
 export type MessageParser = (err: boolean, msg: string, topic: string) => Promise<Array<Asset>>;
@@ -31,7 +32,7 @@ export function subscriber(topic: string): Promise<unknown> {
     const promise = new Promise(function(resolve, reject) {
         messaging.subscribe(topic, function(err, data) {
             if (err) {
-                reject('Error with subscribing: ' + JSON.stringify(data));
+                reject(new Error('Error with subscribing: ' + JSON.stringify(data)));
             } else {
                 resolve(data);
             }
@@ -51,7 +52,7 @@ export function bulkSubscriber(topics: string[]): Promise<unknown> {
                 resolve();
             })
             .catch(e => {
-                log(`Subscription error: ${JSON.stringify(e)}`);
+                log(`Subscription error: ${e.message}`);
                 reject(new Error(e));
             });
         Promise.runQueue();
@@ -99,8 +100,8 @@ export function normalizer(config: NormalizerConfig): void {
         subscribePromises.push(subscriber(config.topics[i]));
     }
 
-    function failureCb(reason: unknown): void {
-        logger.publishLog(LogLevels.ERROR, SERVICE_INSTANCE_ID, ': Failed ', JSON.stringify(reason));
+    function failureCb(error: Error | string): void {
+        logger.publishLog(LogLevels.ERROR, SERVICE_INSTANCE_ID, ': Failed ', getErrorMessage(error));
     }
 
     function HandleMessage(err: boolean, msg: string, topic: string): void {

@@ -44,12 +44,12 @@ export function CbCollectionLib(collectionName: CollectionName): CbCollectionLib
             if (!opts || !opts.item) {
                 const errMsg = 'ERROR trying to create without an item ' + opts;
                 logger.publishLog(GC.LOG_LEVEL.DEBUG, errMsg);
-                reject(errMsg);
+                reject(new Error(errMsg));
             }
             const col = ClearBlade.Collection({ collectionName });
             col.create(opts.item, function(err, res) {
                 if (err) {
-                    reject(res);
+                    reject(new Error(JSON.stringify(res)));
                 } else {
                     resolve(res);
                 }
@@ -70,12 +70,12 @@ export function CbCollectionLib(collectionName: CollectionName): CbCollectionLib
             if (!opts || !opts.query || !opts.changes) {
                 const errMsg = 'ERROR: query or changes object is missing';
                 logger.publishLog(GC.LOG_LEVEL.ERROR, errMsg);
-                reject(errMsg);
+                reject(new Error(errMsg));
             }
             col.update(opts.query, opts.changes, function(err, res) {
                 if (err) {
                     logger.publishLog(GC.LOG_LEVEL.ERROR, 'ERROR: with update ', err, res, opts);
-                    reject(res);
+                    reject(new Error(res));
                 } else {
                     logger.publishLog(GC.LOG_LEVEL.DEBUG, 'DEBUG: Updated ' + collectionName);
                     resolve(res);
@@ -95,12 +95,12 @@ export function CbCollectionLib(collectionName: CollectionName): CbCollectionLib
             if (!query) {
                 const errMsg = 'ERROR: query is missing';
                 logger.publishLog(GC.LOG_LEVEL.ERROR, errMsg);
-                reject(errMsg);
+                reject(new Error(errMsg));
             }
             col.fetch(query, function(err, res) {
                 if (err) {
                     logger.publishLog(GC.LOG_LEVEL.ERROR, 'ERROR: with fetch ' + res);
-                    reject(res);
+                    reject(new Error(JSON.stringify(res)));
                 } else {
                     logger.publishLog(GC.LOG_LEVEL.DEBUG, 'DEBUG: Fetched Success: ' + collectionName);
                     resolve(res);
