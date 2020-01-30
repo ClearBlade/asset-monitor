@@ -34,7 +34,6 @@ export function Logger({ name = defaultConfig.name, logSetting = defaultConfig.l
     const messaging = ClearBlade.Messaging();
     function publishLog(logLevel: LogLevels, ...messages: unknown[]): void {
         const pubMsg = createPrettyLogWithName({ name }, messages);
-
         switch (logLevel) {
             case GC.LOG_LEVEL.INFO:
                 if (logSetting === GC.LOG_LEVEL.INFO || logSetting === GC.LOG_LEVEL.DEBUG) {
