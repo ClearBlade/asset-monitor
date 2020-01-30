@@ -1,4 +1,5 @@
 import { CreateAssetHistoryOptions } from '../global-config';
+import '../../static/promise-polyfill';
 interface CreateAssetHistoryConfig {
     req: CbServer.BasicReq;
     resp: CbServer.Resp;
