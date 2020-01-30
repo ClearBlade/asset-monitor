@@ -1,35 +1,45 @@
-import { processCondition } from '../utils';
+import { processRule } from '../utils';
 
 describe('Duration For Rules', () => {
     it('processes a basic rule after run failure with duration', () => {
-        const processedRule = processCondition([incoming.FAILED_WITH_DURATION], [], 'all');
+        const processedRule = processRule([incoming.FAILED_WITH_DURATION]);
         expect(processedRule).toEqual(results.FAILED_WITH_DURATION);
     });
 
     it('processes a basic rule after run failure without duration', () => {
-        const processedRule = processCondition([incoming.FAILED_WITHOUT_DURATION], [], 'all');
+        const processedRule = processRule([incoming.FAILED_WITHOUT_DURATION]);
         expect(processedRule).toEqual(results.FAILED_WITHOUT_DURATION);
     });
 
+    it('processes a mixed level type rule ALL', () => {
+        const processedRule = processRule([incoming.MIXED_LEVEL_TYPES_ALL]);
+        expect(processedRule).toEqual(results.MIXED_LEVEL_TYPES_ALL);
+    });
+
+    it('processes a mixed level type rule ANY', () => {
+        const processedRule = processRule([incoming.MIXED_LEVEL_TYPES_ANY]);
+        expect(processedRule).toEqual(results.MIXED_LEVEL_TYPES_ANY);
+    });
+
     it('processes a split rule after run failure without duration', () => {
-        const processedRule = processCondition([incoming.SPLIT_FAILED_WITHOUT_DURATION], [], 'all');
+        const processedRule = processRule([incoming.SPLIT_FAILED_WITHOUT_DURATION]);
         expect(processedRule).toEqual(results.SPLIT_FAILED_WITHOUT_DURATION);
     });
 
     it('processes a split rule after run failure with duration', () => {
-        const processedRule = processCondition([incoming.SPLIT_FAILED_WITH_DURATION], [], 'all');
+        const processedRule = processRule([incoming.SPLIT_FAILED_WITH_DURATION]);
         expect(processedRule).toEqual(results.SPLIT_FAILED_WITH_DURATION);
     });
 
-    // it('processes a nested rule after run failure with duration', () => {
-    //     const processedRule = processCondition([incoming.NESTED_FAILED_WITH_DURATION], [], 'all');
-    //     expect(processedRule).toEqual(results.NESTED_FAILED_WITH_DURATION);
-    // });
+    it('processes a nested rule after run failure with duration', () => {
+        const processedRule = processRule([incoming.NESTED_FAILED_WITH_DURATION]);
+        expect(processedRule).toEqual(results.NESTED_FAILED_WITH_DURATION);
+    });
 
-    // it('processes a nested rule after run failure without duration', () => {
-    //     const processedRule = processRule([incoming.NESTED_FAILED_WITHOUT_DURATION], [], 'all');
-    //     expect(processedRule).toEqual(results.NESTED_FAILED_WITHOUT_DURATION);
-    // });
+    it('processes a nested rule after run failure without duration', () => {
+        const processedRule = processRule([incoming.NESTED_FAILED_WITHOUT_DURATION]);
+        expect(processedRule).toEqual(results.NESTED_FAILED_WITHOUT_DURATION);
+    });
 });
 
 const incoming = {
@@ -98,6 +108,112 @@ const incoming = {
                 result: false,
                 path: '.data.custom_data.speed',
                 value: 70,
+            },
+        ],
+    },
+    MIXED_LEVEL_TYPES_ALL: {
+        all: [
+            {
+                fact: 'state',
+                operator: 'equal',
+                params: {
+                    id: 'testAsset5',
+                    attribute: 'speed',
+                    collection: 'assets',
+                    type: 'yacht',
+                    duration: 30000,
+                },
+                factResult: 75,
+                result: false,
+                path: '.data.custom_data.speed',
+                value: 70,
+            },
+            {
+                any: [
+                    {
+                        fact: 'state',
+                        operator: 'equal',
+                        params: {
+                            id: 'testAsset6',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: 'yacht',
+                            duration: 30000,
+                        },
+                        factResult: 75,
+                        result: false,
+                        path: '.data.custom_data.speed',
+                        value: 70,
+                    },
+                    {
+                        fact: 'state',
+                        operator: 'equal',
+                        params: {
+                            id: 'testAsset7',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: 'yacht',
+                            duration: 30000,
+                        },
+                        factResult: 80,
+                        result: false,
+                        path: '.data.custom_data.speed',
+                        value: 70,
+                    },
+                ],
+            },
+        ],
+    },
+    MIXED_LEVEL_TYPES_ANY: {
+        any: [
+            {
+                fact: 'state',
+                operator: 'equal',
+                params: {
+                    id: 'testAsset5',
+                    attribute: 'speed',
+                    collection: 'assets',
+                    type: 'yacht',
+                    duration: 30000,
+                },
+                factResult: 75,
+                result: false,
+                path: '.data.custom_data.speed',
+                value: 70,
+            },
+            {
+                all: [
+                    {
+                        fact: 'state',
+                        operator: 'equal',
+                        params: {
+                            id: 'testAsset6',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: 'yacht',
+                            duration: 30000,
+                        },
+                        factResult: 75,
+                        result: false,
+                        path: '.data.custom_data.speed',
+                        value: 70,
+                    },
+                    {
+                        fact: 'state',
+                        operator: 'equal',
+                        params: {
+                            id: 'testAsset7',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: 'yacht',
+                            duration: 30000,
+                        },
+                        factResult: 80,
+                        result: false,
+                        path: '.data.custom_data.speed',
+                        value: 70,
+                    },
+                ],
             },
         ],
     },
@@ -420,6 +536,7 @@ const incoming = {
                                     type: 'train',
                                     duration: null,
                                 },
+                                factResult: 52,
                                 result: false,
                                 path: '.data.custom_data.speed',
                                 value: 50,
@@ -492,6 +609,53 @@ const results = {
             },
             {
                 id: 'testAsset6',
+                result: false,
+                duration: 30000,
+            },
+        ],
+    ],
+    MIXED_LEVEL_TYPES_ALL: [
+        [
+            {
+                id: 'testAsset5',
+                result: false,
+                duration: 30000,
+            },
+            {
+                id: 'testAsset6',
+                result: false,
+                duration: 30000,
+            },
+        ],
+        [
+            {
+                id: 'testAsset5',
+                result: false,
+                duration: 30000,
+            },
+            {
+                id: 'testAsset7',
+                result: false,
+                duration: 30000,
+            },
+        ],
+    ],
+    MIXED_LEVEL_TYPES_ANY: [
+        [
+            {
+                id: 'testAsset5',
+                result: false,
+                duration: 30000,
+            },
+        ],
+        [
+            {
+                id: 'testAsset6',
+                result: false,
+                duration: 30000,
+            },
+            {
+                id: 'testAsset7',
                 result: false,
                 duration: 30000,
             },
@@ -578,7 +742,24 @@ const results = {
             {
                 id: 'testAsset5',
                 result: false,
+                duration: 30000,
+            },
+            {
+                id: 'testAsset1',
+                result: true,
                 duration: 10000,
+            },
+            {
+                id: 'testAsset2',
+                result: false,
+                duration: 10000,
+            },
+        ],
+        [
+            {
+                id: 'testAsset6',
+                result: false,
+                duration: 30000,
             },
             {
                 id: 'testAsset1',
@@ -595,7 +776,7 @@ const results = {
             {
                 id: 'testAsset5',
                 result: false,
-                duration: 10000,
+                duration: 30000,
             },
             {
                 id: 'testAsset3',
@@ -612,24 +793,7 @@ const results = {
             {
                 id: 'testAsset6',
                 result: false,
-                duration: 10000,
-            },
-            {
-                id: 'testAsset1',
-                result: true,
-                duration: 10000,
-            },
-            {
-                id: 'testAsset2',
-                result: false,
-                duration: 10000,
-            },
-        ],
-        [
-            {
-                id: 'testAsset6',
-                result: false,
-                duration: 10000,
+                duration: 30000,
             },
             {
                 id: 'testAsset3',
@@ -646,12 +810,12 @@ const results = {
     NESTED_FAILED_WITHOUT_DURATION: [
         [
             {
-                id: 'testAsset6',
+                id: 'testAsset5',
                 result: false,
                 duration: null,
             },
             {
-                id: 'testAsset5',
+                id: 'testAsset6',
                 result: false,
                 duration: null,
             },
@@ -659,6 +823,18 @@ const results = {
         [
             {
                 id: 'testAsset1',
+                result: false,
+                duration: null,
+            },
+            {
+                id: 'testAsset3',
+                result: false,
+                duration: null,
+            },
+        ],
+        [
+            {
+                id: 'testAsset2',
                 result: false,
                 duration: null,
             },
@@ -676,18 +852,6 @@ const results = {
             },
             {
                 id: 'testAsset4',
-                result: false,
-                duration: null,
-            },
-        ],
-        [
-            {
-                id: 'testAsset2',
-                result: false,
-                duration: null,
-            },
-            {
-                id: 'testAsset3',
                 result: false,
                 duration: null,
             },

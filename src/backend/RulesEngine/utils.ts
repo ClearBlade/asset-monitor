@@ -91,7 +91,7 @@ interface ProcessedCondition {
     duration: number;
 }
 
-type ProcessedRule = Array<ProcessedCondition[]>;
+type ProcessedRule = Array<ProcessedCondition[] | ProcessedCondition>;
 
 type ParentOperator = 'all' | 'any';
 
@@ -113,139 +113,80 @@ function isValidFact(fact: ConditionProperties): ProcessedCondition | undefined 
     }
 }
 
-function processAllFacts(facts: ConditionProperties[], processedRule: ProcessedRule): ProcessedRule {
-    const processedFacts: ProcessedCondition[] = [];
-    for (let i = 0; i < facts.length; i++) {
-        const fact: ConditionProperties = facts[i];
-        const processedFact = isValidFact(fact);
-        if (processedFact) {
-            // if (!processedRule.length) {
-            //     processedRule.push([processedFact]);
-            // } else {
-            //     for (let j = 0; j < processedRule.length; j++) {
-            //         processedRule[j].push(processedFact);
-            //     }
-            // }
-            processedFacts.push(processedFact);
-        }
+function processFact(
+    condition: ConditionProperties,
+    processedLevel: ProcessedRule,
+    parentOperator: ParentOperator,
+): void {
+    const validFact = isValidFact(condition);
+    if (validFact) {
+        processedLevel.push(
+            parentOperator === 'all' ? (validFact as ProcessedCondition) : ([validFact] as ProcessedCondition[]),
+        );
     }
-    processedRule.push(processedFacts);
-    return processedRule;
 }
 
-function processAnyFacts(facts: ConditionProperties[], processedRule: ProcessedRule): ProcessedRule {
-    const isRoot = !processedRule.length;
-    const numCombinations = processedRule.length;
-    for (let i = 0; i < facts.length; i++) {
-        const fact: ConditionProperties = facts[i];
-        const processedFact = isValidFact(fact);
-        if (processedFact) {
-            if (isRoot) {
-                processedRule.push([processedFact]);
+function processAllCondition(
+    condition: Array<TopLevelCondition | ConditionProperties>,
+    processedLevel: ProcessedRule,
+): void {
+    const result = processRule(condition, 'all');
+    if (Array.isArray(result[0])) {
+        processedLevel.push(...result);
+    } else {
+        processedLevel.push(result as ProcessedCondition[]);
+    }
+}
+
+function processAnyCondition(
+    condition: Array<TopLevelCondition | ConditionProperties>,
+    processedLevel: ProcessedRule,
+): ProcessedRule {
+    const result = processRule(condition, 'any');
+    if (!processedLevel.length) {
+        for (let j = 0; j < result.length; j++) {
+            if (Array.isArray(result[j])) {
+                processedLevel.push(result[j]);
             } else {
-                for (let n = 0; n < numCombinations; n++) {
-                    if (i === 0) {
-                        processedRule[n].push(processedFact);
-                    } else {
-                        const modified = [...processedRule[n]];
-                        modified[modified.length - 1] = processedFact;
-                        processedRule.push(modified);
-                    }
+                processedLevel.push([result[j] as ProcessedCondition]);
+            }
+        }
+    } else {
+        const incomingprocessedLevel = [...processedLevel];
+        processedLevel = [];
+        for (let j = 0; j < result.length; j++) {
+            for (let n = 0; n < incomingprocessedLevel.length; n++) {
+                if (Array.isArray(incomingprocessedLevel[n])) {
+                    processedLevel.push([
+                        ...(incomingprocessedLevel[n] as ProcessedCondition[]),
+                        ...(result[j] as ProcessedCondition[]),
+                    ]);
+                } else {
+                    processedLevel.push([
+                        incomingprocessedLevel[n] as ProcessedCondition,
+                        ...(result[j] as ProcessedCondition[]),
+                    ]);
                 }
             }
         }
     }
-    return processedRule;
+    return processedLevel;
 }
 
-function processFacts(facts: ConditionProperties[]): ProcessedCondition[] {
-    const processedFacts = [];
-    for (let i = 0; i < facts.length; i++) {
-        const valid = isValidFact(facts[i]);
-        if (valid) {
-            processedFacts.push(valid);
-        }
-    }
-    return processedFacts;
-}
-
-export function processCondition(
+export function processRule(
     conditions: Array<TopLevelCondition | ConditionProperties>,
-    processedRule: ProcessedRule,
-    parentOperator: ParentOperator,
+    parentOperator?: ParentOperator,
 ): ProcessedRule {
+    let processedLevel: ProcessedRule = [];
     for (let i = 0; i < conditions.length; i++) {
         const operatorKey = Object.keys(conditions[i])[0];
         if (operatorKey === 'all') {
-            console.log('about to process all', conditions[i]);
-            console.log('about to process all', processedRule);
-            const result = processCondition(
-                conditions[i][operatorKey as keyof TopLevelCondition],
-                [...processedRule],
-                'all',
-            );
-            console.log('WHAMMYYY', result);
-            console.log('WHAMMYYY', processedRule);
-            if (processedRule.length) {
-                processedRule.push(result);
-            } else if (Array.isArray(result[0])) {
-                processedRule.push(...result);
-            } else {
-                processedRule.push([...result]);
-            }
-            console.log('processed all', JSON.stringify(processedRule));
+            processAllCondition(conditions[i][operatorKey as keyof TopLevelCondition], processedLevel);
         } else if (operatorKey === 'any') {
-            console.log('about to process any', conditions[i]);
-            console.log('about to process any', processedRule);
-            const result = processCondition(
-                conditions[i][operatorKey as keyof TopLevelCondition],
-                [...processedRule],
-                'any',
-            );
-            console.log('did all the aall stuff', result);
-            if (!processedRule.length) {
-                processedRule = result.map(r => {
-                    if (Array.isArray(r)) {
-                        return [...r];
-                    } else {
-                        return [r];
-                    }
-                });
-            } else {
-                const numCombinations = processedRule.length;
-                for (let j = 0; j < result.length; j++) {
-                    for (let n = 0; n < numCombinations; n++) {
-                        if (j === 0) {
-                            processedRule[n].push(result[j]);
-                        } else {
-                            const modified = [...processedRule[n]];
-                            modified[modified.length - 1] = result[j];
-                            processedRule.push(modified);
-                        }
-                    }
-                }
-            }
-            console.log('processed any', processedRule);
+            processedLevel = processAnyCondition(conditions[i][operatorKey as keyof TopLevelCondition], processedLevel);
         } else {
-            if (parentOperator === 'all') {
-                processedRule = processFacts(conditions as ConditionProperties[]);
-                console.log('processed all facts', processedRule);
-            } else {
-                processedRule = processFacts(conditions as ConditionProperties[]);
-                console.log('processed any facts', processedRule);
-            }
-            break;
+            processFact(conditions[i] as ConditionProperties, processedLevel, parentOperator as ParentOperator);
         }
     }
-    console.log('processed condition before returning', processedRule);
-    return processedRule;
-}
-
-export function processRule(conditions: TopLevelCondition): ProcessedRule {
-    const operatorKey = Object.keys(conditions)[0];
-    const processedRule = [
-        ...processCondition(conditions[operatorKey as keyof TopLevelCondition], [], operatorKey as ParentOperator),
-    ];
-    console.log('returning processed rule', processedRule);
-    return processedRule;
+    return processedLevel;
 }
