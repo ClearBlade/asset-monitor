@@ -1,7 +1,7 @@
 import { GC, CollectionName, UpdateAssetStatusOptions, LogLevels, AssetStatusUpdateMethod } from '../global-config';
 import { CbCollectionLib } from '../collection-lib';
 import { Logger } from '../Logger';
-import { Topics } from '../Util';
+import { Topics, getErrorMessage } from '../Util';
 import { Asset } from '../collection-schema/Assets';
 import { bulkSubscriber } from '../Normalizer';
 import '../../static/promise-polyfill';
@@ -31,8 +31,8 @@ export function updateAssetStatusSS({
     const logger = Logger({ name: 'AssetStatusSSLib', logSetting: LOG_SETTING });
     const messaging = ClearBlade.Messaging();
 
-    function failureCb(reason: unknown): void {
-        logger.publishLog(LogLevels.ERROR, 'Failed ', reason);
+    function failureCb(error: Error): void {
+        logger.publishLog(LogLevels.ERROR, 'Failed ', getErrorMessage(error.message));
     }
 
     function MergeAsset(assetID: string, msg: Asset): Promise<unknown> {
@@ -42,11 +42,11 @@ export function updateAssetStatusSS({
             if (data.DATA.length <= 0) {
                 //TODO think of a better way to handle this
                 logger.publishLog(LogLevels.ERROR, 'No asset found for id ', assetID);
-                return Promise.reject(' No asset found for id ' + assetID);
+                return Promise.reject(new Error('No asset found for id ' + assetID));
             }
             if (data.DATA.length > 1) {
                 logger.publishLog(LogLevels.ERROR, 'Multiple Assets found for id ', assetID);
-                return Promise.reject(' Multiple Assets found for id ' + assetID);
+                return Promise.reject(new Error('Multiple Assets found for id ' + assetID));
             }
 
             const dataStr = (data.DATA[0] as Asset)['custom_data'] as string;
@@ -54,8 +54,8 @@ export function updateAssetStatusSS({
             try {
                 customData = JSON.parse(dataStr);
             } catch (e) {
-                logger.publishLog(LogLevels.ERROR, 'Failed while parsing: ', e);
-                return Promise.reject('Failed while parsing: ' + e);
+                logger.publishLog(LogLevels.ERROR, 'Failed while parsing: ', e.message);
+                return Promise.reject(new Error('Failed while parsing: ' + e.message));
             }
             const incomingCustomData = msg['custom_data'];
             for (const key of Object.keys(incomingCustomData as object)) {
@@ -84,7 +84,7 @@ export function updateAssetStatusSS({
         try {
             jsonMessage = JSON.parse(msg);
         } catch (e) {
-            logger.publishLog(LogLevels.ERROR, 'Failed while parsing: ', e);
+            logger.publishLog(LogLevels.ERROR, 'Failed while parsing: ', e.message);
             return;
         }
         // Update for Jim/Ryan; Might fail for AD if used directly..
@@ -131,8 +131,8 @@ export function updateAssetStatusSS({
             WaitLoop();
         })
         .catch(e => {
-            log(`Subscription error: ${JSON.stringify(e)}`);
-            resp.error(`Subscription error: ${JSON.stringify(e)}`);
+            log(`Subscription error: ${e.message}`);
+            resp.error(`Subscription error: ${e.message}`);
         });
     Promise.runQueue();
 }

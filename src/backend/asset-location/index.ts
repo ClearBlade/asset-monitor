@@ -2,7 +2,7 @@ import { GC, CollectionName, UpdateAssetLocationOptions, LogLevels } from '../gl
 import { Asset } from '../collection-schema/Assets';
 import { CbCollectionLib } from '../collection-lib';
 import { Logger } from '../Logger';
-import { Topics } from '../Util';
+import { Topics, getErrorMessage } from '../Util';
 import { bulkSubscriber } from '../Normalizer';
 import '../../static/promise-polyfill';
 
@@ -46,8 +46,8 @@ export function updateAssetLocationSS({
         logger.publishLog(LogLevels.SUCCESS, 'Succeeded ', value);
     }
 
-    function failureCb(reason: unknown): void {
-        logger.publishLog(LogLevels.ERROR, 'Failed ', reason);
+    function failureCb(error: Error): void {
+        logger.publishLog(LogLevels.ERROR, 'Failed ', getErrorMessage(error.message));
     }
 
     function updateAssetLocation(assetsOpts: UpdateAssetLocationDataOptions): Promise<unknown> {
@@ -57,7 +57,7 @@ export function updateAssetLocationSS({
 
         logger.publishLog(LogLevels.DEBUG, 'DEBUG: ', 'In Update Asset Location');
         if (!currentState.item_id) {
-            return Promise.reject('Item Id is missing');
+            return Promise.reject(new Error('Item Id is missing'));
         }
         const query = ClearBlade.Query({ collectionName: CollectionName.ASSETS }).equalTo(
             'item_id',
@@ -100,8 +100,8 @@ export function updateAssetLocationSS({
         try {
             newAsset['custom_data'] = JSON.stringify(assetData['custom_data']);
         } catch (e) {
-            logger.publishLog(LogLevels.ERROR, 'ERROR Failed to stringify ', e);
-            return Promise.reject('Failed to stringify ' + e);
+            logger.publishLog(LogLevels.ERROR, 'ERROR Failed to stringify ', e.message);
+            return Promise.reject(new Error('Failed to stringify ' + e.message));
         }
 
         return assetsCol.cbCreatePromise({ item: [newAsset] as Record<string, unknown>[] });
@@ -117,8 +117,7 @@ export function updateAssetLocationSS({
         try {
             incomingMsg = JSON.parse(msg);
         } catch (e) {
-            logger.publishLog(LogLevels.ERROR, 'Failed parse the message: ', e);
-
+            logger.publishLog(LogLevels.ERROR, 'Failed parse the message: ', e.message);
             return;
         }
 
@@ -156,8 +155,8 @@ export function updateAssetLocationSS({
                     logger.publishLog(LogLevels.ERROR, 'ERROR: Multiple Assets with same assetId exists: ', data);
                 }
             })
-            .catch(function(reason) {
-                logger.publishLog(LogLevels.ERROR, 'Failed to fetch: ', reason);
+            .catch(function(error) {
+                logger.publishLog(LogLevels.ERROR, 'Failed to fetch: ', error.message);
             });
 
         Promise.runQueue();
@@ -177,8 +176,8 @@ export function updateAssetLocationSS({
             WaitLoop();
         })
         .catch(e => {
-            log(`Subscription error: ${JSON.stringify(e)}`);
-            resp.error(`Subscription error: ${JSON.stringify(e)}`);
+            log(`Subscription error: ${e.message}`);
+            resp.error(`Subscription error: ${e.message}`);
         });
     Promise.runQueue();
 }
