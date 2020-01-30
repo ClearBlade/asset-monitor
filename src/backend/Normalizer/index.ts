@@ -100,8 +100,8 @@ export function normalizer(config: NormalizerConfig): void {
         subscribePromises.push(subscriber(config.topics[i]));
     }
 
-    function failureCb(reason: unknown): void {
-        logger.publishLog(LogLevels.ERROR, SERVICE_INSTANCE_ID, ': Failed ', getErrorMessage(reason));
+    function failureCb(error: Error | string): void {
+        logger.publishLog(LogLevels.ERROR, SERVICE_INSTANCE_ID, ': Failed ', getErrorMessage(error));
     }
 
     function HandleMessage(err: boolean, msg: string, topic: string): void {
