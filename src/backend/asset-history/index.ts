@@ -4,6 +4,9 @@ import { AssetHistory } from '../collection-schema/AssetHistory';
 import { CbCollectionLib } from '../collection-lib';
 import { Logger } from '../Logger';
 import { Topics, getErrorMessage } from '../Util';
+import { bulkSubscriber } from '../Normalizer';
+import '../../static/promise-polyfill';
+
 interface CreateAssetHistoryConfig {
     req: CbServer.BasicReq;
     resp: CbServer.Resp;
@@ -29,7 +32,6 @@ export function createAssetHistorySS({
     } = defaultOptions,
 }: CreateAssetHistoryConfig): void {
     const TOPIC = '$share/AssetHistoryGroup/' + Topics.HistoryAssetLocation('+');
-    const SERVICE_INSTANCE_ID = req.service_instance_id;
 
     ClearBlade.init({ request: req });
     const messaging = ClearBlade.Messaging();
@@ -39,8 +41,8 @@ export function createAssetHistorySS({
         logger.publishLog(LogLevels.SUCCESS, 'AssetHistory Creation Succeeded ', value);
     }
 
-    function failureCb(reason: unknown): void {
-        logger.publishLog(LogLevels.ERROR, 'Failed ', getErrorMessage(reason));
+    function failureCb(error: Error): void {
+        logger.publishLog(LogLevels.ERROR, 'Failed ', getErrorMessage(error.message));
     }
 
     function getEmptyAssetHistoryObject(): AssetHistory {
@@ -142,13 +144,10 @@ export function createAssetHistorySS({
         try {
             parsedMsg = JSON.parse(msg);
         } catch (e) {
-            logger.publishLog(LogLevels.ERROR, 'Failed parse the message: ', getErrorMessage(e));
+            logger.publishLog(LogLevels.ERROR, 'Failed parse the message: ', e.message);
             return;
         }
         let assetHistoryItems: Array<AssetHistory> = [];
-        // Update for Jim/Ryan; Might fail for AD if used directly..
-        //const assetID = getAssetIdFromTopic(topic);
-
         let assetID = '';
 
         if (parsedMsg['id']) {
@@ -185,12 +184,8 @@ export function createAssetHistorySS({
         Promise.runQueue();
     }
 
-    function WaitLoop(err: boolean, data: string | null): void {
-        if (err) {
-            logger.publishLog(LogLevels.ERROR, 'Subscribe failed for: ', SERVICE_INSTANCE_ID, ': ', data);
-            resp.error(data);
-        }
-        logger.publishLog(LogLevels.SUCCESS, 'Subscribed to Shared Topic. Starting Loop.');
+    function WaitLoop(): void {
+        logger.publishLog(LogLevels.SUCCESS, 'Subscribed to Shared Topics. Starting Loop.');
 
         // eslint-disable-next-line no-constant-condition
         while (true) {
@@ -198,5 +193,13 @@ export function createAssetHistorySS({
         }
     }
 
-    messaging.subscribe(TOPIC, WaitLoop);
+    bulkSubscriber([TOPIC, ...(!ClearBlade.isEdge() ? [TOPIC + '/_platform'] : [])])
+        .then(() => {
+            WaitLoop();
+        })
+        .catch(e => {
+            log(`Subscription error: ${e.message}`);
+            resp.error(`Subscription error: ${e.message}`);
+        });
+    Promise.runQueue();
 }

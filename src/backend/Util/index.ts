@@ -134,9 +134,17 @@ export function isNormalizedDataValid(normalizedData: Array<Asset>): boolean {
 }
 
 export function getErrorMessage(error: unknown): string {
-    if (typeof error === 'object' && !!error && !!error.message) {
-        return error.message;
+    if (!!error && typeof error === 'object') {
+        if (error.stack) {
+            return error.stack;
+        } else {
+            if (error.message) {
+                return error.message;
+            } else {
+                return JSON.stringify(error);
+            }
+        }
     } else {
-        return JSON.stringify(error);
+        return error as string;
     }
 }
