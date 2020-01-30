@@ -49,7 +49,7 @@ export function CbCollectionLib(collectionName: CollectionName): CbCollectionLib
             const col = ClearBlade.Collection({ collectionName });
             col.create(opts.item, function(err, res) {
                 if (err) {
-                    reject(new Error(res));
+                    reject(new Error(JSON.stringify(res)));
                 } else {
                     resolve(res);
                 }
@@ -100,7 +100,7 @@ export function CbCollectionLib(collectionName: CollectionName): CbCollectionLib
             col.fetch(query, function(err, res) {
                 if (err) {
                     logger.publishLog(GC.LOG_LEVEL.ERROR, 'ERROR: with fetch ' + res);
-                    reject(new Error(res));
+                    reject(new Error(JSON.stringify(res)));
                 } else {
                     logger.publishLog(GC.LOG_LEVEL.DEBUG, 'DEBUG: Fetched Success: ' + collectionName);
                     resolve(res);
