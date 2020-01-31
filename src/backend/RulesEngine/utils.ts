@@ -3,7 +3,7 @@ import { Asset } from '../collection-schema/Assets';
 import { CollectionName } from '../global-config';
 import { CbCollectionLib } from '../collection-lib';
 import { Areas } from '../collection-schema/Areas';
-import { EntityTypes, Condition } from './types';
+import { EntityTypes } from './types';
 import { Entities } from './async';
 
 export interface WithParsedCustomData extends Asset {

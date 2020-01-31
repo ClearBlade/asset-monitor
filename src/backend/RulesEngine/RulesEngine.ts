@@ -128,7 +128,7 @@ function handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResul
     // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
     // @ts-ignore json-rule-engine types does not include factMap
     const incomingData = almanac.factMap.get('incomingData').value;
-    const processedResults = processRule([ruleResult.conditions], 'all');
+    const processedResults = processRule([ruleResult.conditions]);
     const entities = aggregateFactMap(almanac, processedResults.combinations);
     if (processedResults.hasDuration) {
         processDurations(

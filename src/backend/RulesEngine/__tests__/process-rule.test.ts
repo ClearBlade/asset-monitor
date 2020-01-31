@@ -510,6 +510,21 @@ const incoming = {
             {
                 all: [
                     {
+                        fact: 'state',
+                        operator: 'equal',
+                        params: {
+                            id: 'testAsset3',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: 'gondola',
+                            duration: null,
+                        },
+                        factResult: 65,
+                        result: false,
+                        path: '.data.custom_data.speed',
+                        value: 60,
+                    },
+                    {
                         any: [
                             {
                                 fact: 'state',
@@ -540,40 +555,6 @@ const incoming = {
                                 result: false,
                                 path: '.data.custom_data.speed',
                                 value: 50,
-                            },
-                        ],
-                    },
-                    {
-                        any: [
-                            {
-                                fact: 'state',
-                                operator: 'equal',
-                                params: {
-                                    id: 'testAsset3',
-                                    attribute: 'speed',
-                                    collection: 'assets',
-                                    type: 'gondola',
-                                    duration: null,
-                                },
-                                factResult: 65,
-                                result: false,
-                                path: '.data.custom_data.speed',
-                                value: 60,
-                            },
-                            {
-                                fact: 'state',
-                                operator: 'equal',
-                                params: {
-                                    id: 'testAsset4',
-                                    attribute: 'speed',
-                                    collection: 'assets',
-                                    type: 'gondola',
-                                    duration: null,
-                                },
-                                factResult: 70,
-                                result: false,
-                                path: '.data.custom_data.speed',
-                                value: 60,
                             },
                         ],
                     },
@@ -822,48 +803,24 @@ const results = {
         ],
         [
             {
-                id: 'testAsset1',
-                result: false,
-                duration: null,
-            },
-            {
                 id: 'testAsset3',
                 result: false,
                 duration: null,
             },
-        ],
-        [
-            {
-                id: 'testAsset2',
-                result: false,
-                duration: null,
-            },
-            {
-                id: 'testAsset3',
-                result: false,
-                duration: null,
-            },
-        ],
-        [
             {
                 id: 'testAsset1',
                 result: false,
                 duration: null,
             },
-            {
-                id: 'testAsset4',
-                result: false,
-                duration: null,
-            },
         ],
         [
             {
-                id: 'testAsset2',
+                id: 'testAsset3',
                 result: false,
                 duration: null,
             },
             {
-                id: 'testAsset4',
+                id: 'testAsset2',
                 result: false,
                 duration: null,
             },
