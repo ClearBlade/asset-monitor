@@ -101,7 +101,7 @@ export function normalizer(config: NormalizerConfig): void {
     }
 
     function failureCb(error: Error | string): void {
-        logger.publishLog(LogLevels.ERROR, SERVICE_INSTANCE_ID, ': Failed ', getErrorMessage(error));
+        logger.publishLog(LogLevels.ERROR, 'Failed ', getErrorMessage(error));
     }
 
     function HandleMessage(err: boolean, msg: string, topic: string): void {
@@ -123,7 +123,7 @@ export function normalizer(config: NormalizerConfig): void {
     }
 
     function WaitLoop(): void {
-        logger.publishLog(LogLevels.SUCCESS, SERVICE_INSTANCE_ID, ': Subscribed to Shared Topics. Starting Loop.');
+        logger.publishLog(LogLevels.INFO, 'Subscribed to Shared Topics. Starting Loop.');
         // eslint-disable-next-line no-constant-condition
         while (true) {
             messaging.waitForMessage([TOPIC], HandleMessage);

@@ -19,6 +19,7 @@ const defaultOptions = {
     STANDARD_KEY_STORAGE_SETTING: GC.ASSET_HISTORY_CONFIG.STANDARD_KEY_STORAGE_SETTING,
     CUSTOM_DATA_KEY_STORAGE_SETTING: GC.ASSET_HISTORY_CONFIG.CUSTOM_DATA_KEY_STORAGE_SETTING,
     LOG_SETTING: GC.ASSET_HISTORY_CONFIG.LOG_SETTING,
+    LOG_SERVICE_NAME: 'AssetHistoryServiceNameUnset',
 };
 export function createAssetHistorySS({
     req,
@@ -27,6 +28,7 @@ export function createAssetHistorySS({
         STANDARD_KEYS_TO_STORE = defaultOptions.STANDARD_KEYS_TO_STORE,
         CUSTOM_DATA_KEYS_TO_STORE = defaultOptions.CUSTOM_DATA_KEYS_TO_STORE,
         LOG_SETTING = defaultOptions.LOG_SETTING,
+        LOG_SERVICE_NAME = defaultOptions.LOG_SERVICE_NAME,
         CUSTOM_DATA_KEY_STORAGE_SETTING = defaultOptions.CUSTOM_DATA_KEY_STORAGE_SETTING,
         STANDARD_KEY_STORAGE_SETTING = defaultOptions.STANDARD_KEY_STORAGE_SETTING,
     } = defaultOptions,
@@ -36,10 +38,10 @@ export function createAssetHistorySS({
 
     ClearBlade.init({ request: req });
     const messaging = ClearBlade.Messaging();
-    const logger = new Logger({ name: 'AssetHistorySSLib', logSetting: LOG_SETTING });
+    const logger = new Logger({ name: LOG_SERVICE_NAME, logSetting: LOG_SETTING });
 
     function successCb(value: unknown): void {
-        logger.publishLog(LogLevels.SUCCESS, 'AssetHistory Creation Succeeded ', value);
+        logger.publishLog(LogLevels.INFO, 'AssetHistory Creation Succeeded ', value);
     }
 
     function failureCb(error: Error): void {
@@ -72,7 +74,7 @@ export function createAssetHistorySS({
         if (STANDARD_KEYS_TO_STORE && STANDARD_KEYS_TO_STORE.length <= 0) {
             return [];
         }
-        logger.publishLog(LogLevels.DEBUG, 'STANDARD_KEYS_TO_STORE Data: ', STANDARD_KEYS_TO_STORE);
+        logger.publishLog(LogLevels.TRACE, 'STANDARD_KEYS_TO_STORE Data: ', STANDARD_KEYS_TO_STORE);
 
         for (let i = 0; i < STANDARD_KEYS_TO_STORE.length; i++) {
             const currItem = getEmptyAssetHistoryObject();
@@ -139,6 +141,7 @@ export function createAssetHistorySS({
     function HandleMessage(err: boolean, msg: string, topic: string): void {
         if (err) {
             logger.publishLog(LogLevels.ERROR, 'Failed to wait for message: ', err, ' ', msg, '  ', topic);
+            return;
         }
 
         let parsedMsg: Asset;
@@ -186,7 +189,7 @@ export function createAssetHistorySS({
     }
 
     function WaitLoop(): void {
-        logger.publishLog(LogLevels.SUCCESS, 'Subscribed to Shared Topics. Starting Loop.');
+        logger.publishLog(LogLevels.INFO, 'Subscribed to Shared Topics. Starting Loop.');
 
         // eslint-disable-next-line no-constant-condition
         while (true) {

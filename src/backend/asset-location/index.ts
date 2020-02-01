@@ -21,6 +21,7 @@ const defaultOptions = {
     KEYS_TO_UPDATE: GC.UPDATE_ASSET_LOCATION_OPTIONS.KEYS_TO_UPDATE,
     LOG_SETTING: GC.UPDATE_ASSET_LOCATION_OPTIONS.LOG_SETTING,
     CREATE_NEW_ASSET_IF_MISSING: GC.UPDATE_ASSET_LOCATION_OPTIONS.CREATE_NEW_ASSET_IF_MISSING,
+    LOG_SERVICE_NAME: GC.UPDATE_ASSET_LOCATION_OPTIONS.LOG_SERVICE_NAME,
 };
 
 export function updateAssetLocationSS({
@@ -29,6 +30,7 @@ export function updateAssetLocationSS({
     options: {
         KEYS_TO_UPDATE = defaultOptions.KEYS_TO_UPDATE,
         LOG_SETTING = defaultOptions.LOG_SETTING,
+        LOG_SERVICE_NAME = defaultOptions.LOG_SERVICE_NAME,
         CREATE_NEW_ASSET_IF_MISSING = defaultOptions.CREATE_NEW_ASSET_IF_MISSING,
     } = defaultOptions,
 }: UpdateAssetLocationConfig): void {
@@ -38,13 +40,13 @@ export function updateAssetLocationSS({
     ClearBlade.init({ request: req });
     const messaging = ClearBlade.Messaging();
 
-    const logger = new Logger({ name: 'AssetLocationSSLib', logSetting: LOG_SETTING });
+    const logger = new Logger({ name: LOG_SERVICE_NAME, logSetting: LOG_SETTING });
 
     //TODO default params in function
     //settings = settings || GC.UPDATE_ASSET_LOCATION_SETTINGS;
 
     function successCb(value: unknown): void {
-        logger.publishLog(LogLevels.SUCCESS, 'Succeeded ', value);
+        logger.publishLog(LogLevels.INFO, 'Succeeded ', value);
     }
 
     function failureCb(error: Error): void {
@@ -164,7 +166,7 @@ export function updateAssetLocationSS({
     }
 
     function WaitLoop(): void {
-        logger.publishLog(LogLevels.SUCCESS, 'Subscribed to Shared Topic. Starting Loop.');
+        logger.publishLog(LogLevels.INFO, 'Subscribed to Shared Topic. Starting Loop.');
 
         // eslint-disable-next-line no-constant-condition
         while (true) {

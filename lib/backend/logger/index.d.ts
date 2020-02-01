@@ -7,10 +7,6 @@ interface LoggerConfig {
     name: string;
     logSetting?: LogLevels;
 }
-/**
- * Type: Module
- * Description: A library that contains a function which, when called, returns an object with a public API.
- */
 export declare class Logger {
     private name;
     private logSetting;

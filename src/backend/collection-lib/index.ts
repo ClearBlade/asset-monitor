@@ -1,4 +1,4 @@
-import { CollectionName, GC } from '../global-config';
+import { CollectionName } from '../global-config';
 import '../../static/promise-polyfill';
 interface CollectionUpdateOptions {
     query: CbServer.QueryObj;
