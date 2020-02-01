@@ -1,3 +1,4 @@
+import { LogLevels } from '../global-config';
 import { Asset } from '../collection-schema/Assets';
 import '../../static/promise-polyfill/index.js';
 export declare type MessageParser = (err: boolean, msg: string, topic: string) => Promise<Array<Asset>>;
@@ -10,6 +11,8 @@ interface NormalizerConfig {
     resp: CbServer.Resp;
     messageParser: MessageParser;
     topics: Array<string>;
+    logSetting?: LogLevels;
+    logServiceName?: string;
 }
 declare type IKeysToPublish = Array<string>;
 export interface PublishConfig {
