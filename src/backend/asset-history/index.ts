@@ -32,6 +32,7 @@ export function createAssetHistorySS({
     } = defaultOptions,
 }: CreateAssetHistoryConfig): void {
     const TOPIC = '$share/AssetHistoryGroup/' + Topics.HistoryAssetLocation('+');
+    const TOPICS = [TOPIC, ...(!ClearBlade.isEdge() ? [TOPIC + '/_platform'] : [])];
 
     ClearBlade.init({ request: req });
     const messaging = ClearBlade.Messaging();
@@ -189,11 +190,11 @@ export function createAssetHistorySS({
 
         // eslint-disable-next-line no-constant-condition
         while (true) {
-            messaging.waitForMessage([TOPIC], HandleMessage);
+            messaging.waitForMessage(TOPICS, HandleMessage);
         }
     }
 
-    bulkSubscriber([TOPIC, ...(!ClearBlade.isEdge() ? [TOPIC + '/_platform'] : [])])
+    bulkSubscriber(TOPICS)
         .then(() => {
             WaitLoop();
         })

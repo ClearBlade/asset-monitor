@@ -27,6 +27,7 @@ export function updateAssetStatusSS({
     ClearBlade.init({ request: req });
 
     const TOPIC = '$share/AssetStatusGroup/' + Topics.DBUpdateAssetStatus('+');
+    const TOPICS = [TOPIC, ...(!ClearBlade.isEdge() ? [TOPIC + '/_platform'] : [])];
 
     const logger = Logger({ name: 'AssetStatusSSLib', logSetting: LOG_SETTING });
     const messaging = ClearBlade.Messaging();
@@ -122,11 +123,11 @@ export function updateAssetStatusSS({
 
         // eslint-disable-next-line no-constant-condition
         while (true) {
-            messaging.waitForMessage([TOPIC], handleMessage);
+            messaging.waitForMessage(TOPICS, handleMessage);
         }
     }
 
-    bulkSubscriber([TOPIC, ...(!ClearBlade.isEdge() ? [TOPIC + '/_platform'] : [])])
+    bulkSubscriber(TOPICS)
         .then(() => {
             WaitLoop();
         })

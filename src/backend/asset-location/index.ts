@@ -33,6 +33,7 @@ export function updateAssetLocationSS({
     } = defaultOptions,
 }: UpdateAssetLocationConfig): void {
     const TOPIC = '$share/UpdateLocationGroup/' + Topics.DBUpdateAssetLocation('+');
+    const TOPICS = [TOPIC, ...(!ClearBlade.isEdge() ? [TOPIC + '/_platform'] : [])];
 
     ClearBlade.init({ request: req });
     const messaging = ClearBlade.Messaging();
@@ -167,11 +168,11 @@ export function updateAssetLocationSS({
 
         // eslint-disable-next-line no-constant-condition
         while (true) {
-            messaging.waitForMessage([TOPIC], HandleMessage);
+            messaging.waitForMessage(TOPICS, HandleMessage);
         }
     }
 
-    bulkSubscriber([TOPIC, ...(!ClearBlade.isEdge() ? [TOPIC + '/_platform'] : [])])
+    bulkSubscriber(TOPICS)
         .then(() => {
             WaitLoop();
         })
