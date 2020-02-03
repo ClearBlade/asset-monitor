@@ -6,7 +6,7 @@ import {
     createEvent,
     createEventHistoryItem,
     Entities,
-    shouldCreateEvent,
+    shouldCreateOrUpdateEvent,
     SplitEntities,
 } from './async';
 import * as uuid from 'uuid/v4';
@@ -14,21 +14,19 @@ import { EventSchema } from '../collection-schema/Events';
 import { Areas } from '../collection-schema/Areas';
 import { doesTimeframeMatchRule } from './timeframe';
 
-export function processSuccessfulEvents(
-    combinations: Array<string[]>,
+export function processSuccessfulEvent(
+    ids: string[],
     ruleParams: RuleParams,
     entities: Entities,
     actionTopic: string,
     trigger: Entities,
 ): void {
     if (doesTimeframeMatchRule(new Date().toISOString(), ruleParams.timeframe)) {
-        for (let i = 0; i < combinations.length; i++) {
-            const filteredEntities = combinations[i].reduce((acc: Entities, id: string) => {
-                acc[id] = entities[id];
-                return acc;
-            }, {});
-            processEvent(ruleParams, filteredEntities, actionTopic, trigger);
-        }
+        const filteredEntities = ids.reduce((acc: Entities, id: string) => {
+            acc[id] = entities[id];
+            return acc;
+        }, {});
+        processEvent(ruleParams, filteredEntities, actionTopic, trigger);
     }
 }
 
@@ -57,8 +55,8 @@ export function processEvent(
 ): Promise<EventSchema> {
     const { eventTypeID, actionIDs, priority, severity, ruleID } = ruleParams;
     const splitEntities = getSplitEntities(entities);
-    const promise = shouldCreateEvent(ruleID, splitEntities).then(should => {
-        if (should) {
+    const promise = shouldCreateOrUpdateEvent(ruleID, splitEntities).then(shouldCreate => {
+        if (shouldCreate) {
             const promise = getStateForEvent(eventTypeID).then(({ is_open, state }) => {
                 const id = uuid();
                 const timestamp = new Date().toISOString();

@@ -25,13 +25,13 @@ export function processDurations(
     actionTopic: string,
     incomingData: FactData,
 ): void {
-    for (let i = 0; i < validCombinations.length; i++) {
-        const key = getKey(ruleParams.ruleID, validCombinations[i]);
-        if (timerStore[key]) {
-            // update values
-        } else {
-            // create new key
-            // include:
-        }
-    }
+    // for (let i = 0; i < validCombinations.length; i++) {
+    //     const key = getKey(ruleParams.ruleID, validCombinations[i]);
+    //     if (timerStore[key]) {
+    //         // update values
+    //     } else {
+    //         // create new key
+    //         // include:
+    //     }
+    // }
 }

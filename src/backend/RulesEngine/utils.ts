@@ -6,6 +6,8 @@ import { Areas } from '../collection-schema/Areas';
 import { EntityTypes } from './types';
 import { Entities } from './async';
 
+/////////// for evaluating facts while engine is running
+
 export interface WithParsedCustomData extends Asset {
     custom_data: Record<string, object>;
     entityType?: EntityTypes;
@@ -70,22 +72,9 @@ export function buildFact(entityData: Asset | Areas, incomingData: WithParsedCus
     return withParsedCustomData;
 }
 
-export function aggregateFactMap(almanac: Almanac, conditionIds: Array<ProcessedCondition[]>): Entities {
-    return conditionIds.reduce((acc: Entities, combination: ProcessedCondition[]) => {
-        for (let i = 0; i < combination.length; i++) {
-            if (!acc[combination[i].id]) {
-                // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-                // @ts-ignore json-rule-engine types does not include factMap
-                acc[combination[i].id] = almanac.factMap.get(combination[i].id).value.data;
-            }
-        }
-        return acc;
-    }, {});
-}
+/////////// for processing rules after engine completes
 
-// for processing rules after engine completes
-
-interface ProcessedCondition {
+export interface ProcessedCondition {
     id: string;
     result: boolean;
     duration: number;
@@ -93,7 +82,7 @@ interface ProcessedCondition {
 
 type ProcessedRule = Array<ProcessedCondition[] | ProcessedCondition>;
 
-type ParentOperator = 'all' | 'any';
+export type ParentOperator = 'all' | 'any';
 
 function buildProcessedCondition(fact: ConditionProperties): ProcessedCondition {
     return {
@@ -189,4 +178,95 @@ export function processRule(
         }
     }
     return processedLevel;
+}
+
+////////// for filtering only relevant conditions from results
+// filter for events related to triggerId
+
+// if 'any' search for combinations
+// for trues, combine into one event of ids and fire and be done
+// if no trues
+// for *trues, send to duration processing
+
+// if 'and' search for combinations
+// for trues, group them, combine into one event of ids and fire
+// for *trues, send each to duration processing
+
+interface ProcessedFiltered {
+    trues: string[];
+    pendingDurations: ProcessedRule;
+}
+
+function filterByIdAndDuration(processedRule: Array<ProcessedCondition[]>, triggerId: string): ProcessedFiltered {
+    return processedRule.reduce(
+        (filteredRule: ProcessedFiltered, combination) => {
+            let hasId = false;
+            let hasTrue = false;
+            let hasDuration = false;
+            let allTrue = true;
+            for (let i = 0; i < combination.length; i++) {
+                if (combination[i].id === triggerId) {
+                    hasId = true;
+                }
+                if (combination[i].duration) {
+                    hasDuration = true;
+                }
+                if (combination[i].result) {
+                    hasTrue = true;
+                } else {
+                    allTrue = false;
+                }
+            }
+            if (hasId) {
+                if (allTrue && !hasDuration) {
+                    filteredRule.trues.push(...combination.map(c => c.id));
+                } else if (hasTrue && hasDuration) {
+                    filteredRule.pendingDurations.push(combination as ProcessedCondition[]);
+                }
+            }
+            return filteredRule;
+        },
+        {
+            trues: [],
+            pendingDurations: [],
+        },
+    );
+}
+
+export function filterProcessedRule(
+    processedRule: Array<ProcessedCondition[]>,
+    triggerId: string,
+    topLevelType: ParentOperator,
+): ProcessedFiltered {
+    const filteredProcessed = filterByIdAndDuration(processedRule, triggerId);
+    if (topLevelType === 'any' && filteredProcessed.trues.length) {
+        filteredProcessed.pendingDurations = []; // get rid of these since we don't need to process them because it's an 'or'
+    }
+    return filteredProcessed;
+}
+
+////////// grab data for assets/areas to send to event or duration processing
+
+export function aggregateFactMap(processedRule: ProcessedFiltered, almanac: Almanac): Entities {
+    const factMap = processedRule.trues.reduce((acc: Entities, id: string) => {
+        if (!acc[id]) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+            // @ts-ignore json-rule-engine types does not include factMap
+            acc[id] = almanac.factMap.get(id).value.data;
+        }
+        return acc;
+    }, {});
+
+    (processedRule.pendingDurations as Array<ProcessedCondition[]>).reduce((acc, combination) => {
+        for (let i = 0; i < combination.length; i++) {
+            if (!acc[combination[i].id]) {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+                // @ts-ignore json-rule-engine types does not include factMap
+                acc[combination[i].id] = almanac.factMap.get(combination[i].id).value.data;
+            }
+        }
+        return acc;
+    }, factMap);
+
+    return factMap;
 }

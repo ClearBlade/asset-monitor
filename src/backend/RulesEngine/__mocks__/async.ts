@@ -32,7 +32,7 @@ export function createEventHistoryItem(): Promise<undefined> {
     });
 }
 
-export function shouldCreateEvent(): Promise<boolean> {
+export function shouldCreateOrUpdateEvent(): Promise<boolean> {
     return new Promise(resolve => {
         resolve(true);
     });

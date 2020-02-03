@@ -13,12 +13,18 @@ export interface FactData {
 }
 export declare function collectAndBuildFact(almanac: Almanac, id: string, type: string, collectionName: CollectionName, incomingData: WithParsedCustomData): Promise<FactData>;
 export declare function buildFact(entityData: Asset | Areas, incomingData: WithParsedCustomData): WithParsedCustomData;
-export declare function aggregateFactMap(almanac: Almanac, conditionIds: Array<string[]>): Entities;
-interface ProcessedRule {
-    conditionIds: Array<string[]>;
-    hasDuration: boolean;
-    hasSuccessfulResult: boolean;
-    numValidCombination: number;
+export interface ProcessedCondition {
+    id: string;
+    result: boolean;
+    duration: number;
 }
-export declare function processRule(conditions: Array<TopLevelCondition | ConditionProperties>, processedRule: ProcessedRule, parentOperator: 'any' | 'all'): ProcessedRule;
+declare type ProcessedRule = Array<ProcessedCondition[] | ProcessedCondition>;
+export declare type ParentOperator = 'all' | 'any';
+export declare function processRule(conditions: Array<TopLevelCondition | ConditionProperties>, parentOperator?: ParentOperator): ProcessedRule;
+interface ProcessedFiltered {
+    trues: string[];
+    pendingDurations: ProcessedRule;
+}
+export declare function filterProcessedRule(processedRule: Array<ProcessedCondition[]>, triggerId: string, topLevelType: ParentOperator): ProcessedFiltered;
+export declare function aggregateFactMap(processedRule: ProcessedFiltered, almanac: Almanac): Entities;
 export {};

@@ -12,8 +12,8 @@ export interface SplitEntities {
     assets: Entities;
     areas: Entities;
 }
-export declare function entitiesAreEqual(event: EventSchema, splitEntities: SplitEntities): boolean;
-export declare function shouldCreateEvent(ruleID: string, splitEntities: SplitEntities): Promise<boolean>;
+export declare function compareOverlappingEntities(event: EventSchema, splitEntities: SplitEntities): boolean | SplitEntities;
+export declare function shouldCreateOrUpdateEvent(ruleID: string, splitEntities: SplitEntities): Promise<boolean>;
 export interface EventState {
     is_open: boolean;
     state: string;

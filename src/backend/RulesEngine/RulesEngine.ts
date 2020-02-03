@@ -3,13 +3,13 @@ import 'core-js/features/map';
 import { Engine, Event, TopLevelCondition, Almanac, RuleResult, Rule } from 'json-rules-engine';
 import { StateParams, RuleParams } from './types';
 import { parseAndConvertConditions } from './convert-rule';
-import { processSuccessfulEvents } from './events';
+import { processSuccessfulEvent } from './events';
 import { Rules } from '../collection-schema/Rules';
 import { CbCollectionLib } from '../collection-lib';
 import { Areas } from '../collection-schema/Areas';
 import { Asset } from '../collection-schema/Assets';
-import { processRule, aggregateFactMap } from './utils';
-import { processDurations } from './duration';
+import { processRule, aggregateFactMap, ParentOperator, filterProcessedRule, ProcessedCondition } from './utils';
+// import { processDurations } from './duration';
 
 interface WithParsedCustomData extends Asset {
     custom_data: Record<string, object>;
@@ -128,23 +128,31 @@ function handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResul
     // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
     // @ts-ignore json-rule-engine types does not include factMap
     const incomingData = almanac.factMap.get('incomingData').value;
+
     const processedResults = processRule([ruleResult.conditions]);
-    const entities = aggregateFactMap(almanac, processedResults.combinations);
-    if (processedResults.hasDuration) {
-        processDurations(
-            processedResults.conditionIds,
-            ruleResult.conditions,
-            event.params as RuleParams,
-            entities,
-            actionTopic,
-            incomingData,
-        );
-    } else {
-        const validCombinations = processedResults.conditionIds.filter(combo => {
-            return combo.length === processedResults.numValidCombination;
-        });
-        processSuccessfulEvents(validCombinations, event.params as RuleParams, entities, actionTopic, incomingData);
+    const topLevelType = Object.keys(ruleResult.conditions)[0] as ParentOperator;
+    const filteredResults = filterProcessedRule(
+        processedResults as Array<ProcessedCondition[]>,
+        incomingData.id,
+        topLevelType,
+    );
+
+    const entities = aggregateFactMap(filteredResults, almanac);
+
+    // if (processedResults.hasDuration) {
+    //     processDurations(
+    //         processedResults.conditionIds,
+    //         ruleResult.conditions,
+    //         event.params as RuleParams,
+    //         entities,
+    //         actionTopic,
+    //         incomingData,
+    //     );
+    // } else {
+    if (filteredResults.trues.length) {
+        processSuccessfulEvent(filteredResults.trues, event.params as RuleParams, entities, actionTopic, incomingData);
     }
+    // }
 }
 
 function buildFact(entityData: Asset | Areas, incomingData: WithParsedCustomData): WithParsedCustomData {
