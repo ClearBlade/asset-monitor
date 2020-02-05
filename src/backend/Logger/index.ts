@@ -48,14 +48,10 @@ export class Logger {
     }
 
     public publishLog(logLevel: LogLevels, ...messages: unknown[]): void {
-        console.log('Logging ClearBlade: ', ClearBlade);
-
         const messaging = ClearBlade.Messaging();
-        console.log('Logging messaging: ', messaging);
         const pubMsg = createPrettyLogWithName({ name: this.name }, messages);
         const level = this.levelToInt(logLevel);
         const minLevel = this.levelToInt(this.logSetting || '');
-
         if (level < minLevel) return;
 
         messaging.publish(logLevel, pubMsg);

@@ -5,7 +5,6 @@ const publishMock = jest.fn();
 
 describe('Logger', () => {
     beforeAll(() => {
-        //@ts-ignore
         global.ClearBlade.Messaging = () => ({
             publish: publishMock,
         });
