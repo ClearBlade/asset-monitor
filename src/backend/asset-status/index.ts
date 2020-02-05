@@ -15,6 +15,7 @@ interface UpdateAssetStatusConfig {
 const defaultOptions = {
     LOG_SETTING: GC.UPDATE_ASSET_STATUS_OPTIONS.LOG_SETTING,
     UPDATE_METHOD: GC.UPDATE_ASSET_STATUS_OPTIONS.UPDATE_METHOD,
+    LOG_SERVICE_NAME: GC.UPDATE_ASSET_STATUS_OPTIONS.LOG_SERVICE_NAME,
 };
 export function updateAssetStatusSS({
     req,
@@ -22,6 +23,7 @@ export function updateAssetStatusSS({
     options: {
         LOG_SETTING = defaultOptions.LOG_SETTING,
         UPDATE_METHOD = defaultOptions.UPDATE_METHOD,
+        LOG_SERVICE_NAME = defaultOptions.LOG_SERVICE_NAME,
     } = defaultOptions,
 }: UpdateAssetStatusConfig): void {
     ClearBlade.init({ request: req });
@@ -29,7 +31,7 @@ export function updateAssetStatusSS({
     const TOPIC = '$share/AssetStatusGroup/' + Topics.DBUpdateAssetStatus('+');
     const TOPICS = [TOPIC, ...(!ClearBlade.isEdge() ? [TOPIC + '/_platform'] : [])];
 
-    const logger = Logger({ name: 'AssetStatusSSLib', logSetting: LOG_SETTING });
+    const logger = new Logger({ name: LOG_SERVICE_NAME, logSetting: LOG_SETTING });
     const messaging = ClearBlade.Messaging();
 
     function failureCb(error: Error): void {
@@ -66,6 +68,7 @@ export function updateAssetStatusSS({
             const currDate = new Date().toISOString();
             const assetsQuery = ClearBlade.Query({ collectionName: CollectionName.ASSETS }).equalTo('id', assetID);
             const statusChanges: Asset = { custom_data: JSON.stringify(customData), last_updated: currDate };
+            logger.publishLog(LogLevels.DEBUG, 'Status Changes: ', statusChanges);
             return assetsCol.cbUpdatePromise({
                 query: assetsQuery,
                 changes: statusChanges as Record<string, unknown>,
@@ -119,7 +122,7 @@ export function updateAssetStatusSS({
     }
 
     function WaitLoop(): void {
-        logger.publishLog(LogLevels.SUCCESS, 'Subscribed to Shared Topic. Starting Loop.');
+        logger.publishLog(LogLevels.INFO, 'Subscribed to Shared Topic. Starting Loop.');
 
         // eslint-disable-next-line no-constant-condition
         while (true) {
