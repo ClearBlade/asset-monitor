@@ -10,10 +10,12 @@ export interface NormalizerDeviceMap {
 }
 
 export enum LogLevels {
+    FATAL = 'fatal',
+    ERROR = 'error',
+    WARN = 'warn',
     INFO = 'info',
     DEBUG = 'debug',
-    ERROR = 'error',
-    SUCCESS = 'success',
+    TRACE = 'trace',
 }
 
 export enum CollectionName {
@@ -40,13 +42,15 @@ export type AssetHistoryConfig = Array<string>;
 
 export interface UpdateAssetLocationOptions {
     KEYS_TO_UPDATE?: IKeyForLocationUpdate;
-    LOG_SETTING?: LogLevels;
+    LOG_SETTING: LogLevels;
     CREATE_NEW_ASSET_IF_MISSING?: boolean;
+    LOG_SERVICE_NAME: string;
 }
 
 export interface UpdateAssetStatusOptions {
     LOG_SETTING: LogLevels;
     UPDATE_METHOD: AssetStatusUpdateMethod;
+    LOG_SERVICE_NAME: string;
 }
 
 export enum KeyStorageSettings {
@@ -57,12 +61,12 @@ export enum KeyStorageSettings {
 export interface CreateAssetHistoryOptions {
     STANDARD_KEYS_TO_STORE: Array<string>;
     CUSTOM_DATA_KEYS_TO_STORE: Array<string>;
-    LOG_SETTING?: LogLevels;
+    LOG_SETTING: LogLevels;
+    LOG_SERVICE_NAME: string;
     STANDARD_KEY_STORAGE_SETTING: KeyStorageSettings;
     CUSTOM_DATA_KEY_STORAGE_SETTING: KeyStorageSettings;
 }
 export interface GlobalConfig {
-    LOG_LEVEL: LogLevel;
     LOG_SETTING: LogLevels;
     CUSTOM_CONFIGS: {
         [key: string]: NormalizerDeviceMap;
@@ -74,12 +78,6 @@ export interface GlobalConfig {
 }
 
 const globalConfig: GlobalConfig = {
-    LOG_LEVEL: {
-        INFO: LogLevels.INFO,
-        DEBUG: LogLevels.DEBUG,
-        ERROR: LogLevels.ERROR,
-        SUCCESS: LogLevels.SUCCESS,
-    },
     LOG_SETTING: LogLevels.DEBUG,
     CUSTOM_CONFIGS: {},
     ASSET_HISTORY_CONFIG: {
@@ -88,6 +86,7 @@ const globalConfig: GlobalConfig = {
         LOG_SETTING: LogLevels.DEBUG,
         STANDARD_KEY_STORAGE_SETTING: KeyStorageSettings.CUSTOM,
         CUSTOM_DATA_KEY_STORAGE_SETTING: KeyStorageSettings.ALL,
+        LOG_SERVICE_NAME: 'AssetHistoryServiceNameUnset',
     },
     NORMALIZER_PUB_CONFIG: {
         locationConfig: {
@@ -158,10 +157,12 @@ const globalConfig: GlobalConfig = {
         ],
         CREATE_NEW_ASSET_IF_MISSING: false,
         LOG_SETTING: LogLevels.DEBUG,
+        LOG_SERVICE_NAME: 'AssetLocationServiceNameUnset',
     },
     UPDATE_ASSET_STATUS_OPTIONS: {
         UPDATE_METHOD: AssetStatusUpdateMethod.MERGE,
         LOG_SETTING: LogLevels.DEBUG,
+        LOG_SERVICE_NAME: 'AssetStatusServiceNameUnset',
     },
 };
 

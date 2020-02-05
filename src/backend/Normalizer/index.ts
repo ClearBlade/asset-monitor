@@ -17,6 +17,8 @@ interface NormalizerConfig {
     resp: CbServer.Resp;
     messageParser: MessageParser;
     topics: Array<string>;
+    logSetting?: LogLevels;
+    logServiceName?: string;
 }
 
 type IKeysToPublish = Array<string>;
@@ -87,11 +89,12 @@ export function bulkPublisher(
 export function normalizer(config: NormalizerConfig): void {
     const messageParser = config.messageParser;
     const publishConfig = config.normalizerPubConfig || GC.NORMALIZER_PUB_CONFIG;
-
+    const logServiceName = config.logServiceName || 'Normalizer';
+    const logSetting = config.logSetting || LogLevels.DEBUG;
     const TOPIC = config.topics[0];
     const SERVICE_INSTANCE_ID = config.req.service_instance_id;
     const messaging = ClearBlade.Messaging();
-    const logger = Logger({ name: 'Normalizer' });
+    const logger = new Logger({ name: logServiceName, logSetting });
 
     logger.publishLog(LogLevels.DEBUG, 'Normalizer SERVICE_INSTANCE_ID:: ' + SERVICE_INSTANCE_ID);
 
@@ -101,7 +104,7 @@ export function normalizer(config: NormalizerConfig): void {
     }
 
     function failureCb(error: Error | string): void {
-        logger.publishLog(LogLevels.ERROR, SERVICE_INSTANCE_ID, ': Failed ', getErrorMessage(error));
+        logger.publishLog(LogLevels.ERROR, 'Failed ', getErrorMessage(error));
     }
 
     function HandleMessage(err: boolean, msg: string, topic: string): void {
@@ -123,7 +126,7 @@ export function normalizer(config: NormalizerConfig): void {
     }
 
     function WaitLoop(): void {
-        logger.publishLog(LogLevels.SUCCESS, SERVICE_INSTANCE_ID, ': Subscribed to Shared Topics. Starting Loop.');
+        logger.publishLog(LogLevels.INFO, 'Subscribed to Shared Topics. Starting Loop.');
         // eslint-disable-next-line no-constant-condition
         while (true) {
             messaging.waitForMessage([TOPIC], HandleMessage);

@@ -6,10 +6,12 @@ export interface NormalizerDeviceMap {
     [index: string]: string | object;
 }
 export declare enum LogLevels {
+    FATAL = "fatal",
+    ERROR = "error",
+    WARN = "warn",
     INFO = "info",
     DEBUG = "debug",
-    ERROR = "error",
-    SUCCESS = "success"
+    TRACE = "trace"
 }
 export declare enum CollectionName {
     ASSETS = "assets",
@@ -30,12 +32,14 @@ export declare type IKeyForStatusUpdate = Array<string>;
 export declare type AssetHistoryConfig = Array<string>;
 export interface UpdateAssetLocationOptions {
     KEYS_TO_UPDATE?: IKeyForLocationUpdate;
-    LOG_SETTING?: LogLevels;
+    LOG_SETTING: LogLevels;
     CREATE_NEW_ASSET_IF_MISSING?: boolean;
+    LOG_SERVICE_NAME: string;
 }
 export interface UpdateAssetStatusOptions {
     LOG_SETTING: LogLevels;
     UPDATE_METHOD: AssetStatusUpdateMethod;
+    LOG_SERVICE_NAME: string;
 }
 export declare enum KeyStorageSettings {
     NO = "no",
@@ -45,12 +49,12 @@ export declare enum KeyStorageSettings {
 export interface CreateAssetHistoryOptions {
     STANDARD_KEYS_TO_STORE: Array<string>;
     CUSTOM_DATA_KEYS_TO_STORE: Array<string>;
-    LOG_SETTING?: LogLevels;
+    LOG_SETTING: LogLevels;
+    LOG_SERVICE_NAME: string;
     STANDARD_KEY_STORAGE_SETTING: KeyStorageSettings;
     CUSTOM_DATA_KEY_STORAGE_SETTING: KeyStorageSettings;
 }
 export interface GlobalConfig {
-    LOG_LEVEL: LogLevel;
     LOG_SETTING: LogLevels;
     CUSTOM_CONFIGS: {
         [key: string]: NormalizerDeviceMap;
