@@ -2,8 +2,7 @@ import { Event } from 'json-rules-engine';
 import { processEvent } from '../events';
 import { EventSchema } from '../../collection-schema/Events';
 import * as uuid from 'uuid/v4';
-import { Entities, SplitEntities } from '../async';
-import { RuleParams } from '../types';
+import { RuleParams, Entities, SplitEntities } from '../types';
 
 jest.mock('../async');
 jest.mock('uuid/v4');

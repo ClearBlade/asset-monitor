@@ -4,6 +4,8 @@ import { Asset } from '../collection-schema/Assets';
 import { Areas } from '../collection-schema/Areas';
 import { Actions } from '../collection-schema/Actions';
 import { EventType, EventSchema } from '../collection-schema/Events';
+import { Entities, SplitEntities } from './types';
+import { uniqueArray } from './utils';
 
 export function getAllAssetsForType(assetType: string): Promise<Array<CbServer.CollectionSchema<Asset>>> {
     const assetsCollection = CbCollectionLib(CollectionName.ASSETS);
@@ -40,18 +42,9 @@ export function getActionByID(actionID: string): Promise<Actions> {
     return promise;
 }
 
-export interface Entities {
-    [x: string]: Asset | Areas;
-}
-
-export interface SplitEntities {
-    assets: Entities;
-    areas: Entities;
-}
-
 function compareAssetsOrAreas(oldEntities: Entities, newEntities: Entities): boolean | string[] {
-    const oldKeys = Object.keys(oldEntities);
-    const newKeys = Object.keys(newEntities);
+    const oldKeys = uniqueArray(Object.keys(oldEntities));
+    const newKeys = uniqueArray(Object.keys(newEntities));
     const additions = [];
     let hasOverlap = false;
 

@@ -1,19 +1,15 @@
 import '../../static/promise-polyfill';
 import 'core-js/features/map';
 import { Engine, Event, TopLevelCondition, Almanac, RuleResult, Rule } from 'json-rules-engine';
-import { StateParams, RuleParams } from './types';
+import { StateParams, RuleParams, ProcessedCondition, WithParsedCustomData } from './types';
 import { parseAndConvertConditions } from './convert-rule';
 import { processSuccessfulEvent } from './events';
 import { Rules } from '../collection-schema/Rules';
 import { CbCollectionLib } from '../collection-lib';
 import { Areas } from '../collection-schema/Areas';
 import { Asset } from '../collection-schema/Assets';
-import { processRule, aggregateFactMap, ParentOperator, filterProcessedRule, ProcessedCondition } from './utils';
-// import { processDurations } from './duration';
-
-interface WithParsedCustomData extends Asset {
-    custom_data: Record<string, object>;
-}
+import { processRule, aggregateFactMap, filterProcessedRule } from './utils';
+import { DurationEngine } from './DurationEngine';
 
 interface IncomingFact {
     incomingData: WithParsedCustomData;
@@ -22,6 +18,8 @@ interface IncomingFact {
 interface FactData {
     data: WithParsedCustomData;
 }
+
+const durationEngine = new DurationEngine();
 
 export class RulesEngine {
     engine: Engine;
@@ -100,6 +98,7 @@ export class RulesEngine {
                             timeframe: parsedTimeframe,
                             ruleID: id,
                             ruleName: label,
+                            ruleType: Object.keys(convertedConditions)[0],
                         },
                     },
                 });
@@ -128,31 +127,29 @@ function handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResul
     // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
     // @ts-ignore json-rule-engine types does not include factMap
     const incomingData = almanac.factMap.get('incomingData').value;
-
     const processedResults = processRule([ruleResult.conditions]);
-    const topLevelType = Object.keys(ruleResult.conditions)[0] as ParentOperator;
-    const filteredResults = filterProcessedRule(
-        processedResults as Array<ProcessedCondition[]>,
-        incomingData.id,
-        topLevelType,
-    );
+    const filteredResults = filterProcessedRule(processedResults as Array<ProcessedCondition[]>, incomingData.id);
+
+    if ((event.params as RuleParams).ruleType === 'any' && filteredResults.trues.length) {
+        filteredResults.pendingDurations = []; // get rid of these since we don't need to process them because it's an 'or'
+        const ruleId = (event.params as RuleParams).ruleID;
+        durationEngine.clearTimersForRule(ruleId);
+    }
 
     const entities = aggregateFactMap(filteredResults, almanac);
 
-    // if (processedResults.hasDuration) {
-    //     processDurations(
-    //         processedResults.conditionIds,
-    //         ruleResult.conditions,
-    //         event.params as RuleParams,
-    //         entities,
-    //         actionTopic,
-    //         incomingData,
-    //     );
-    // } else {
     if (filteredResults.trues.length) {
         processSuccessfulEvent(filteredResults.trues, event.params as RuleParams, entities, actionTopic, incomingData);
     }
-    // }
+    if (filteredResults.pendingDurations.length) {
+        durationEngine.processDurations(
+            filteredResults.pendingDurations as Array<ProcessedCondition[]>,
+            event.params as RuleParams,
+            entities,
+            actionTopic,
+            incomingData,
+        );
+    }
 }
 
 function buildFact(entityData: Asset | Areas, incomingData: WithParsedCustomData): WithParsedCustomData {

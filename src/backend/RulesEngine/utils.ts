@@ -3,15 +3,9 @@ import { Asset } from '../collection-schema/Assets';
 import { CollectionName } from '../global-config';
 import { CbCollectionLib } from '../collection-lib';
 import { Areas } from '../collection-schema/Areas';
-import { EntityTypes } from './types';
-import { Entities } from './async';
+import { ProcessedCondition, WithParsedCustomData, Entities } from './types';
 
 /////////// for evaluating facts while engine is running
-
-export interface WithParsedCustomData extends Asset {
-    custom_data: Record<string, object>;
-    entityType?: EntityTypes;
-}
 
 export interface FactData {
     data: WithParsedCustomData;
@@ -74,12 +68,6 @@ export function buildFact(entityData: Asset | Areas, incomingData: WithParsedCus
 
 /////////// for processing rules after engine completes
 
-export interface ProcessedCondition {
-    id: string;
-    result: boolean;
-    duration: number;
-}
-
 type ProcessedRule = Array<ProcessedCondition[] | ProcessedCondition>;
 
 export type ParentOperator = 'all' | 'any';
@@ -91,6 +79,7 @@ function buildProcessedCondition(fact: ConditionProperties): ProcessedCondition 
         // @ts-ignore json-rule-engine types does not include result
         result: fact.result,
         duration: (fact.params as Record<string, number>).duration,
+        timerStart: 0,
     };
 }
 
@@ -197,7 +186,7 @@ interface ProcessedFiltered {
     pendingDurations: ProcessedRule;
 }
 
-function filterByIdAndDuration(processedRule: Array<ProcessedCondition[]>, triggerId: string): ProcessedFiltered {
+export function filterProcessedRule(processedRule: Array<ProcessedCondition[]>, triggerId: string): ProcessedFiltered {
     return processedRule.reduce(
         (filteredRule: ProcessedFiltered, combination) => {
             let hasId = false;
@@ -221,7 +210,8 @@ function filterByIdAndDuration(processedRule: Array<ProcessedCondition[]>, trigg
                 if (allTrue && !hasDuration) {
                     filteredRule.trues.push(...combination.map(c => c.id));
                 } else if (hasTrue && hasDuration) {
-                    filteredRule.pendingDurations.push(combination as ProcessedCondition[]);
+                    const sorted = combination.sort((a, b) => b.duration - a.duration);
+                    filteredRule.pendingDurations.push(sorted as ProcessedCondition[]);
                 }
             }
             return filteredRule;
@@ -233,16 +223,11 @@ function filterByIdAndDuration(processedRule: Array<ProcessedCondition[]>, trigg
     );
 }
 
-export function filterProcessedRule(
-    processedRule: Array<ProcessedCondition[]>,
-    triggerId: string,
-    topLevelType: ParentOperator,
-): ProcessedFiltered {
-    const filteredProcessed = filterByIdAndDuration(processedRule, triggerId);
-    if (topLevelType === 'any' && filteredProcessed.trues.length) {
-        filteredProcessed.pendingDurations = []; // get rid of these since we don't need to process them because it's an 'or'
-    }
-    return filteredProcessed;
+export function uniqueArray(arr: string[]): string[] {
+    const seen = {} as { [x: string]: boolean };
+    return arr.filter(item => {
+        return Object.prototype.hasOwnProperty.call(seen, item) ? false : (seen[item] = true);
+    });
 }
 
 ////////// grab data for assets/areas to send to event or duration processing

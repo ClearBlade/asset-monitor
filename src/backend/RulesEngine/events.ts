@@ -1,13 +1,11 @@
-import { RuleParams } from './types';
+import { RuleParams, Entities, SplitEntities, WithParsedCustomData } from './types';
 import '../../static/promise-polyfill';
 import {
     getActionByID,
     getStateForEvent,
     createEvent,
     createEventHistoryItem,
-    Entities,
     shouldCreateOrUpdateEvent,
-    SplitEntities,
 } from './async';
 import * as uuid from 'uuid/v4';
 import { EventSchema } from '../collection-schema/Events';
@@ -19,7 +17,7 @@ export function processSuccessfulEvent(
     ruleParams: RuleParams,
     entities: Entities,
     actionTopic: string,
-    trigger: Entities,
+    trigger: WithParsedCustomData,
 ): void {
     if (doesTimeframeMatchRule(new Date().toISOString(), ruleParams.timeframe)) {
         const filteredEntities = ids.reduce((acc: Entities, id: string) => {
@@ -51,7 +49,7 @@ export function processEvent(
     ruleParams: RuleParams,
     entities: Entities,
     actionTopic: string,
-    trigger: Entities,
+    trigger: WithParsedCustomData,
 ): Promise<EventSchema> {
     const { eventTypeID, actionIDs, priority, severity, ruleID } = ruleParams;
     const splitEntities = getSplitEntities(entities);
@@ -104,7 +102,12 @@ export function processEvent(
     return promise;
 }
 
-function performAction(actionId: string, event: EventSchema, actionTopic: string, triggerMessage: Entities): void {
+function performAction(
+    actionId: string,
+    event: EventSchema,
+    actionTopic: string,
+    triggerMessage: WithParsedCustomData,
+): void {
     getActionByID(actionId).then(function(action) {
         const messaging = ClearBlade.Messaging();
         messaging.publish(
