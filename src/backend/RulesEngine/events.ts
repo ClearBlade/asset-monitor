@@ -12,6 +12,8 @@ import { EventSchema } from '../collection-schema/Events';
 import { Areas } from '../collection-schema/Areas';
 import { doesTimeframeMatchRule } from './timeframe';
 
+const messaging = ClearBlade.Messaging();
+
 export function processSuccessfulEvent(
     ids: string[],
     ruleParams: RuleParams,
@@ -109,7 +111,6 @@ function performAction(
     triggerMessage: WithParsedCustomData,
 ): void {
     getActionByID(actionId).then(function(action) {
-        const messaging = ClearBlade.Messaging();
         messaging.publish(
             actionTopic,
             JSON.stringify({

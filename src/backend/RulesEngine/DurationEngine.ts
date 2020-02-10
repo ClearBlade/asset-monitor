@@ -20,40 +20,70 @@ interface Timers {
     [x: string]: TimersForRule;
 }
 
+const DURATION_TOPIC = 'ruleDurationReached';
+
 export class DurationEngine {
     timerStore: Timers;
+    messaging: CbServer.Messaging;
     constructor() {
         this.timerStore = {};
+        this.messaging = ClearBlade.Messaging();
+        this.messaging.subscribe(DURATION_TOPIC, (err, data) => this.timerExecuted(err, data as string));
     }
 
     clearTimersForRule(ruleId: string): void {
-        // TODO: loop through and clear each actual timer
         if (this.timerStore[ruleId]) {
+            const timersForRule = this.timerStore[ruleId];
+            const keys = Object.keys(timersForRule);
+            for (let i = 0; i < keys.length; i++) {
+                const timer = timersForRule[keys[i]];
+                this.messaging.cancelCBTimeout(timer.timerId, cancelTimeoutCallback);
+            }
             delete this.timerStore[ruleId];
         }
     }
 
     clearTimer(ruleId: string, key: string): void {
         if (this.timerStore[ruleId] && this.timerStore[ruleId][key]) {
-            // TODO: clear actual timer
+            const timer = this.timerStore[ruleId][key];
+            this.messaging.cancelCBTimeout(timer.timerId, cancelTimeoutCallback);
             delete this.timerStore[ruleId][key];
+        }
+        if (!Object.keys(this.timerStore[ruleId]).length) {
+            delete this.timerStore[ruleId];
         }
     }
 
-    timerExecuted(ruleId: string, key: string): void {
-        const { conditions, entities, actionTopic, incomingData, ruleParams } = this.timerStore[ruleId][key];
-        const ids = [];
-        for (let i = 0; i < conditions.length; i++) {
-            if (!conditions[i].result) {
-                this.clearTimer(ruleId, key);
-            } else {
-                ids.push(conditions[i].id);
+    timerExecuted(err: boolean, data: string): void {
+        if (err) {
+            log(`Error on subscription: ${JSON.stringify(data)}`);
+        } else {
+            const { ruleId, key } = JSON.parse(data);
+            const { conditions, entities, actionTopic, incomingData, ruleParams } = this.timerStore[ruleId][key];
+            const ids = [];
+            for (let i = 0; i < conditions.length; i++) {
+                if (!conditions[i].result) {
+                    this.clearTimer(ruleId, key);
+                } else {
+                    ids.push(conditions[i].id);
+                }
+            }
+            processSuccessfulEvent(ids, ruleParams, entities, actionTopic, incomingData);
+            if (ruleParams.ruleType === 'any') {
+                this.clearTimersForRule(ruleParams.ruleID);
             }
         }
-        processSuccessfulEvent(ids, ruleParams, entities, actionTopic, incomingData);
-        if (ruleParams.ruleType === 'any') {
-            this.clearTimersForRule(ruleParams.ruleID);
-        }
+    }
+
+    startTimer(key: string, ruleId: string, timer: Timer): void {
+        const timerId = uuid();
+        const remainingTime = timer.timedEntity.duration - (Date.now() - timer.timedEntity.timerStart);
+        const data = JSON.stringify({
+            ruleId,
+            key,
+        });
+        timer.timerId = timerId;
+        this.messaging.setTimeout(remainingTime, DURATION_TOPIC, data, createTimeoutCallback);
     }
 
     evaluateIncomingConditions(
@@ -70,21 +100,23 @@ export class DurationEngine {
 
         for (let i = 0; i < conditions.length; i++) {
             if (conditions[i].result) {
-                handleTrueCondition(conditions[i], existingTimer, i); // may update existingTimer
+                handleTrueCondition(conditions[i], existingTimer, i); // may update existingTimer if remaing time for any exceeds the current timed entity
             } else if (existingTimer.conditions[i].result) {
                 existingTimer.conditions[i] = conditions[i];
             }
         }
 
         if (existingTimer.timedEntity) {
+            // timer(s) ongoing
             if (timedCondition.id !== existingTimer.timedEntity.id) {
-                // clear actual timer of existing timer id
-                // create and invoke new timer function with timeout set for duration - (Date.now() - timerStart)
-                // assign new timer id to existingTimer.timerId
+                const key = getKey(conditions);
+                this.messaging.cancelCBTimeout(existingTimer.timerId, cancelTimeoutCallback);
+                this.startTimer(key, ruleId, existingTimer);
                 existingTimer.incomingData = incomingData;
             }
             existingTimer.entities = entities;
         } else {
+            // no ongoing timers - clear it
             const key = getKey(conditions);
             this.clearTimer(ruleId, key);
         }
@@ -115,8 +147,21 @@ export class DurationEngine {
                     incomingData,
                     ruleParams,
                 );
+                this.startTimer(key, ruleId, this.timerStore[ruleId][key]);
             }
         }
+    }
+}
+
+function createTimeoutCallback(err: boolean, msg: string): void {
+    if (err) {
+        log(`Error creating timeout: ${JSON.stringify(msg)}`);
+    }
+}
+
+function cancelTimeoutCallback(err: boolean, msg: string): void {
+    if (err) {
+        log(`Error canceling timeout: ${JSON.stringify(msg)}`);
     }
 }
 
@@ -127,8 +172,11 @@ function handleTrueCondition(incomingCondition: ProcessedCondition, existingTime
             timerStart: Date.now(),
         };
     }
-    const remainingTime = existingTimer.timedEntity.duration - (Date.now() - existingTimer.timedEntity.timerStart);
-    if (incomingCondition.duration && (!existingTimer.timedEntity || incomingCondition.duration > remainingTime)) {
+    const remainingExistingTime =
+        existingTimer.timedEntity.duration - (Date.now() - existingTimer.timedEntity.timerStart);
+    const remainingIncomingTime =
+        incomingCondition.duration && incomingCondition.duration - (Date.now() - incomingCondition.timerStart);
+    if (remainingIncomingTime && (!existingTimer.timedEntity || remainingIncomingTime > remainingExistingTime)) {
         existingTimer.timedEntity = incomingCondition;
     }
 }
@@ -153,14 +201,13 @@ function buildTimerObject(
     incomingData: WithParsedCustomData,
     ruleParams: RuleParams,
 ): Timer {
-    const timerId = uuid();
     return {
         conditions,
         entities: pickEntities(conditions, entities),
         actionTopic,
         incomingData,
         ruleParams,
-        timerId,
+        timerId: '',
         timedEntity: conditions[0],
     };
 }
