@@ -64,7 +64,7 @@
         "strict": true,
         "forceConsistentCasingInFileNames": true
     },
-    "files": ["src/global.d.ts"],
+    "files": ["src/global.d.ts", "node_modules/@clearblade/code-service-types/index.d.ts"],
     "include": [
         "src/backend/normalizer",
         "src/backend/collection-schema",
