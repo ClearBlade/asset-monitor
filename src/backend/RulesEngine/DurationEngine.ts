@@ -12,26 +12,22 @@ interface Timer {
     timedEntity: ProcessedCondition; // entity whose duration is currently counting for the whole event
 }
 
-interface TimersForRule {
+interface Timers {
     [x: string]: Timer;
 }
 
-interface Timers {
-    [x: string]: TimersForRule;
-}
-
 export const DURATION_TOPIC = 'rule_duration_reached';
+const DURATION_CACHE = 'rule_duration_cache';
 
 export class DurationEngine {
     private static _instance: DurationEngine;
 
-    timerStore: Timers;
+    timerCache: CbServer.Cache<Timers>;
     messaging: CbServer.Messaging;
 
     constructor() {
-        this.timerStore = {};
+        this.timerCache = ClearBlade.Cache(DURATION_CACHE) as CbServer.Cache<Timers>;
         this.messaging = ClearBlade.Messaging();
-        // this.messaging.subscribe(DURATION_TOPIC, this.timerExecuted);
     }
 
     static getInstance(): DurationEngine {
@@ -41,50 +37,61 @@ export class DurationEngine {
         return DurationEngine._instance;
     }
 
+    getCacheHandler(ruleId: string, callback: (data: Timers) => void): void {
+        this.timerCache.get(ruleId, (err, data) => {
+            if (err) {
+                log(`Error getting cache for rule: ${ruleId}`);
+            } else {
+                callback(data);
+            }
+        });
+    }
+
     clearTimersForRule(ruleId: string): void {
-        if (this.timerStore[ruleId]) {
-            const timersForRule = this.timerStore[ruleId];
-            const keys = Object.keys(timersForRule);
+        this.getCacheHandler(ruleId, data => {
+            const keys = Object.keys(data);
             for (let i = 0; i < keys.length; i++) {
-                const timer = timersForRule[keys[i]];
+                const timer = data[keys[i]];
                 this.messaging.cancelCBTimeout(timer.timerId, cancelTimeoutCallback);
             }
-            delete this.timerStore[ruleId];
-        }
+            this.timerCache.delete(ruleId, deleteCacheCallback);
+        });
     }
 
     clearTimer(ruleId: string, key: string): void {
-        if (this.timerStore[ruleId] && this.timerStore[ruleId][key]) {
-            const timer = this.timerStore[ruleId][key];
+        this.getCacheHandler(ruleId, data => {
+            const timer = data[key];
             this.messaging.cancelCBTimeout(timer.timerId, cancelTimeoutCallback);
-            delete this.timerStore[ruleId][key];
-        }
-        if (!Object.keys(this.timerStore[ruleId]).length) {
-            delete this.timerStore[ruleId];
-        }
+            delete data[key];
+            if (!Object.keys(data).length) {
+                this.timerCache.delete(ruleId, deleteCacheCallback);
+            } else {
+                this.timerCache.set(ruleId, data, setCacheCallback);
+            }
+        });
     }
 
     timerExecuted(err: boolean, data: string | null): void {
-        if (err) {
-            log(`Error on subscription: ${data}}`);
-        } else if (data) {
+        if (data) {
             const { userData } = JSON.parse(data as string);
             const { key, ruleId } = JSON.parse(userData);
 
-            const { conditions, entities, actionTopic, incomingData, ruleParams } = this.timerStore[ruleId][key];
-            const ids = [];
-            for (let i = 0; i < conditions.length; i++) {
-                if (!conditions[i].result) {
-                    this.clearTimer(ruleId, key);
-                    return;
-                } else {
-                    ids.push(conditions[i].id);
+            this.getCacheHandler(ruleId, data => {
+                const { conditions, entities, actionTopic, incomingData, ruleParams } = data[key];
+                const ids = [];
+                for (let i = 0; i < conditions.length; i++) {
+                    if (!conditions[i].result) {
+                        this.clearTimer(ruleId, key);
+                        return;
+                    } else {
+                        ids.push(conditions[i].id);
+                    }
                 }
-            }
-            processSuccessfulEvent(ids, ruleParams, entities, actionTopic, incomingData);
-            if (ruleParams.ruleType === 'any') {
-                this.clearTimersForRule(ruleParams.ruleID);
-            }
+                processSuccessfulEvent(ids, ruleParams, entities, actionTopic, incomingData);
+                if (ruleParams.ruleType === 'any') {
+                    this.clearTimersForRule(ruleId);
+                }
+            });
         }
     }
 
@@ -143,38 +150,33 @@ export class DurationEngine {
         incomingData: WithParsedCustomData,
     ): void {
         const ruleId = ruleParams.ruleID;
-        if (!this.timerStore[ruleId]) {
-            this.timerStore[ruleId] = {};
-        }
-        for (let i = 0; i < combinations.length; i++) {
-            const key = getKey(combinations[i]);
-            if (this.timerStore[ruleId][key]) {
-                const existingTimer = this.timerStore[ruleId][key];
-                const pickedEntities = pickEntities(combinations[i], entities);
-                this.evaluateIncomingConditions(combinations[i], existingTimer, pickedEntities, ruleId, incomingData);
-            } else {
-                this.timerStore[ruleId][key] = buildTimerObject(
-                    combinations[i],
-                    entities,
-                    actionTopic,
-                    incomingData,
-                    ruleParams,
-                );
-                this.startTimer(key, ruleId, this.timerStore[ruleId][key]);
+        this.getCacheHandler(ruleId, data => {
+            const timersForRule = data || {};
+            for (let i = 0; i < combinations.length; i++) {
+                const key = getKey(combinations[i]);
+                if (timersForRule[key]) {
+                    const existingTimer = timersForRule[key];
+                    const pickedEntities = pickEntities(combinations[i], entities);
+                    this.evaluateIncomingConditions(
+                        combinations[i],
+                        existingTimer,
+                        pickedEntities,
+                        ruleId,
+                        incomingData,
+                    );
+                } else {
+                    timersForRule[key] = buildTimerObject(
+                        combinations[i],
+                        entities,
+                        actionTopic,
+                        incomingData,
+                        ruleParams,
+                    );
+                    this.startTimer(key, ruleId, timersForRule[key]);
+                }
             }
-        }
-    }
-}
-
-function createTimeoutCallback(err: boolean, msg: string): void {
-    if (err) {
-        log(`Error creating timeout: ${JSON.stringify(msg)}`);
-    }
-}
-
-function cancelTimeoutCallback(err: boolean, msg: string): void {
-    if (err) {
-        log(`Error canceling timeout: ${JSON.stringify(msg)}`);
+            this.timerCache.set(ruleId, timersForRule, setCacheCallback);
+        });
     }
 }
 
@@ -226,4 +228,28 @@ function buildTimerObject(
             timerStart: Date.now(),
         },
     };
+}
+
+function setCacheCallback(err: boolean, msg: string): void {
+    if (err) {
+        log(`Error setting cache for rule: ${JSON.stringify(msg)}`);
+    }
+}
+
+function deleteCacheCallback(err: boolean, msg: string): void {
+    if (err) {
+        log(`Error deleting cache for rule: ${JSON.stringify(msg)}`);
+    }
+}
+
+function createTimeoutCallback(err: boolean, msg: string): void {
+    if (err) {
+        log(`Error creating timeout: ${JSON.stringify(msg)}`);
+    }
+}
+
+function cancelTimeoutCallback(err: boolean, msg: string): void {
+    if (err) {
+        log(`Error canceling timeout: ${JSON.stringify(msg)}`);
+    }
 }
