@@ -46,7 +46,7 @@ export function collectAndBuildFact(
     });
 }
 
-export function buildFact(entityData: Asset | Areas, incomingData: WithParsedCustomData): WithParsedCustomData {
+function buildFact(entityData: Asset | Areas, incomingData: WithParsedCustomData): WithParsedCustomData {
     let withParsedCustomData: WithParsedCustomData = {
         // parse custom_data
         ...entityData,

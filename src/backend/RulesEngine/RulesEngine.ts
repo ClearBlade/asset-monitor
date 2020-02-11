@@ -5,10 +5,7 @@ import { StateParams, RuleParams, ProcessedCondition, WithParsedCustomData } fro
 import { parseAndConvertConditions } from './convert-rule';
 import { processSuccessfulEvent } from './events';
 import { Rules } from '../collection-schema/Rules';
-import { CbCollectionLib } from '../collection-lib';
-import { Areas } from '../collection-schema/Areas';
-import { Asset } from '../collection-schema/Assets';
-import { processRule, aggregateFactMap, filterProcessedRule } from './utils';
+import { processRule, aggregateFactMap, filterProcessedRule, collectAndBuildFact } from './utils';
 import { DurationEngine } from './DurationEngine';
 
 interface IncomingFact {
@@ -19,25 +16,25 @@ interface FactData {
     data: WithParsedCustomData;
 }
 
-const durationEngine = new DurationEngine();
-
 export class RulesEngine {
     engine: Engine;
+    durationEngine: DurationEngine;
     rules: { [id: string]: Rule }; // track rules here since there is not getRule method needed for edit/delete
     actionTopic: string;
     constructor(actionTopic: string) {
         Number.parseFloat = parseFloat;
         this.rules = {};
         this.actionTopic = actionTopic;
+        this.durationEngine = DurationEngine.getInstance();
         this.engine = new Engine([], {
             allowUndefinedFacts: true,
         })
             .addFact('state', (params, almanac) => handleStateCondition(params as StateParams, almanac))
             .on('success', (event, almanac, ruleResult) =>
-                handleRuleSuccess(event, almanac, ruleResult, this.actionTopic),
+                this.handleRuleSuccess(event, almanac, ruleResult, this.actionTopic),
             )
             .on('failure', (event, almanac, ruleResult) =>
-                handleRuleFailure(event, almanac, ruleResult, this.actionTopic),
+                this.handleRuleFailure(event, almanac, ruleResult, this.actionTopic),
             );
     }
 
@@ -116,98 +113,46 @@ export class RulesEngine {
         Promise.runQueue();
         return promise;
     }
-}
 
-function handleRuleFailure(event: Event, almanac: Almanac, ruleResult: RuleResult, actionTopic: string): void {
-    log('failed rule ' + JSON.stringify(ruleResult));
-}
-
-function handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResult, actionTopic: string): void {
-    log('Processing rule for successful event: ' + JSON.stringify(ruleResult));
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-    // @ts-ignore json-rule-engine types does not include factMap
-    const incomingData = almanac.factMap.get('incomingData').value;
-    const processedResults = processRule([ruleResult.conditions]);
-    const filteredResults = filterProcessedRule(processedResults as Array<ProcessedCondition[]>, incomingData.id);
-
-    if ((event.params as RuleParams).ruleType === 'any' && filteredResults.trues.length) {
-        filteredResults.pendingDurations = []; // get rid of these since we don't need to process them because it's an 'or'
-        const ruleId = (event.params as RuleParams).ruleID;
-        durationEngine.clearTimersForRule(ruleId);
+    handleRuleFailure(event: Event, almanac: Almanac, ruleResult: RuleResult, actionTopic: string): void {
+        log('failed rule ' + JSON.stringify(ruleResult));
     }
 
-    const entities = aggregateFactMap(filteredResults, almanac);
+    handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResult, actionTopic: string): void {
+        log('Processing rule for successful event: ' + JSON.stringify(ruleResult));
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore json-rule-engine types does not include factMap
+        const incomingData = almanac.factMap.get('incomingData').value;
+        const processedResults = processRule([ruleResult.conditions]);
+        const filteredResults = filterProcessedRule(processedResults as Array<ProcessedCondition[]>, incomingData.id);
 
-    if (filteredResults.trues.length) {
-        processSuccessfulEvent(filteredResults.trues, event.params as RuleParams, entities, actionTopic, incomingData);
-    }
-    if (filteredResults.pendingDurations.length) {
-        durationEngine.processDurations(
-            filteredResults.pendingDurations as Array<ProcessedCondition[]>,
-            event.params as RuleParams,
-            entities,
-            actionTopic,
-            incomingData,
-        );
-    }
-}
-
-function buildFact(entityData: Asset | Areas, incomingData: WithParsedCustomData): WithParsedCustomData {
-    let withParsedCustomData: WithParsedCustomData = {
-        // parse custom_data
-        ...entityData,
-        custom_data: JSON.parse((entityData.custom_data as string) || '{}'),
-    };
-    if (entityData.id === incomingData.id) {
-        // if this one is the same as asset that triggered engine
-        withParsedCustomData = {
-            ...withParsedCustomData,
-            ...incomingData,
-            custom_data: {
-                ...withParsedCustomData.custom_data,
-                ...incomingData.custom_data,
-            },
-        };
-    }
-    return withParsedCustomData;
-}
-
-function collectAndBuildFact(
-    almanac: Almanac,
-    data: FactData,
-    params: StateParams,
-    incomingData: WithParsedCustomData,
-): Promise<FactData> {
-    return new Promise(res => {
-        if (data) {
-            res(data);
+        if ((event.params as RuleParams).ruleType === 'any' && filteredResults.trues.length) {
+            filteredResults.pendingDurations = []; // get rid of these since we don't need to process them because it's an 'or'
+            const ruleId = (event.params as RuleParams).ruleID;
+            this.durationEngine.clearTimersForRule(ruleId);
         }
-        // custom data has not been fetched for asset
-        const collection = CbCollectionLib(params.collection);
-        const query = ClearBlade.Query({ collectionName: params.collection });
-        if (params.type) {
-            query.equalTo('type', params.type);
-        } else {
-            query.equalTo('id', params.id);
+
+        const entities = aggregateFactMap(filteredResults, almanac);
+
+        if (filteredResults.trues.length) {
+            processSuccessfulEvent(
+                filteredResults.trues,
+                event.params as RuleParams,
+                entities,
+                actionTopic,
+                incomingData,
+            );
         }
-        const promise = collection
-            .cbFetchPromise({ query })
-            .then((data: CbServer.CollectionFetchData<Asset | Areas>) => {
-                let initialData; // the fact who started all this mess
-                for (let i = 0; i < data.DATA.length; i++) {
-                    const entityData = data.DATA[i];
-                    const fact = buildFact(entityData, incomingData);
-                    if (params.id === entityData.id) {
-                        // if this one is the same as asset that triggered fact
-                        initialData = { ...fact };
-                    }
-                    almanac.addRuntimeFact(entityData.id as string, { data: fact }); // add fact for id
-                }
-                res({ data: initialData } as FactData); // resolve the initial fact's value
-            });
-        Promise.runQueue();
-        return promise;
-    });
+        if (filteredResults.pendingDurations.length) {
+            this.durationEngine.processDurations(
+                filteredResults.pendingDurations as Array<ProcessedCondition[]>,
+                event.params as RuleParams,
+                entities,
+                actionTopic,
+                incomingData,
+            );
+        }
+    }
 }
 
 function handleStateCondition(params: StateParams, almanac: Almanac): Promise<FactData> {
@@ -216,9 +161,7 @@ function handleStateCondition(params: StateParams, almanac: Almanac): Promise<Fa
         const isDifferentType = params.type !== incomingData.type;
         if (isIncoming || isDifferentType) {
             const promise = almanac.factValue<FactData>(params.id).then(data => {
-                return collectAndBuildFact(almanac, data, params, incomingData).then(builtFact => {
-                    return builtFact;
-                });
+                return data || collectAndBuildFact(almanac, params.id, params.type, params.collection, incomingData);
             });
             Promise.runQueue();
             return promise;

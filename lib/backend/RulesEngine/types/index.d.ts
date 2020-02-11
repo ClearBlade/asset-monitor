@@ -1,4 +1,7 @@
 import { CollectionName } from '../../global-config';
+import { Asset } from '../../collection-schema/Assets';
+import { Areas } from '../../collection-schema/Areas';
+import { ParentOperator } from '../utils';
 export declare enum TimeFrameTypes {
     REPEATEACHWEEK = "repeatEachWeek",
     REPEATBYDAY = "repeatByDay"
@@ -72,6 +75,7 @@ export interface RuleParams {
     timeframe?: TimeFrame;
     ruleID: string;
     ruleName: string;
+    ruleType: ParentOperator;
 }
 export interface StateParams {
     id: string;
@@ -85,4 +89,21 @@ export interface AreaParams {
     type: string;
     id2: string;
     type2: string;
+}
+export interface WithParsedCustomData extends Asset {
+    custom_data: Record<string, object>;
+    entityType?: EntityTypes;
+}
+export interface ProcessedCondition {
+    id: string;
+    result: boolean;
+    duration: number;
+    timerStart: number;
+}
+export interface Entities {
+    [x: string]: Asset | Areas;
+}
+export interface SplitEntities {
+    assets: Entities;
+    areas: Entities;
 }

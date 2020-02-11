@@ -12,8 +12,6 @@ import { EventSchema } from '../collection-schema/Events';
 import { Areas } from '../collection-schema/Areas';
 import { doesTimeframeMatchRule } from './timeframe';
 
-const messaging = ClearBlade.Messaging();
-
 export function processSuccessfulEvent(
     ids: string[],
     ruleParams: RuleParams,
@@ -82,8 +80,8 @@ export function processEvent(
                         transition_attribute: 'state',
                     }).then(() => {
                         if (actionTopic) {
-                            for (let i = 0; i < ruleParams.actionIDs.length; i++) {
-                                performAction(ruleParams.actionIDs[i], item, actionTopic, trigger);
+                            for (let i = 0; i < actionIDs.length; i++) {
+                                performAction(actionIDs[i], item, actionTopic, trigger);
                             }
                         }
                         return item;
@@ -111,6 +109,7 @@ function performAction(
     triggerMessage: WithParsedCustomData,
 ): void {
     getActionByID(actionId).then(function(action) {
+        const messaging = ClearBlade.Messaging();
         messaging.publish(
             actionTopic,
             JSON.stringify({

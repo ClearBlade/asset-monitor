@@ -1,5 +1,6 @@
 import { Rules } from '../collection-schema/Rules';
 import { RulesEngine } from './RulesEngine';
+import { DurationEngine, DURATION_TOPIC } from './DurationEngine';
 import { subscriber } from '../Normalizer';
 import { EntityTypes } from './types';
 
@@ -14,6 +15,7 @@ const RULES_UPDATED_TOPIC = 'rules_collection_updated';
 
 export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, actionTopic }: RulesEngineAPI): void {
     const engine = new RulesEngine(actionTopic);
+    const durationEngine = DurationEngine.getInstance();
     const messaging = ClearBlade.Messaging();
 
     fetchRulesForEngine().then(rules => {
@@ -42,7 +44,7 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
 
     function subscribeAndInitialize(): void {
         Promise.all(
-            [...incomingDataTopics, RULES_UPDATED_TOPIC].map(topic => {
+            [...incomingDataTopics, RULES_UPDATED_TOPIC, DURATION_TOPIC].map(topic => {
                 subscriber(topic);
             }),
         )
@@ -58,7 +60,10 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
     function initializeWhileLoop(): void {
         // eslint-disable-next-line no-constant-condition
         while (true) {
-            messaging.waitForMessage([...incomingDataTopics, RULES_UPDATED_TOPIC], handleIncomingMessage);
+            messaging.waitForMessage(
+                [...incomingDataTopics, RULES_UPDATED_TOPIC, DURATION_TOPIC],
+                handleIncomingMessage,
+            );
         }
     }
 
@@ -68,6 +73,8 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
         } else {
             if (topic === RULES_UPDATED_TOPIC) {
                 handleRulesCollUpdate(msg);
+            } else if (topic === DURATION_TOPIC) {
+                durationEngine.timerExecuted(err, msg);
             } else {
                 let incomingData;
                 try {

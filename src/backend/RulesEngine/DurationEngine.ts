@@ -20,15 +20,25 @@ interface Timers {
     [x: string]: TimersForRule;
 }
 
-const DURATION_TOPIC = 'ruleDurationReached';
+export const DURATION_TOPIC = 'rule_duration_reached';
 
 export class DurationEngine {
+    private static _instance: DurationEngine;
+
     timerStore: Timers;
     messaging: CbServer.Messaging;
+
     constructor() {
         this.timerStore = {};
         this.messaging = ClearBlade.Messaging();
-        this.messaging.subscribe(DURATION_TOPIC, (err, data) => this.timerExecuted(err, data as string));
+        // this.messaging.subscribe(DURATION_TOPIC, this.timerExecuted);
+    }
+
+    static getInstance(): DurationEngine {
+        if (!DurationEngine._instance) {
+            DurationEngine._instance = new DurationEngine();
+        }
+        return DurationEngine._instance;
     }
 
     clearTimersForRule(ruleId: string): void {
@@ -54,16 +64,19 @@ export class DurationEngine {
         }
     }
 
-    timerExecuted(err: boolean, data: string): void {
+    timerExecuted(err: boolean, data: string | null): void {
         if (err) {
-            log(`Error on subscription: ${JSON.stringify(data)}`);
-        } else {
-            const { ruleId, key } = JSON.parse(data);
+            log(`Error on subscription: ${data}}`);
+        } else if (data) {
+            const { userData } = JSON.parse(data as string);
+            const { key, ruleId } = JSON.parse(userData);
+
             const { conditions, entities, actionTopic, incomingData, ruleParams } = this.timerStore[ruleId][key];
             const ids = [];
             for (let i = 0; i < conditions.length; i++) {
                 if (!conditions[i].result) {
                     this.clearTimer(ruleId, key);
+                    return;
                 } else {
                     ids.push(conditions[i].id);
                 }
@@ -208,6 +221,9 @@ function buildTimerObject(
         incomingData,
         ruleParams,
         timerId: '',
-        timedEntity: conditions[0],
+        timedEntity: {
+            ...conditions[0],
+            timerStart: Date.now(),
+        },
     };
 }
