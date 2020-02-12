@@ -12,11 +12,13 @@ interface RulesEngineAPI {
 }
 
 const RULES_UPDATED_TOPIC = 'rules_collection_updated';
+const RULES_SHARED_GROUP = 'rules_shared_topic';
 
 export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, actionTopic }: RulesEngineAPI): void {
     const engine = new RulesEngine(actionTopic);
     const durationEngine = DurationEngine.getInstance();
     const messaging = ClearBlade.Messaging();
+    const sharedTopics = [...incomingDataTopics, DURATION_TOPIC].map(t => `$share/${RULES_SHARED_GROUP}/${t}`);
 
     fetchRulesForEngine().then(rules => {
         Promise.all(
@@ -44,7 +46,7 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
 
     function subscribeAndInitialize(): void {
         Promise.all(
-            [...incomingDataTopics, RULES_UPDATED_TOPIC, DURATION_TOPIC].map(topic => {
+            [...sharedTopics, RULES_UPDATED_TOPIC].map(topic => {
                 subscriber(topic);
             }),
         )
@@ -60,27 +62,24 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
     function initializeWhileLoop(): void {
         // eslint-disable-next-line no-constant-condition
         while (true) {
-            messaging.waitForMessage(
-                [...incomingDataTopics, RULES_UPDATED_TOPIC, DURATION_TOPIC],
-                handleIncomingMessage,
-            );
+            messaging.waitForMessage([...sharedTopics, RULES_UPDATED_TOPIC], handleIncomingMessage);
         }
     }
 
     function handleIncomingMessage(err: boolean, msg: string, topic: string): void {
         if (err) {
             resp.error('Error calling waitForMessage ' + JSON.stringify(msg));
-        } else {
+        } else if (topic) {
             if (topic === RULES_UPDATED_TOPIC) {
                 handleRulesCollUpdate(msg);
-            } else if (topic === DURATION_TOPIC) {
+            } else if (topic === `$share/${RULES_SHARED_GROUP}/${DURATION_TOPIC}`) {
                 durationEngine.timerExecuted(err, msg);
             } else {
                 let incomingData;
                 try {
                     incomingData = {
                         ...JSON.parse(msg),
-                        entityType: topic.includes('_assets') ? EntityTypes.ASSET : EntityTypes.AREA,
+                        entityType: topic.includes('_asset') ? EntityTypes.ASSET : EntityTypes.AREA,
                     };
                 } catch (e) {
                     resp.error('Invalid message structure: ' + JSON.stringify(e));

@@ -42,7 +42,7 @@ export class DurationEngine {
             if (err) {
                 log(`Error getting cache for rule: ${ruleId}`);
             } else {
-                callback(data);
+                callback(data ? { ...data } : {});
             }
         });
     }
@@ -153,11 +153,10 @@ export class DurationEngine {
     ): void {
         const ruleId = ruleParams.ruleID;
         this.getCacheHandler(ruleId, data => {
-            const timersForRule = data || {};
             for (let i = 0; i < combinations.length; i++) {
                 const key = getKey(combinations[i]);
-                if (timersForRule[key]) {
-                    const existingTimer = timersForRule[key];
+                if (data[key]) {
+                    const existingTimer = data[key];
                     const pickedEntities = pickEntities(combinations[i], entities);
                     this.evaluateIncomingConditions(
                         combinations[i],
@@ -167,17 +166,11 @@ export class DurationEngine {
                         incomingData,
                     );
                 } else {
-                    timersForRule[key] = buildTimerObject(
-                        combinations[i],
-                        entities,
-                        actionTopic,
-                        incomingData,
-                        ruleParams,
-                    );
-                    this.startTimer(key, ruleId, timersForRule[key]);
+                    data[key] = buildTimerObject(combinations[i], entities, actionTopic, incomingData, ruleParams);
+                    this.startTimer(key, ruleId, data[key]);
                 }
             }
-            this.timerCache.set(ruleId, timersForRule, setCacheCallback);
+            this.timerCache.set(ruleId, data, setCacheCallback);
         });
     }
 }
