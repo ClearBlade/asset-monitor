@@ -2,6 +2,7 @@ import { Logger } from '../Logger';
 import { GC, LogLevels } from '../global-config';
 import { Asset } from '../collection-schema/Assets';
 import { getErrorMessage } from '../Util';
+import { subscriber, bulkSubscriber } from '@clearblade/messaging-utils';
 import '../../static/promise-polyfill/index.js';
 
 export type MessageParser = (err: boolean, msg: string, topic: string) => Promise<Array<Asset>>;
@@ -29,38 +30,6 @@ export interface PublishConfig {
     shouldPublishAsset?: (asset: Asset) => boolean;
 }
 
-export function subscriber(topic: string): Promise<unknown> {
-    const messaging = ClearBlade.Messaging();
-    const promise = new Promise(function(resolve, reject) {
-        messaging.subscribe(topic, function(err, data) {
-            if (err) {
-                reject(new Error('Error with subscribing: ' + JSON.stringify(data)));
-            } else {
-                resolve(data);
-            }
-        });
-    });
-    return promise;
-}
-
-export function bulkSubscriber(topics: string[]): Promise<unknown> {
-    return new Promise(function(resolve, reject) {
-        Promise.all(
-            topics.map(topic => {
-                subscriber(topic);
-            }),
-        )
-            .then(() => {
-                resolve();
-            })
-            .catch(e => {
-                log(`Subscription error: ${e.message}`);
-                reject(new Error(e));
-            });
-        Promise.runQueue();
-    });
-}
-
 export function publisher(assets: Array<Asset>, pubConfig: PublishConfig): void {
     const messaging = ClearBlade.Messaging();
     for (let i = 0, l = assets.length; i < l; i++) {
@@ -76,6 +45,8 @@ export function publisher(assets: Array<Asset>, pubConfig: PublishConfig): void 
         }
     }
 }
+
+export { subscriber, bulkSubscriber };
 
 export function bulkPublisher(
     assets: Array<Asset>,

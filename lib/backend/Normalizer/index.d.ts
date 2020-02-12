@@ -1,5 +1,6 @@
 import { LogLevels } from '../global-config';
 import { Asset } from '../collection-schema/Assets';
+import { subscriber, bulkSubscriber } from '@clearblade/messaging-utils';
 import '../../static/promise-polyfill/index.js';
 export declare type MessageParser = (err: boolean, msg: string, topic: string) => Promise<Array<Asset>>;
 export interface NormalizerPublishConfig {
@@ -20,13 +21,11 @@ export interface PublishConfig {
     keysToPublish: IKeysToPublish;
     shouldPublishAsset?: (asset: Asset) => boolean;
 }
-export declare function subscriber(topic: string): Promise<unknown>;
-export declare function bulkSubscriber(topics: string[]): Promise<unknown>;
 export declare function publisher(assets: Array<Asset>, pubConfig: PublishConfig): void;
+export { subscriber, bulkSubscriber };
 export declare function bulkPublisher(assets: Array<Asset>, normalizerPubConfig?: NormalizerPublishConfig): void;
 export declare function normalizer(config: NormalizerConfig): void;
 export declare const api: {
     default: typeof normalizer;
     publisher: typeof publisher;
 };
-export {};

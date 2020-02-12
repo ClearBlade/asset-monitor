@@ -5,6 +5,7 @@ const publishMock = jest.fn();
 
 describe('Logger', () => {
     beforeAll(() => {
+        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
         global.ClearBlade.Messaging = () => ({
             publish: publishMock,
         });
