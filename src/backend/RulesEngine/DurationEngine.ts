@@ -90,6 +90,8 @@ export class DurationEngine {
                 processSuccessfulEvent(ids, ruleParams, entities, actionTopic, incomingData);
                 if (ruleParams.ruleType === 'any') {
                     this.clearTimersForRule(ruleId);
+                } else {
+                    this.clearTimer(ruleId, key);
                 }
             });
         }
