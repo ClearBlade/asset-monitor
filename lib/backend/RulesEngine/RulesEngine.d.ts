@@ -20,7 +20,6 @@ export declare class RulesEngine {
     deleteRule(id: string): void;
     convertRule(ruleData: Rules): Promise<Rule>;
     run(fact: IncomingFact): Promise<string>;
-    handleRuleFailure(event: Event, almanac: Almanac, ruleResult: RuleResult, actionTopic: string): void;
-    handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResult, actionTopic: string): void;
+    handleRuleFinished(event: Event, almanac: Almanac, ruleResult: RuleResult, actionTopic: string): void;
 }
 export {};

@@ -31,10 +31,10 @@ export class RulesEngine {
         })
             .addFact('state', (params, almanac) => handleStateCondition(params as StateParams, almanac))
             .on('success', (event, almanac, ruleResult) =>
-                this.handleRuleSuccess(event, almanac, ruleResult, this.actionTopic),
+                this.handleRuleFinished(event, almanac, ruleResult, this.actionTopic),
             )
             .on('failure', (event, almanac, ruleResult) =>
-                this.handleRuleFailure(event, almanac, ruleResult, this.actionTopic),
+                this.handleRuleFinished(event, almanac, ruleResult, this.actionTopic),
             );
     }
 
@@ -114,12 +114,8 @@ export class RulesEngine {
         return promise;
     }
 
-    handleRuleFailure(event: Event, almanac: Almanac, ruleResult: RuleResult, actionTopic: string): void {
-        log('failed rule ' + JSON.stringify(ruleResult));
-    }
-
-    handleRuleSuccess(event: Event, almanac: Almanac, ruleResult: RuleResult, actionTopic: string): void {
-        log('Processing rule for successful event: ' + JSON.stringify(ruleResult));
+    handleRuleFinished(event: Event, almanac: Almanac, ruleResult: RuleResult, actionTopic: string): void {
+        log('Processing rule for event: ' + JSON.stringify(ruleResult));
         // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
         // @ts-ignore json-rule-engine types does not include factMap
         const incomingData = almanac.factMap.get('incomingData').value;
