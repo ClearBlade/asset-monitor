@@ -113,7 +113,9 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
                 engine.editRule(parsedMessage.data);
                 break;
             case 'DELETE':
-                engine.deleteRule(parsedMessage.data.id);
+                for (let i = 0; i < parsedMessage.data.length; i++) {
+                    engine.deleteRule(parsedMessage.data[i]);
+                }
                 break;
             default:
                 return;
