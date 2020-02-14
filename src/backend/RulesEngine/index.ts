@@ -11,6 +11,7 @@ interface RulesEngineAPI {
     actionTopic: string;
 }
 
+// const RULES_ENTITY_UPDATED_TOPIC = 'rules_entity_updated';
 const RULES_UPDATED_TOPIC = 'rules_collection_updated';
 const RULES_SHARED_GROUP = 'rules_shared_topic';
 
@@ -20,29 +21,31 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
     const messaging = ClearBlade.Messaging();
     const sharedTopics = [...incomingDataTopics, DURATION_TOPIC].map(t => `$share/${RULES_SHARED_GROUP}/${t}`);
 
-    fetchRulesForEngine().then(rules => {
-        Promise.all(
-            rules.map(ruleData => {
-                const promise = engine
-                    .addRule(ruleData)
-                    .then(rule => rule.name)
-                    .catch(e => {
-                        log('Error adding rule: ' + JSON.stringify(e));
-                    });
-                Promise.runQueue();
-                return promise;
-            }),
-        )
-            .then(ruleNames => {
-                log(`Successfully added rules: ${ruleNames.join(', ')}`);
-                subscribeAndInitialize();
-            })
-            .catch(e => {
-                log(e);
-            });
+    function fetchAndConvertRules(): void {
+        fetchRulesForEngine().then(rules => {
+            Promise.all(
+                rules.map(ruleData => {
+                    const promise = engine
+                        .addRule(ruleData)
+                        .then(rule => rule.name)
+                        .catch(e => {
+                            log('Error adding rule: ' + JSON.stringify(e));
+                        });
+                    Promise.runQueue();
+                    return promise;
+                }),
+            )
+                .then(ruleNames => {
+                    log(`Successfully added rules: ${ruleNames.join(', ')}`);
+                    subscribeAndInitialize();
+                })
+                .catch(e => {
+                    log(e);
+                });
+            Promise.runQueue();
+        });
         Promise.runQueue();
-    });
-    Promise.runQueue();
+    }
 
     function subscribeAndInitialize(): void {
         Promise.all(
@@ -72,6 +75,8 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
         } else if (topic) {
             if (topic === RULES_UPDATED_TOPIC) {
                 handleRulesCollUpdate(msg);
+                // } else if (topic === RULES_ENTITY_UPDATED_TOPIC) {
+                //     handleEntityUpdate();
             } else if (topic === `$share/${RULES_SHARED_GROUP}/${DURATION_TOPIC}`) {
                 durationEngine.timerExecuted(err, msg);
             } else {
@@ -121,4 +126,10 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
                 return;
         }
     }
+
+    // function handleEntityUpdate(): void {
+    //     fetchAndConvertRules();
+    // }
+
+    fetchAndConvertRules();
 }

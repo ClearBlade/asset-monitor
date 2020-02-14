@@ -1,5 +1,4 @@
 import { RuleParams, ProcessedCondition, WithParsedCustomData, Entities } from './types';
-import uuid = require('uuid/v4');
 import { processSuccessfulEvent } from './events';
 
 interface Timer {
@@ -97,25 +96,34 @@ export class DurationEngine {
         }
     }
 
-    startTimer(key: string, ruleId: string, timer: Timer): void {
-        const timerId = uuid();
+    startTimerAndGetId(key: string, ruleId: string, timer: Timer): Promise<string> {
         const remainingTime = timer.timedEntity.duration - (Date.now() - timer.timedEntity.timerStart);
         const data = JSON.stringify({
             ruleId,
             key,
         });
-        timer.timerId = timerId;
-        this.messaging.setTimeout(remainingTime, DURATION_TOPIC, data, createTimeoutCallback);
+        return new Promise((res, rej) => {
+            this.messaging.setTimeout(remainingTime, DURATION_TOPIC, data, (err, msg) => {
+                if (err) {
+                    log(`Error creating timeout: ${JSON.stringify(msg)}`);
+                    rej();
+                } else {
+                    res(msg);
+                }
+            });
+        });
     }
 
-    evaluateIncomingConditions(
+    modifyTimer(
         conditions: ProcessedCondition[],
         existingTimer: Timer,
         entities: Entities,
         ruleId: string,
         incomingData: WithParsedCustomData,
-    ): void {
-        const timedCondition = conditions.find(c => c.id === existingTimer.timedEntity.id) as ProcessedCondition;
+    ): Promise<Timer> {
+        const timedCondition = (conditions.filter(
+            c => c.id === existingTimer.timedEntity.id,
+        ) as ProcessedCondition[])[0];
         if (!timedCondition.result) {
             delete existingTimer.timedEntity;
         }
@@ -133,14 +141,54 @@ export class DurationEngine {
             if (timedCondition.id !== existingTimer.timedEntity.id) {
                 const key = getKey(conditions);
                 this.messaging.cancelCBTimeout(existingTimer.timerId, cancelTimeoutCallback);
-                this.startTimer(key, ruleId, existingTimer);
-                existingTimer.incomingData = incomingData;
+                this.startTimerAndGetId(key, ruleId, existingTimer).then(timerId => {
+                    return {
+                        ...existingTimer,
+                        timerId,
+                        incomingData,
+                        entities,
+                    };
+                });
+                Promise.runQueue();
             }
-            existingTimer.entities = entities;
+            return new Promise(res => {
+                res({
+                    ...existingTimer,
+                    entities,
+                });
+            });
         } else {
             // no ongoing timers - clear it
             const key = getKey(conditions);
             this.clearTimer(ruleId, key);
+            return new Promise(res => {
+                res({ ...existingTimer });
+            });
+        }
+    }
+
+    evaluateIncomingCombination(
+        combination: ProcessedCondition[],
+        ruleParams: RuleParams,
+        timer: Timer,
+        key: string,
+        entities: Entities,
+        actionTopic: string,
+        incomingData: WithParsedCustomData,
+    ): Promise<Timer> {
+        if (timer) {
+            const pickedEntities = pickEntities(combination, entities);
+            return this.modifyTimer(combination, timer, pickedEntities, ruleParams.ruleID, incomingData);
+        } else {
+            const timerObj = buildTimerObject(combination, entities, actionTopic, incomingData, ruleParams);
+            const promise = this.startTimerAndGetId(key, ruleParams.ruleID, timerObj).then(timerId => {
+                return {
+                    ...timerObj,
+                    timerId,
+                };
+            });
+            Promise.runQueue();
+            return promise;
         }
     }
 
@@ -153,24 +201,24 @@ export class DurationEngine {
     ): void {
         const ruleId = ruleParams.ruleID;
         this.getCacheHandler(ruleId, data => {
-            for (let i = 0; i < combinations.length; i++) {
-                const key = getKey(combinations[i]);
-                if (data[key]) {
-                    const existingTimer = data[key];
-                    const pickedEntities = pickEntities(combinations[i], entities);
-                    this.evaluateIncomingConditions(
-                        combinations[i],
-                        existingTimer,
-                        pickedEntities,
-                        ruleId,
+            Promise.all(
+                combinations.map(c => {
+                    const key = getKey(c);
+                    this.evaluateIncomingCombination(
+                        c,
+                        ruleParams,
+                        data[key],
+                        key,
+                        entities,
+                        actionTopic,
                         incomingData,
-                    );
-                } else {
-                    data[key] = buildTimerObject(combinations[i], entities, actionTopic, incomingData, ruleParams);
-                    this.startTimer(key, ruleId, data[key]);
-                }
-            }
-            this.timerCache.set(ruleId, data, setCacheCallback);
+                    ).then(newTimer => {
+                        data[key] = newTimer;
+                    });
+                }),
+            ).then(() => {
+                this.timerCache.set(ruleId, data, setCacheCallback);
+            });
         });
     }
 }
@@ -234,12 +282,6 @@ function setCacheCallback(err: boolean, msg: string): void {
 function deleteCacheCallback(err: boolean, msg: string): void {
     if (err) {
         log(`Error deleting cache for rule: ${JSON.stringify(msg)}`);
-    }
-}
-
-function createTimeoutCallback(err: boolean, msg: string): void {
-    if (err) {
-        log(`Error creating timeout: ${JSON.stringify(msg)}`);
     }
 }
 

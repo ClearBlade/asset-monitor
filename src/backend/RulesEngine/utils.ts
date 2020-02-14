@@ -190,7 +190,6 @@ export function filterProcessedRule(processedRule: Array<ProcessedCondition[]>, 
     return processedRule.reduce(
         (filteredRule: ProcessedFiltered, combination) => {
             let hasId = false;
-            let hasTrue = false;
             let hasDuration = false;
             let allTrue = true;
             for (let i = 0; i < combination.length; i++) {
@@ -200,16 +199,14 @@ export function filterProcessedRule(processedRule: Array<ProcessedCondition[]>, 
                 if (combination[i].duration) {
                     hasDuration = true;
                 }
-                if (combination[i].result) {
-                    hasTrue = true;
-                } else {
+                if (!combination[i].result) {
                     allTrue = false;
                 }
             }
             if (hasId) {
                 if (allTrue && !hasDuration) {
                     filteredRule.trues.push(...combination.map(c => c.id));
-                } else if (hasTrue && hasDuration) {
+                } else if (hasDuration) {
                     const sorted = combination.sort((a, b) => b.duration - a.duration);
                     filteredRule.pendingDurations.push(sorted as ProcessedCondition[]);
                 }

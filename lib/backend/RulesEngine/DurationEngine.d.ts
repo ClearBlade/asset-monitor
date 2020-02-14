@@ -22,8 +22,9 @@ export declare class DurationEngine {
     clearTimersForRule(ruleId: string): void;
     clearTimer(ruleId: string, key: string): void;
     timerExecuted(err: boolean, data: string | null): void;
-    startTimer(key: string, ruleId: string, timer: Timer): void;
-    evaluateIncomingConditions(conditions: ProcessedCondition[], existingTimer: Timer, entities: Entities, ruleId: string, incomingData: WithParsedCustomData): void;
+    startTimerAndGetId(key: string, ruleId: string, timer: Timer): Promise<string>;
+    modifyTimer(conditions: ProcessedCondition[], existingTimer: Timer, entities: Entities, ruleId: string, incomingData: WithParsedCustomData): Promise<Timer>;
+    evaluateIncomingCombination(combination: ProcessedCondition[], ruleParams: RuleParams, timer: Timer, key: string, entities: Entities, actionTopic: string, incomingData: WithParsedCustomData): Promise<Timer>;
     processDurations(combinations: Array<ProcessedCondition[]>, ruleParams: RuleParams, entities: Entities, actionTopic: string, incomingData: WithParsedCustomData): void;
 }
 export {};
