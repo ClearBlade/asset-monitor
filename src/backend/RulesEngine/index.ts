@@ -11,7 +11,7 @@ interface RulesEngineAPI {
     actionTopic: string;
 }
 
-// const RULES_ENTITY_UPDATED_TOPIC = 'rules_entity_updated';
+const RULES_ENTITY_UPDATED_TOPIC = 'rules_entity_updated';
 const RULES_UPDATED_TOPIC = 'rules_collection_updated';
 const RULES_SHARED_GROUP = 'rules_shared_topic';
 
@@ -49,7 +49,7 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
 
     function subscribeAndInitialize(): void {
         Promise.all(
-            [...sharedTopics, RULES_UPDATED_TOPIC].map(topic => {
+            [...sharedTopics, RULES_UPDATED_TOPIC, RULES_ENTITY_UPDATED_TOPIC].map(topic => {
                 subscriber(topic);
             }),
         )
@@ -65,7 +65,10 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
     function initializeWhileLoop(): void {
         // eslint-disable-next-line no-constant-condition
         while (true) {
-            messaging.waitForMessage([...sharedTopics, RULES_UPDATED_TOPIC], handleIncomingMessage);
+            messaging.waitForMessage(
+                [...sharedTopics, RULES_UPDATED_TOPIC, RULES_ENTITY_UPDATED_TOPIC],
+                handleIncomingMessage,
+            );
         }
     }
 
@@ -75,8 +78,8 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
         } else if (topic) {
             if (topic === RULES_UPDATED_TOPIC) {
                 handleRulesCollUpdate(msg);
-                // } else if (topic === RULES_ENTITY_UPDATED_TOPIC) {
-                //     handleEntityUpdate();
+            } else if (topic === RULES_ENTITY_UPDATED_TOPIC) {
+                fetchAndConvertRules();
             } else if (topic === `$share/${RULES_SHARED_GROUP}/${DURATION_TOPIC}`) {
                 durationEngine.timerExecuted(err, msg);
             } else {
@@ -126,10 +129,6 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
                 return;
         }
     }
-
-    // function handleEntityUpdate(): void {
-    //     fetchAndConvertRules();
-    // }
 
     fetchAndConvertRules();
 }
