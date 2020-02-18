@@ -97,13 +97,12 @@ export class DurationEngine {
     }
 
     startTimerAndGetId(key: string, ruleId: string, timer: Timer): Promise<string> {
-        const remainingTime = timer.timedEntity.duration - (Date.now() - timer.timedEntity.timerStart);
         const data = JSON.stringify({
             ruleId,
             key,
         });
         return new Promise((res, rej) => {
-            this.messaging.setTimeout(remainingTime, DURATION_TOPIC, data, (err, msg) => {
+            this.messaging.setTimeout(timer.timedEntity.duration, DURATION_TOPIC, data, (err, msg) => {
                 if (err) {
                     log(`Error creating timeout: ${JSON.stringify(msg)}`);
                     rej();

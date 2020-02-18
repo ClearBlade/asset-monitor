@@ -86,7 +86,7 @@ function buildProcessedCondition(fact: ConditionProperties): ProcessedCondition 
 function isValidFact(fact: ConditionProperties): ProcessedCondition | undefined {
     // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
     // @ts-ignore json-rule-engine types does not include result
-    if (fact.factResult) {
+    if (fact.factResult || fact.factResult === false) {
         return buildProcessedCondition(fact);
     }
 }
