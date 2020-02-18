@@ -11,7 +11,7 @@ interface Timer {
     timedEntity: ProcessedCondition; // entity whose duration is currently counting for the whole event
 }
 
-interface Timers {
+export interface Timers {
     [x: string]: Timer;
 }
 
@@ -24,8 +24,8 @@ export class DurationEngine {
     timerCache: CbServer.Cache<Timers>;
     messaging: CbServer.Messaging;
 
-    constructor() {
-        this.timerCache = ClearBlade.Cache(DURATION_CACHE) as CbServer.Cache<Timers>;
+    constructor(timerCache = ClearBlade.Cache(DURATION_CACHE) as CbServer.Cache<Timers>) {
+        this.timerCache = timerCache;
         this.messaging = ClearBlade.Messaging();
     }
 
@@ -96,7 +96,7 @@ export class DurationEngine {
         }
     }
 
-    startTimerAndGetId(key: string, ruleId: string, timer: Timer): Promise<string> {
+    async startTimerAndGetId(key: string, ruleId: string, timer: Timer): Promise<string> {
         const data = JSON.stringify({
             ruleId,
             key,
@@ -113,7 +113,7 @@ export class DurationEngine {
         });
     }
 
-    modifyTimer(
+    async modifyTimer(
         conditions: ProcessedCondition[],
         existingTimer: Timer,
         entities: Entities,
@@ -166,7 +166,7 @@ export class DurationEngine {
         }
     }
 
-    evaluateIncomingCombination(
+    async evaluateIncomingCombination(
         combination: ProcessedCondition[],
         ruleParams: RuleParams,
         timer: Timer,
@@ -191,16 +191,16 @@ export class DurationEngine {
         }
     }
 
-    processDurations(
+    async processDurations(
         combinations: Array<ProcessedCondition[]>,
         ruleParams: RuleParams,
         entities: Entities,
         actionTopic: string,
         incomingData: WithParsedCustomData,
-    ): void {
+    ): Promise<void> {
         const ruleId = ruleParams.ruleID;
         this.getCacheHandler(ruleId, data => {
-            Promise.all(
+            return Promise.all(
                 combinations.map(c => {
                     const key = getKey(c);
                     this.evaluateIncomingCombination(
@@ -216,7 +216,7 @@ export class DurationEngine {
                     });
                 }),
             ).then(() => {
-                this.timerCache.set(ruleId, data, setCacheCallback);
+                return this.timerCache.set(ruleId, data, setCacheCallback);
             });
         });
     }

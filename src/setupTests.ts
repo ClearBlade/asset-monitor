@@ -17,9 +17,16 @@ global.ClearBlade = {
             equalTo: (): void => undefined,
         };
     },
-    Messaging: (): { publish: () => void; subscribe: () => void; waitForMessage: () => void } => ({
+    Messaging: (): {
+        publish: () => void;
+        subscribe: () => void;
+        waitForMessage: () => void;
+        cancelCBTimeout: () => void;
+    } => ({
         publish: (): void => undefined,
         subscribe: (): void => undefined,
         waitForMessage: (): void => undefined,
+        cancelCBTimeout: (): void => undefined,
     }),
+    Cache: (): void => undefined,
 };
