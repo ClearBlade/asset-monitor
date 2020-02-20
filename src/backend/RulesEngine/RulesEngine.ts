@@ -73,6 +73,13 @@ export class RulesEngine {
         }
     }
 
+    clearRules(): void {
+        const rules = Object.keys(this.rules);
+        for (let i = 0; i < rules.length; i++) {
+            this.deleteRule(rules[i]);
+        }
+    }
+
     async convertRule(ruleData: Rules): Promise<Rule> {
         const { label, event_type_id, priority, severity, id, timeframe, action_ids, conditions } = ruleData;
 

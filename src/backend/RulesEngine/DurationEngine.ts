@@ -119,7 +119,8 @@ export class DurationEngine {
         entities: Entities,
         ruleId: string,
         incomingData: WithParsedCustomData,
-    ): Promise<Timer> {
+        isNew?: boolean,
+    ): Promise<Timer> | void {
         const timedCondition = (conditions.filter(
             c => c.id === existingTimer.timedEntity.id,
         ) as ProcessedCondition[])[0];
@@ -137,9 +138,11 @@ export class DurationEngine {
 
         if (existingTimer.timedEntity) {
             // timer(s) ongoing
-            if (timedCondition.id !== existingTimer.timedEntity.id) {
+            if (timedCondition.id !== existingTimer.timedEntity.id || isNew) {
                 const key = getKey(conditions);
-                this.messaging.cancelCBTimeout(existingTimer.timerId, cancelTimeoutCallback);
+                if (!isNew) {
+                    this.messaging.cancelCBTimeout(existingTimer.timerId, cancelTimeoutCallback);
+                }
                 this.startTimerAndGetId(key, ruleId, existingTimer).then(timerId => {
                     return {
                         ...existingTimer,
@@ -156,39 +159,35 @@ export class DurationEngine {
                     entities,
                 });
             });
-        } else {
+        } else if (!isNew) {
             // no ongoing timers - clear it
             const key = getKey(conditions);
             this.clearTimer(ruleId, key);
-            return new Promise(res => {
-                res({ ...existingTimer });
-            });
         }
+        return new Promise(res => res());
     }
 
     evaluateIncomingCombination(
         combination: ProcessedCondition[],
         ruleParams: RuleParams,
         timer: Timer,
-        key: string,
         entities: Entities,
         actionTopic: string,
         incomingData: WithParsedCustomData,
     ): Promise<Timer> {
-        if (timer) {
-            const pickedEntities = pickEntities(combination, entities);
-            return this.modifyTimer(combination, timer, pickedEntities, ruleParams.ruleID, incomingData);
-        } else {
-            const timerObj = buildTimerObject(combination, entities, actionTopic, incomingData, ruleParams);
-            const promise = this.startTimerAndGetId(key, ruleParams.ruleID, timerObj).then(timerId => {
-                return {
-                    ...timerObj,
-                    timerId,
-                };
-            });
-            Promise.runQueue();
-            return promise;
+        const pickedEntities = pickEntities(combination, entities);
+        let existingTimer = timer && { ...timer };
+        if (!existingTimer) {
+            existingTimer = buildTimerObject(combination, entities, actionTopic, incomingData, ruleParams);
         }
+        return this.modifyTimer(
+            combination,
+            existingTimer,
+            pickedEntities,
+            ruleParams.ruleID,
+            incomingData,
+            !timer,
+        ) as Promise<Timer>;
     }
 
     processDurations(
@@ -207,34 +206,49 @@ export class DurationEngine {
                         c,
                         ruleParams,
                         data[key],
-                        key,
                         entities,
                         actionTopic,
                         incomingData,
                     ).then(newTimer => {
-                        data[key] = newTimer;
+                        if (newTimer) {
+                            data[key] = newTimer;
+                        }
                     });
                 }),
             ).then(() => {
-                this.timerCache.set(ruleId, data, setCacheCallback);
+                if (Object.keys(data).length) {
+                    this.timerCache.set(ruleId, data, setCacheCallback);
+                }
             });
+            Promise.runQueue();
         });
     }
 }
 
 function handleTrueCondition(incomingCondition: ProcessedCondition, existingTimer: Timer, idx: number): void {
+    let updatedCondition = { ...incomingCondition };
     if (!existingTimer.conditions[idx].result) {
-        existingTimer.conditions[idx] = {
+        updatedCondition = {
             ...incomingCondition,
             timerStart: Date.now(),
         };
+        existingTimer.conditions[idx] = updatedCondition;
     }
-    const remainingExistingTime =
-        existingTimer.timedEntity.duration - (Date.now() - existingTimer.timedEntity.timerStart);
+    let remainingExistingTime;
+    if (existingTimer.timedEntity) {
+        remainingExistingTime =
+            existingTimer.timedEntity.duration - (Date.now() - existingTimer.timedEntity.timerStart);
+    }
     const remainingIncomingTime =
-        incomingCondition.duration && incomingCondition.duration - (Date.now() - incomingCondition.timerStart);
-    if (remainingIncomingTime && (!existingTimer.timedEntity || remainingIncomingTime > remainingExistingTime)) {
-        existingTimer.timedEntity = incomingCondition;
+        updatedCondition.duration && updatedCondition.duration - (Date.now() - updatedCondition.timerStart);
+    if (remainingIncomingTime) {
+        if (remainingExistingTime) {
+            if (!existingTimer.timedEntity || remainingIncomingTime > remainingExistingTime) {
+                existingTimer.timedEntity = updatedCondition;
+            } else {
+                existingTimer.timedEntity = updatedCondition;
+            }
+        }
     }
 }
 

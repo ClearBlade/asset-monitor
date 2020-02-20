@@ -207,7 +207,12 @@ export function filterProcessedRule(processedRule: Array<ProcessedCondition[]>, 
                 if (allTrue && !hasDuration) {
                     filteredRule.trues.push(...combination.map(c => c.id));
                 } else if (hasDuration) {
-                    const sorted = combination.sort((a, b) => b.duration - a.duration);
+                    const sorted = combination.sort((a, b) => {
+                        if (a.duration === b.duration) {
+                            return a.id > b.id ? 1 : -1;
+                        }
+                        return b.duration - a.duration;
+                    });
                     filteredRule.pendingDurations.push(sorted as ProcessedCondition[]);
                 }
             }

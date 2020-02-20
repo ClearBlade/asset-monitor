@@ -21,9 +21,9 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
     const messaging = ClearBlade.Messaging();
     const sharedTopics = [...incomingDataTopics, DURATION_TOPIC].map(t => `$share/${RULES_SHARED_GROUP}/${t}`);
 
-    function fetchAndConvertRules(): void {
-        fetchRulesForEngine().then(rules => {
-            Promise.all(
+    function fetchAndConvertRules(): Promise<(string | void)[]> {
+        const promise = fetchRulesForEngine().then(rules => {
+            return Promise.all(
                 rules.map(ruleData => {
                     const promise = engine
                         .addRule(ruleData)
@@ -34,17 +34,10 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
                     Promise.runQueue();
                     return promise;
                 }),
-            )
-                .then(ruleNames => {
-                    log(`Successfully added rules: ${ruleNames.join(', ')}`);
-                    subscribeAndInitialize();
-                })
-                .catch(e => {
-                    log(e);
-                });
-            Promise.runQueue();
+            );
         });
         Promise.runQueue();
+        return promise;
     }
 
     function subscribeAndInitialize(): void {
@@ -79,6 +72,7 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
             if (topic === RULES_UPDATED_TOPIC) {
                 handleRulesCollUpdate(msg);
             } else if (topic === RULES_ENTITY_UPDATED_TOPIC) {
+                engine.clearRules();
                 fetchAndConvertRules();
             } else if (topic === `$share/${RULES_SHARED_GROUP}/${DURATION_TOPIC}`) {
                 durationEngine.timerExecuted(err, msg);
@@ -130,5 +124,12 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
         }
     }
 
-    fetchAndConvertRules();
+    fetchAndConvertRules()
+        .then(ruleNames => {
+            log(`Engine started and uccessfully added rules: ${ruleNames.join(', ')}`);
+            subscribeAndInitialize();
+        })
+        .catch(e => {
+            log(e);
+        });
 }

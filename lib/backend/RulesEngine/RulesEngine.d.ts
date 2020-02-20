@@ -18,6 +18,7 @@ export declare class RulesEngine {
     addRule(ruleData: Rules): Promise<Rule>;
     editRule(ruleData: Rules): void;
     deleteRule(id: string): void;
+    clearRules(): void;
     convertRule(ruleData: Rules): Promise<Rule>;
     run(fact: IncomingFact): Promise<string>;
     handleRuleFinished(event: Event, almanac: Almanac, ruleResult: RuleResult, actionTopic: string): void;
