@@ -143,7 +143,7 @@ export class DurationEngine {
                 if (!isNew) {
                     this.messaging.cancelCBTimeout(existingTimer.timerId, cancelTimeoutCallback);
                 }
-                this.startTimerAndGetId(key, ruleId, existingTimer).then(timerId => {
+                const promise = this.startTimerAndGetId(key, ruleId, existingTimer).then(timerId => {
                     return {
                         ...existingTimer,
                         timerId,
@@ -152,6 +152,7 @@ export class DurationEngine {
                     };
                 });
                 Promise.runQueue();
+                return promise;
             }
             return new Promise(res => {
                 res({

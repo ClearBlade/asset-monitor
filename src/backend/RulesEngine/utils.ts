@@ -170,16 +170,6 @@ export function processRule(
 }
 
 ////////// for filtering only relevant conditions from results
-// filter for events related to triggerId
-
-// if 'any' search for combinations
-// for trues, combine into one event of ids and fire and be done
-// if no trues
-// for *trues, send to duration processing
-
-// if 'and' search for combinations
-// for trues, group them, combine into one event of ids and fire
-// for *trues, send each to duration processing
 
 interface ProcessedFiltered {
     trues: string[];
