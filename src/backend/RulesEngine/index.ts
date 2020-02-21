@@ -1,6 +1,8 @@
 import { Rules } from '../collection-schema/Rules';
 import { RulesEngine } from './RulesEngine';
+import { DurationEngine, DURATION_TOPIC } from './DurationEngine';
 import { subscriber } from '../Normalizer';
+import { EntityTypes } from './types';
 
 interface RulesEngineAPI {
     resp: CbServer.Resp;
@@ -9,39 +11,38 @@ interface RulesEngineAPI {
     actionTopic: string;
 }
 
+const RULES_ENTITY_UPDATED_TOPIC = 'rules_entity_updated';
 const RULES_UPDATED_TOPIC = 'rules_collection_updated';
+const RULES_SHARED_GROUP = 'rules_shared_topic';
 
 export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, actionTopic }: RulesEngineAPI): void {
     const engine = new RulesEngine(actionTopic);
+    const durationEngine = DurationEngine.getInstance();
     const messaging = ClearBlade.Messaging();
+    const sharedTopics = [...incomingDataTopics, DURATION_TOPIC].map(t => `$share/${RULES_SHARED_GROUP}/${t}`);
 
-    fetchRulesForEngine().then(rules => {
-        Promise.all(
-            rules.map(ruleData => {
-                const promise = engine
-                    .addRule(ruleData)
-                    .then(rule => rule.name)
-                    .catch(e => {
-                        log('Error adding rule: ' + JSON.stringify(e));
-                    });
-                Promise.runQueue();
-                return promise;
-            }),
-        )
-            .then(ruleNames => {
-                log(`Successfully added rules: ${ruleNames.join(', ')}`);
-                subscribeAndInitialize();
-            })
-            .catch(e => {
-                log(e);
-            });
+    function fetchAndConvertRules(): Promise<(string | void)[]> {
+        const promise = fetchRulesForEngine().then(rules => {
+            return Promise.all(
+                rules.map(ruleData => {
+                    const promise = engine
+                        .addRule(ruleData)
+                        .then(rule => rule.name)
+                        .catch(e => {
+                            log('Error adding rule: ' + JSON.stringify(e));
+                        });
+                    Promise.runQueue();
+                    return promise;
+                }),
+            );
+        });
         Promise.runQueue();
-    });
-    Promise.runQueue();
+        return promise;
+    }
 
     function subscribeAndInitialize(): void {
         Promise.all(
-            [...incomingDataTopics, RULES_UPDATED_TOPIC].map(topic => {
+            [...sharedTopics, RULES_UPDATED_TOPIC, RULES_ENTITY_UPDATED_TOPIC].map(topic => {
                 subscriber(topic);
             }),
         )
@@ -57,20 +58,31 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
     function initializeWhileLoop(): void {
         // eslint-disable-next-line no-constant-condition
         while (true) {
-            messaging.waitForMessage([...incomingDataTopics, RULES_UPDATED_TOPIC], handleIncomingMessage);
+            messaging.waitForMessage(
+                [...sharedTopics, RULES_UPDATED_TOPIC, RULES_ENTITY_UPDATED_TOPIC],
+                handleIncomingMessage,
+            );
         }
     }
 
     function handleIncomingMessage(err: boolean, msg: string, topic: string): void {
         if (err) {
             resp.error('Error calling waitForMessage ' + JSON.stringify(msg));
-        } else {
+        } else if (topic) {
             if (topic === RULES_UPDATED_TOPIC) {
                 handleRulesCollUpdate(msg);
+            } else if (topic === RULES_ENTITY_UPDATED_TOPIC) {
+                engine.clearRules();
+                fetchAndConvertRules();
+            } else if (topic === `$share/${RULES_SHARED_GROUP}/${DURATION_TOPIC}`) {
+                durationEngine.timerExecuted(err, msg);
             } else {
                 let incomingData;
                 try {
-                    incomingData = JSON.parse(msg);
+                    incomingData = {
+                        ...JSON.parse(msg),
+                        entityType: topic.includes('_asset') ? EntityTypes.ASSET : EntityTypes.AREA,
+                    };
                 } catch (e) {
                     resp.error('Invalid message structure: ' + JSON.stringify(e));
                 }
@@ -103,10 +115,21 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
                 engine.editRule(parsedMessage.data);
                 break;
             case 'DELETE':
-                engine.deleteRule(parsedMessage.data.id);
+                for (let i = 0; i < parsedMessage.data.length; i++) {
+                    engine.deleteRule(parsedMessage.data[i]);
+                }
                 break;
             default:
                 return;
         }
     }
+
+    fetchAndConvertRules()
+        .then(ruleNames => {
+            log(`Engine started and uccessfully added rules: ${ruleNames.join(', ')}`);
+            subscribeAndInitialize();
+        })
+        .catch(e => {
+            log(e);
+        });
 }

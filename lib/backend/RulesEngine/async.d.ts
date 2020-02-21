@@ -2,18 +2,12 @@ import { Asset } from '../collection-schema/Assets';
 import { Areas } from '../collection-schema/Areas';
 import { Actions } from '../collection-schema/Actions';
 import { EventSchema } from '../collection-schema/Events';
+import { SplitEntities } from './types';
 export declare function getAllAssetsForType(assetType: string): Promise<Array<CbServer.CollectionSchema<Asset>>>;
 export declare function getAllAreasForType(areaType: string): Promise<Array<CbServer.CollectionSchema<Areas>>>;
 export declare function getActionByID(actionID: string): Promise<Actions>;
-export interface Entities {
-    [x: string]: Asset | Areas;
-}
-export interface SplitEntities {
-    assets: Entities;
-    areas: Entities;
-}
-export declare function entitiesAreEqual(event: EventSchema, splitEntities: SplitEntities): boolean;
-export declare function shouldCreateEvent(ruleID: string, splitEntities: SplitEntities): Promise<boolean>;
+export declare function compareOverlappingEntities(event: EventSchema, splitEntities: SplitEntities): boolean | SplitEntities;
+export declare function shouldCreateOrUpdateEvent(ruleID: string, splitEntities: SplitEntities): Promise<boolean>;
 export interface EventState {
     is_open: boolean;
     state: string;

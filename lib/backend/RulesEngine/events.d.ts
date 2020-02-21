@@ -1,5 +1,5 @@
+import { RuleParams, Entities, WithParsedCustomData } from './types';
 import '../../static/promise-polyfill';
-import { Event } from 'json-rules-engine';
-import { Entities } from './async';
 import { EventSchema } from '../collection-schema/Events';
-export declare function processEvent(event: Event, entities: Entities, actionTopic: string, trigger: Entities): Promise<EventSchema>;
+export declare function processSuccessfulEvent(ids: string[], ruleParams: RuleParams, entities: Entities, actionTopic: string, trigger: WithParsedCustomData): void;
+export declare function processEvent(ruleParams: RuleParams, entities: Entities, actionTopic: string, trigger: WithParsedCustomData): Promise<EventSchema>;

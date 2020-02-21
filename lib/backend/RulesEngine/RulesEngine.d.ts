@@ -1,16 +1,15 @@
 import '../../static/promise-polyfill';
 import 'core-js/features/map';
-import { Engine, Rule } from 'json-rules-engine';
+import { Engine, Event, Almanac, RuleResult, Rule } from 'json-rules-engine';
+import { WithParsedCustomData } from './types';
 import { Rules } from '../collection-schema/Rules';
-import { Asset } from '../collection-schema/Assets';
-interface WithParsedCustomData extends Asset {
-    custom_data: Record<string, object>;
-}
+import { DurationEngine } from './DurationEngine';
 interface IncomingFact {
     incomingData: WithParsedCustomData;
 }
 export declare class RulesEngine {
     engine: Engine;
+    durationEngine: DurationEngine;
     rules: {
         [id: string]: Rule;
     };
@@ -19,7 +18,9 @@ export declare class RulesEngine {
     addRule(ruleData: Rules): Promise<Rule>;
     editRule(ruleData: Rules): void;
     deleteRule(id: string): void;
+    clearRules(): void;
     convertRule(ruleData: Rules): Promise<Rule>;
     run(fact: IncomingFact): Promise<string>;
+    handleRuleFinished(event: Event, almanac: Almanac, ruleResult: RuleResult, actionTopic: string): void;
 }
 export {};

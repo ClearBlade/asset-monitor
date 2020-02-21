@@ -1,18 +1,32 @@
-import { RuleParams } from './types';
+import { RuleParams, Entities, SplitEntities, WithParsedCustomData } from './types';
 import '../../static/promise-polyfill';
-import { Event } from 'json-rules-engine';
 import {
     getActionByID,
     getStateForEvent,
     createEvent,
     createEventHistoryItem,
-    Entities,
-    shouldCreateEvent,
-    SplitEntities,
+    shouldCreateOrUpdateEvent,
 } from './async';
 import * as uuid from 'uuid/v4';
 import { EventSchema } from '../collection-schema/Events';
 import { Areas } from '../collection-schema/Areas';
+import { doesTimeframeMatchRule } from './timeframe';
+
+export function processSuccessfulEvent(
+    ids: string[],
+    ruleParams: RuleParams,
+    entities: Entities,
+    actionTopic: string,
+    trigger: WithParsedCustomData,
+): void {
+    if (doesTimeframeMatchRule(new Date().toISOString(), ruleParams.timeframe)) {
+        const filteredEntities = ids.reduce((acc: Entities, id: string) => {
+            acc[id] = entities[id];
+            return acc;
+        }, {});
+        processEvent(ruleParams, filteredEntities, actionTopic, trigger);
+    }
+}
 
 function getSplitEntities(entities: Entities): SplitEntities {
     return Object.keys(entities).reduce(
@@ -32,15 +46,15 @@ function getSplitEntities(entities: Entities): SplitEntities {
 }
 
 export function processEvent(
-    event: Event,
+    ruleParams: RuleParams,
     entities: Entities,
     actionTopic: string,
-    trigger: Entities,
+    trigger: WithParsedCustomData,
 ): Promise<EventSchema> {
-    const { eventTypeID, actionIDs, priority, severity, ruleID } = event.params as RuleParams;
+    const { eventTypeID, actionIDs, priority, severity, ruleID } = ruleParams;
     const splitEntities = getSplitEntities(entities);
-    const promise = shouldCreateEvent(ruleID, splitEntities).then(should => {
-        if (should) {
+    const promise = shouldCreateOrUpdateEvent(ruleID, splitEntities).then(shouldCreate => {
+        if (shouldCreate) {
             const promise = getStateForEvent(eventTypeID).then(({ is_open, state }) => {
                 const id = uuid();
                 const timestamp = new Date().toISOString();
@@ -66,8 +80,8 @@ export function processEvent(
                         transition_attribute: 'state',
                     }).then(() => {
                         if (actionTopic) {
-                            for (let i = 0; i < (event.params as RuleParams).actionIDs.length; i++) {
-                                performAction((event.params as RuleParams).actionIDs[i], item, actionTopic, trigger);
+                            for (let i = 0; i < actionIDs.length; i++) {
+                                performAction(actionIDs[i], item, actionTopic, trigger);
                             }
                         }
                         return item;
@@ -88,7 +102,12 @@ export function processEvent(
     return promise;
 }
 
-function performAction(actionId: string, event: EventSchema, actionTopic: string, triggerMessage: Entities): void {
+function performAction(
+    actionId: string,
+    event: EventSchema,
+    actionTopic: string,
+    triggerMessage: WithParsedCustomData,
+): void {
     getActionByID(actionId).then(function(action) {
         const messaging = ClearBlade.Messaging();
         messaging.publish(

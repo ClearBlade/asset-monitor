@@ -4,6 +4,8 @@ import { Asset } from '../collection-schema/Assets';
 import { Areas } from '../collection-schema/Areas';
 import { Actions } from '../collection-schema/Actions';
 import { EventType, EventSchema } from '../collection-schema/Events';
+import { Entities, SplitEntities } from './types';
+import { uniqueArray } from './utils';
 
 export function getAllAssetsForType(assetType: string): Promise<Array<CbServer.CollectionSchema<Asset>>> {
     const assetsCollection = CbCollectionLib(CollectionName.ASSETS);
@@ -40,28 +42,70 @@ export function getActionByID(actionID: string): Promise<Actions> {
     return promise;
 }
 
-export interface Entities {
-    [x: string]: Asset | Areas;
+function compareAssetsOrAreas(oldEntities: Entities, newEntities: Entities): boolean | string[] {
+    const oldKeys = uniqueArray(Object.keys(oldEntities));
+    const newKeys = uniqueArray(Object.keys(newEntities));
+    const additions = [];
+    let hasOverlap = false;
+
+    for (let i = 0; i < newKeys.length; i++) {
+        const oldIndex = oldKeys.indexOf(newKeys[i]);
+        if (oldIndex > -1) {
+            oldKeys.splice(oldIndex, 1);
+            hasOverlap = true;
+        } else {
+            additions.push(newKeys[i]);
+        }
+    }
+
+    if (!oldKeys.length && !additions.length) {
+        return true; // all ids are overlapping - do nothing
+    } else if (hasOverlap) {
+        return additions; // need to update existing event with additions
+    } else {
+        return false; // no overlaps - need to keep looking or make new event
+    }
 }
 
-export interface SplitEntities {
-    assets: Entities;
-    areas: Entities;
+function aggregateEntities(newEntities: Entities, oldEntities: Entities): Entities {
+    return {
+        ...oldEntities,
+        ...newEntities,
+    };
 }
 
-function objectsAreEqual(oldEntity: Entities, newEntity: Entities): boolean {
-    const oldKeys = Object.keys(oldEntity).sort();
-    const newKeys = Object.keys(newEntity).sort();
-    return JSON.stringify(oldKeys) === JSON.stringify(newKeys);
-}
-
-export function entitiesAreEqual(event: EventSchema, splitEntities: SplitEntities): boolean {
+export function compareOverlappingEntities(event: EventSchema, splitEntities: SplitEntities): boolean | SplitEntities {
     const existingAssets = JSON.parse(event.assets || '{}');
     const existingAreas = JSON.parse(event.areas || '{}');
-    return objectsAreEqual(existingAssets, splitEntities.assets) && objectsAreEqual(existingAreas, splitEntities.areas);
+
+    const assetAdditions = compareAssetsOrAreas(existingAssets, splitEntities.assets);
+    const areaAdditions = compareAssetsOrAreas(existingAreas, splitEntities.areas);
+    if (
+        Array.isArray(assetAdditions) ||
+        Array.isArray(areaAdditions) ||
+        (assetAdditions && !areaAdditions) ||
+        (!assetAdditions && areaAdditions)
+    ) {
+        return {
+            assets: aggregateEntities(splitEntities.assets, existingAssets),
+            areas: aggregateEntities(splitEntities.areas, existingAreas),
+        };
+    }
+    return assetAdditions && areaAdditions;
 }
 
-export function shouldCreateEvent(ruleID: string, splitEntities: SplitEntities): Promise<boolean> {
+function updateEvent(id: string, entities: SplitEntities): void {
+    const eventsCollection = CbCollectionLib(CollectionName.EVENTS);
+    const query = ClearBlade.Query().equalTo('id', id);
+    const changes = {
+        assets: entities.assets,
+        areas: entities.areas,
+    };
+    eventsCollection.cbUpdatePromise({ query, changes });
+}
+
+export function shouldCreateOrUpdateEvent(ruleID: string, splitEntities: SplitEntities): Promise<boolean> {
+    // if overlapping entities with existing event for rule, then update with added entities or do nothing if none added, else create new
     const eventsCollection = CbCollectionLib(CollectionName.EVENTS);
     const query = ClearBlade.Query({ collectionName: CollectionName.EVENTS })
         .equalTo('rule_id', ruleID)
@@ -72,7 +116,11 @@ export function shouldCreateEvent(ruleID: string, splitEntities: SplitEntities):
         .then((data: CbServer.CollectionFetchData<EventSchema>) => {
             const openEvents = data.DATA;
             for (let i = 0; i < openEvents.length; i++) {
-                if (entitiesAreEqual(openEvents[i], splitEntities)) {
+                const hasOverlappingEntities = compareOverlappingEntities(openEvents[i], splitEntities);
+                if (hasOverlappingEntities) {
+                    if (typeof hasOverlappingEntities === 'object') {
+                        updateEvent(openEvents[i].id as string, hasOverlappingEntities);
+                    }
                     return false;
                 }
             }
