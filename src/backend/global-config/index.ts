@@ -27,6 +27,7 @@ export enum CollectionName {
     EVENT_TYPES = 'event_types',
     EVENTS = 'events',
     EVENT_HISTORY = 'event_history',
+    RULES = 'rules',
 }
 
 export enum AssetStatusUpdateMethod {

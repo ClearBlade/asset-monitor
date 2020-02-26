@@ -1,8 +1,2 @@
-interface EdgeConnectedConfig {
-    req: CbServer.BasicReq;
-    resp: CbServer.Resp;
-    cacheName?: string;
-    collectionName?: string;
-}
-declare function edgeConnected({ resp, req, cacheName, collectionName, }: EdgeConnectedConfig): void;
+import edgeConnected from '@clearblade/one-way-sync/edge/edge-connected';
 export default edgeConnected;

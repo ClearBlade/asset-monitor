@@ -38,6 +38,12 @@ export function shouldCreateOrUpdateEvent(): Promise<boolean> {
     });
 }
 
+export function closeRules(): Promise<undefined> {
+    return new Promise(resolve => {
+        resolve();
+    });
+}
+
 const assets: Array<CbServer.CollectionSchema<Asset>> = [
     {
         custom_data: {},
