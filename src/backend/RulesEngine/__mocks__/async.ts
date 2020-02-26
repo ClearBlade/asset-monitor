@@ -38,9 +38,9 @@ export function shouldCreateOrUpdateEvent(): Promise<boolean> {
     });
 }
 
-export function closeRules(): Promise<undefined> {
+export function closeRules(): Promise<boolean> {
     return new Promise(resolve => {
-        resolve();
+        resolve(true);
     });
 }
 

@@ -51,58 +51,60 @@ export function processEvent(
     entities: Entities,
     actionTopic: string,
     trigger: WithParsedCustomData,
-): Promise<EventSchema> {
+): Promise<EventSchema | void> {
     const { eventTypeID, actionIDs, priority, severity, ruleID, closesIds } = ruleParams;
     const splitEntities = getSplitEntities(entities);
-    const promise = closeRules(closesIds, splitEntities).then(() => {
-        const promise = shouldCreateOrUpdateEvent(ruleID, splitEntities).then(shouldCreate => {
-            if (shouldCreate) {
-                const promise = getStateForEvent(eventTypeID).then(({ is_open, state }) => {
-                    const id = uuid();
-                    const timestamp = new Date().toISOString();
-                    const item = {
-                        last_updated: timestamp,
-                        is_open,
-                        label: `${eventTypeID}_${id}`,
-                        severity,
-                        id,
-                        type: eventTypeID,
-                        state,
-                        priority,
-                        action_ids: JSON.stringify(actionIDs || []),
-                        rule_id: ruleID,
-                        assets: JSON.stringify(splitEntities.assets),
-                        areas: JSON.stringify(splitEntities.areas),
-                    };
-                    const promise = createEvent(item).then(() => {
-                        const promise = createEventHistoryItem({
-                            event_id: id,
-                            timestamp,
-                            transition_value: state,
-                            transition_attribute: 'state',
-                        }).then(() => {
-                            if (actionTopic) {
-                                for (let i = 0; i < actionIDs.length; i++) {
-                                    performAction(actionIDs[i], item, actionTopic, trigger);
+    const promise = closeRules(closesIds, splitEntities).then(shouldProceed => {
+        if (shouldProceed) {
+            const promise = shouldCreateOrUpdateEvent(ruleID, splitEntities).then(shouldCreate => {
+                if (shouldCreate) {
+                    const promise = getStateForEvent(eventTypeID).then(({ is_open, state }) => {
+                        const id = uuid();
+                        const timestamp = new Date().toISOString();
+                        const item = {
+                            last_updated: timestamp,
+                            is_open,
+                            label: `${eventTypeID}_${id}`,
+                            severity,
+                            id,
+                            type: eventTypeID,
+                            state,
+                            priority,
+                            action_ids: JSON.stringify(actionIDs || []),
+                            rule_id: ruleID,
+                            assets: JSON.stringify(splitEntities.assets),
+                            areas: JSON.stringify(splitEntities.areas),
+                        };
+                        const promise = createEvent(item).then(() => {
+                            const promise = createEventHistoryItem({
+                                event_id: id,
+                                timestamp,
+                                transition_value: state,
+                                transition_attribute: 'state',
+                            }).then(() => {
+                                if (actionTopic) {
+                                    for (let i = 0; i < actionIDs.length; i++) {
+                                        performAction(actionIDs[i], item, actionTopic, trigger);
+                                    }
                                 }
-                            }
 
-                            return item;
+                                return item;
+                            });
+                            Promise.runQueue();
+                            return promise;
                         });
                         Promise.runQueue();
                         return promise;
                     });
                     Promise.runQueue();
                     return promise;
-                });
-                Promise.runQueue();
-                return promise;
-            } else {
-                return {};
-            }
-        });
-        Promise.runQueue();
-        return promise;
+                } else {
+                    return {};
+                }
+            });
+            Promise.runQueue();
+            return promise;
+        }
     });
     Promise.runQueue();
     return promise;

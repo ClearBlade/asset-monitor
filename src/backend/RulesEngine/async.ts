@@ -178,8 +178,9 @@ export function createEventHistoryItem(
     return eventHistoryCollection.cbCreatePromise({ item });
 }
 
-export function closeRules(ids: string[], splitEntities: SplitEntities): Promise<('success' | undefined)[]> {
+export function closeRules(ids: string[], splitEntities: SplitEntities): Promise<boolean> {
     if (ids.length) {
+        let shouldProceed = false;
         const promise = Promise.all(
             ids.map(id => {
                 const rulesCollection = CbCollectionLib(CollectionName.RULES);
@@ -201,6 +202,7 @@ export function closeRules(ids: string[], splitEntities: SplitEntities): Promise
                                         splitEntities,
                                     );
                                     if (hasOverlappingEntities) {
+                                        shouldProceed = true;
                                         const query = ClearBlade.Query().equalTo('id', data.DATA[i].id as string);
                                         return eventsCollection.cbUpdatePromise({
                                             query,
@@ -215,9 +217,11 @@ export function closeRules(ids: string[], splitEntities: SplitEntities): Promise
                 Promise.runQueue();
                 return promise;
             }),
-        );
+        ).then(() => {
+            return shouldProceed;
+        });
         Promise.runQueue();
         return promise;
     }
-    return new Promise(res => res());
+    return new Promise(res => res(true));
 }
