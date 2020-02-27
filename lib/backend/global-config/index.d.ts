@@ -21,7 +21,8 @@ export declare enum CollectionName {
     ACTIONS = "actions",
     EVENT_TYPES = "event_types",
     EVENTS = "events",
-    EVENT_HISTORY = "event_history"
+    EVENT_HISTORY = "event_history",
+    RULES = "rules"
 }
 export declare enum AssetStatusUpdateMethod {
     OVERWRITE = "overwrite",

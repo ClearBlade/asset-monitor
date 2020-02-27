@@ -56,8 +56,8 @@ export class RulesEngine {
     }
 
     editRule(ruleData: Rules): void {
-        if (this.rules[ruleData.id]) {
-            this.deleteRule(ruleData.id);
+        if (this.rules[ruleData.id as string]) {
+            this.deleteRule(ruleData.id as string);
             this.addRule(ruleData);
             log('RULE EDITED: ' + JSON.stringify(this.rules));
         } else {
@@ -81,19 +81,29 @@ export class RulesEngine {
     }
 
     async convertRule(ruleData: Rules): Promise<Rule> {
-        const { label, event_type_id, priority, severity, id, timeframe, action_ids, conditions } = ruleData;
+        const {
+            label,
+            event_type_id,
+            priority,
+            severity,
+            id,
+            timeframe,
+            action_ids,
+            conditions,
+            closes_ids,
+        } = ruleData;
 
         const parsedConditions = JSON.parse(conditions || '{}');
         const parsedTimeframe = timeframe ? JSON.parse(timeframe) : timeframe;
         const parsedActionIDs = action_ids ? JSON.parse(action_ids) : action_ids;
 
-        const promise = parseAndConvertConditions(id, parsedConditions).then(
+        const promise = parseAndConvertConditions(id as string, parsedConditions).then(
             (convertedConditions: TopLevelCondition) => {
                 return new Rule({
-                    name: id,
+                    name: id as string,
                     conditions: convertedConditions,
                     event: {
-                        type: label,
+                        type: label as string,
                         params: {
                             eventTypeID: event_type_id,
                             actionIDs: parsedActionIDs,
@@ -103,6 +113,7 @@ export class RulesEngine {
                             ruleID: id,
                             ruleName: label,
                             ruleType: Object.keys(convertedConditions)[0],
+                            closesIds: JSON.parse(closes_ids || '[]'),
                         },
                     },
                 });
