@@ -120,6 +120,7 @@ export interface RuleParams {
     ruleID: string;
     ruleName: string;
     ruleType: ParentOperator;
+    closesIds: string[];
 }
 
 // Condition Params

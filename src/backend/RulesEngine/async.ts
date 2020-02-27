@@ -6,6 +6,7 @@ import { Actions } from '../collection-schema/Actions';
 import { EventType, EventSchema } from '../collection-schema/Events';
 import { Entities, SplitEntities } from './types';
 import { uniqueArray } from './utils';
+import { Rules } from '../collection-schema/Rules';
 
 export function getAllAssetsForType(assetType: string): Promise<Array<CbServer.CollectionSchema<Asset>>> {
     const assetsCollection = CbCollectionLib(CollectionName.ASSETS);
@@ -175,4 +176,52 @@ export function createEventHistoryItem(
 ): Promise<{ item_id: string }[]> {
     const eventHistoryCollection = CbCollectionLib(CollectionName.EVENT_HISTORY);
     return eventHistoryCollection.cbCreatePromise({ item });
+}
+
+export function closeRules(ids: string[], splitEntities: SplitEntities): Promise<boolean> {
+    if (ids.length) {
+        let shouldProceed = false;
+        const promise = Promise.all(
+            ids.map(id => {
+                const rulesCollection = CbCollectionLib(CollectionName.RULES);
+                const query = ClearBlade.Query().equalTo('id', id);
+                const promise = rulesCollection
+                    .cbFetchPromise({ query })
+                    .then((data: CbServer.CollectionFetchData<Rules>) => {
+                        const state = JSON.parse(data.DATA[0].closed_by_rule || '{}').state;
+                        const eventsCollection = CbCollectionLib(CollectionName.EVENTS);
+                        const query = ClearBlade.Query()
+                            .equalTo('rule_id', id)
+                            .equalTo('is_open', true);
+                        const promise = eventsCollection
+                            .cbFetchPromise({ query })
+                            .then((data: CbServer.CollectionFetchData<EventSchema>) => {
+                                for (let i = 0; i < data.DATA.length; i++) {
+                                    const hasOverlappingEntities = compareOverlappingEntities(
+                                        data.DATA[i],
+                                        splitEntities,
+                                    );
+                                    if (hasOverlappingEntities) {
+                                        shouldProceed = true;
+                                        const query = ClearBlade.Query().equalTo('id', data.DATA[i].id as string);
+                                        return eventsCollection.cbUpdatePromise({
+                                            query,
+                                            changes: { state, is_open: false },
+                                        });
+                                    }
+                                }
+                            });
+                        Promise.runQueue();
+                        return promise;
+                    });
+                Promise.runQueue();
+                return promise;
+            }),
+        ).then(() => {
+            return shouldProceed;
+        });
+        Promise.runQueue();
+        return promise;
+    }
+    return new Promise(res => res(true));
 }
