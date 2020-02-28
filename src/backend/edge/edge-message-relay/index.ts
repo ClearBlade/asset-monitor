@@ -6,6 +6,7 @@ export default ({
     edgeShouldRelayAssetStatus,
     edgeShouldRelayLocation,
     edgeShouldRelayRules,
+    topics = [],
     ...rest
 }: {
     req: CbServer.BasicReq;
@@ -14,10 +15,10 @@ export default ({
     edgeShouldRelayAssetStatus: boolean;
     edgeShouldRelayAssetHistory: boolean;
     edgeShouldRelayRules: boolean;
+    topics: string[];
     cacheName?: string;
     collectionName?: string;
 }): ReturnType<typeof relay> => {
-    const topics = [];
     if (edgeShouldRelayLocation) {
         topics.push('$share/EdgeRelayGroup/' + Topics.DBUpdateAssetLocation('+'));
     }
@@ -30,6 +31,7 @@ export default ({
     if (edgeShouldRelayRules) {
         topics.push('$share/EdgeRelayGroup/' + '_rules/_monitor/_asset/+');
     }
+
     return relay({
         ...rest,
         topics,
@@ -56,6 +58,8 @@ export default ({
                         return '_rules/_monitor/_asset/' + assetId;
                     }
                     break;
+                default:
+                    return topic;
             }
         },
     });
