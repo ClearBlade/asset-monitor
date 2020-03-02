@@ -6,6 +6,7 @@ export default ({
     edgeShouldRelayAssetStatus,
     edgeShouldRelayLocation,
     edgeShouldRelayRules,
+    topics = [],
     ...rest
 }: {
     req: CbServer.BasicReq;
@@ -14,25 +15,28 @@ export default ({
     edgeShouldRelayAssetStatus: boolean;
     edgeShouldRelayAssetHistory: boolean;
     edgeShouldRelayRules: boolean;
+    topics: string[];
     cacheName?: string;
     collectionName?: string;
 }): ReturnType<typeof relay> => {
-    const topics = [];
+    const theTopics = [...topics];
+
     if (edgeShouldRelayLocation) {
-        topics.push('$share/EdgeRelayGroup/' + Topics.DBUpdateAssetLocation('+'));
+        theTopics.push('$share/EdgeRelayGroup/' + Topics.DBUpdateAssetLocation('+'));
     }
     if (edgeShouldRelayAssetStatus) {
-        topics.push('$share/EdgeRelayGroup/' + Topics.DBUpdateAssetStatus('+'));
+        theTopics.push('$share/EdgeRelayGroup/' + Topics.DBUpdateAssetStatus('+'));
     }
     if (edgeShouldRelayAssetHistory) {
-        topics.push('$share/EdgeRelayGroup/' + Topics.AssetHistory('+'));
+        theTopics.push('$share/EdgeRelayGroup/' + Topics.AssetHistory('+'));
     }
     if (edgeShouldRelayRules) {
-        topics.push('$share/EdgeRelayGroup/' + '_rules/_monitor/_asset/+');
+        theTopics.push('$share/EdgeRelayGroup/' + '_rules/_monitor/_asset/+');
     }
+
     return relay({
         ...rest,
-        topics,
+        topics: theTopics,
         getRelayTopicSuffix: topic => {
             const assetId = getAssetIdFromTopic(topic);
             switch (topic) {
@@ -56,6 +60,8 @@ export default ({
                         return '_rules/_monitor/_asset/' + assetId;
                     }
                     break;
+                default:
+                    return topic;
             }
         },
     });
