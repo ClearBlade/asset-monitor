@@ -25,14 +25,14 @@ describe('Convert Rules', function() {
             expect(convertedRule).toEqual(parsedConditions.BASIC_ASSET_TO_STATE);
         });
     });
-    it('converts asset type to state AND', function() {
-        return parseAndConvertConditions(id, conditions.ASSET_TYPE_TO_STATE_AND).then(convertedRule => {
-            expect(convertedRule).toEqual(parsedConditions.ASSET_TYPE_TO_STATE_AND);
+    it('converts asset type to state and area AND', function() {
+        return parseAndConvertConditions(id, conditions.ASSET_TYPE_TO_STATE_AND_AREA_AND).then(convertedRule => {
+            expect(convertedRule).toEqual(parsedConditions.ASSET_TYPE_TO_STATE_AND_AREA_AND);
         });
     });
-    it('converts asset type to state OR', function() {
-        return parseAndConvertConditions(id, conditions.ASSET_TYPE_TO_STATE_OR).then(convertedRule => {
-            expect(convertedRule).toEqual(parsedConditions.ASSET_TYPE_TO_STATE_OR);
+    it('converts asset type to state and area OR', function() {
+        return parseAndConvertConditions(id, conditions.ASSET_TYPE_TO_STATE_AND_AREA_OR).then(convertedRule => {
+            expect(convertedRule).toEqual(parsedConditions.ASSET_TYPE_TO_STATE_AND_AREA_OR);
         });
     });
     it('converts nested asset type to state AND', function() {
@@ -128,7 +128,7 @@ const conditions = {
             },
         ],
     },
-    ASSET_TYPE_TO_STATE_AND: {
+    ASSET_TYPE_TO_STATE_AND_AREA_AND: {
         and: [
             {
                 entity: {
@@ -152,10 +152,9 @@ const conditions = {
                     entity_type: EntityTypes.ASSET_TYPE,
                 },
                 relationship: {
-                    operator: 'equal',
-                    attribute: 'speed',
-                    attribute_type: EntityTypes.STATE,
-                    value: 60,
+                    operator: 'inside',
+                    attribute: 'yard',
+                    attribute_type: EntityTypes.AREA_TYPE,
                     duration: {
                         value: 20,
                         unit: DurationUnits.SECONDS,
@@ -164,7 +163,7 @@ const conditions = {
             },
         ],
     },
-    ASSET_TYPE_TO_STATE_OR: {
+    ASSET_TYPE_TO_STATE_AND_AREA_OR: {
         or: [
             {
                 entity: {
@@ -188,10 +187,9 @@ const conditions = {
                     entity_type: EntityTypes.ASSET_TYPE,
                 },
                 relationship: {
-                    operator: 'equal',
-                    attribute: 'speed',
-                    attribute_type: EntityTypes.STATE,
-                    value: 60,
+                    operator: 'outside',
+                    attribute: 'yard',
+                    attribute_type: EntityTypes.AREA_TYPE,
                     duration: {
                         value: 20,
                         unit: DurationUnits.SECONDS,
@@ -318,7 +316,7 @@ const parsedConditions = {
     BASIC_ASSET_TYPE_TO_STATE: {
         any: [
             {
-                fact: 'state',
+                fact: 'entity',
                 operator: 'equal',
                 params: {
                     id: 'testAsset1',
@@ -331,7 +329,7 @@ const parsedConditions = {
                 value: 50,
             },
             {
-                fact: 'state',
+                fact: 'entity',
                 operator: 'equal',
                 params: {
                     id: 'testAsset2',
@@ -348,7 +346,7 @@ const parsedConditions = {
     BASIC_AREA_TYPE_TO_STATE: {
         any: [
             {
-                fact: 'state',
+                fact: 'entity',
                 operator: 'equal',
                 params: {
                     id: 'testArea1',
@@ -361,7 +359,7 @@ const parsedConditions = {
                 value: 50,
             },
             {
-                fact: 'state',
+                fact: 'entity',
                 operator: 'equal',
                 params: {
                     id: 'testArea2',
@@ -378,7 +376,7 @@ const parsedConditions = {
     BASIC_ASSET_TO_STATE: {
         any: [
             {
-                fact: 'state',
+                fact: 'entity',
                 operator: 'equal',
                 params: {
                     id: 'testAsset1',
@@ -395,7 +393,7 @@ const parsedConditions = {
     BASIC_AREA_TO_STATE: {
         any: [
             {
-                fact: 'state',
+                fact: 'entity',
                 operator: 'equal',
                 params: {
                     id: 'testArea1',
@@ -409,12 +407,12 @@ const parsedConditions = {
             },
         ],
     },
-    ASSET_TYPE_TO_STATE_AND: {
+    ASSET_TYPE_TO_STATE_AND_AREA_AND: {
         all: [
             {
                 any: [
                     {
-                        fact: 'state',
+                        fact: 'entity',
                         operator: 'equal',
                         params: {
                             id: 'testAsset1',
@@ -427,7 +425,7 @@ const parsedConditions = {
                         value: 50,
                     },
                     {
-                        fact: 'state',
+                        fact: 'entity',
                         operator: 'equal',
                         params: {
                             id: 'testAsset2',
@@ -444,41 +442,87 @@ const parsedConditions = {
             {
                 any: [
                     {
-                        fact: 'state',
-                        operator: 'equal',
+                        fact: 'entity',
+                        operator: 'inside',
                         params: {
                             id: 'testAsset1',
-                            attribute: 'speed',
                             collection: 'assets',
                             type: 'train',
                             duration: 20000,
                         },
-                        path: '.data.custom_data.speed',
-                        value: 60,
+                        value: {
+                            fact: 'entity',
+                            params: {
+                                id: 'testArea1',
+                                collection: 'areas',
+                                type: 'yard',
+                            },
+                        },
                     },
                     {
-                        fact: 'state',
-                        operator: 'equal',
+                        fact: 'entity',
+                        operator: 'inside',
                         params: {
-                            id: 'testAsset2',
-                            attribute: 'speed',
+                            id: 'testAsset1',
                             collection: 'assets',
                             type: 'train',
                             duration: 20000,
                         },
-                        path: '.data.custom_data.speed',
-                        value: 60,
+                        value: {
+                            fact: 'entity',
+                            params: {
+                                id: 'testArea2',
+                                collection: 'areas',
+                                type: 'yard',
+                            },
+                        },
+                    },
+                    {
+                        fact: 'entity',
+                        operator: 'inside',
+                        params: {
+                            id: 'testAsset2',
+                            collection: 'assets',
+                            type: 'train',
+                            duration: 20000,
+                        },
+                        value: {
+                            fact: 'entity',
+                            params: {
+                                id: 'testArea1',
+                                collection: 'areas',
+                                type: 'yard',
+                            },
+                        },
+                    },
+                    {
+                        fact: 'entity',
+                        operator: 'inside',
+                        params: {
+                            id: 'testAsset2',
+                            collection: 'assets',
+                            type: 'train',
+                            duration: 20000,
+                        },
+                        value: {
+                            fact: 'entity',
+                            params: {
+                                id: 'testArea2',
+                                collection: 'areas',
+                                type: 'yard',
+                            },
+                        },
                     },
                 ],
             },
         ],
     },
-    ASSET_TYPE_TO_STATE_OR: {
+    ASSET_TYPE_TO_STATE_AND_AREA_OR: {
         any: [
             {
                 any: [
                     {
-                        fact: 'state',
+                        fact: 'entity',
                         operator: 'equal',
                         params: {
                             id: 'testAsset1',
@@ -491,7 +535,7 @@ const parsedConditions = {
                         value: 50,
                     },
                     {
-                        fact: 'state',
+                        fact: 'entity',
                         operator: 'equal',
                         params: {
                             id: 'testAsset2',
@@ -508,30 +552,76 @@ const parsedConditions = {
             {
                 any: [
                     {
-                        fact: 'state',
-                        operator: 'equal',
+                        fact: 'entity',
+                        operator: 'outside',
                         params: {
                             id: 'testAsset1',
-                            attribute: 'speed',
                             collection: 'assets',
                             type: 'train',
                             duration: 20000,
                         },
-                        path: '.data.custom_data.speed',
-                        value: 60,
+                        value: {
+                            fact: 'entity',
+                            params: {
+                                id: 'testArea1',
+                                collection: 'areas',
+                                type: 'yard',
+                            },
+                        },
                     },
                     {
-                        fact: 'state',
-                        operator: 'equal',
+                        fact: 'entity',
+                        operator: 'outside',
                         params: {
-                            id: 'testAsset2',
-                            attribute: 'speed',
+                            id: 'testAsset1',
                             collection: 'assets',
                             type: 'train',
                             duration: 20000,
                         },
-                        path: '.data.custom_data.speed',
-                        value: 60,
+                        value: {
+                            fact: 'entity',
+                            params: {
+                                id: 'testArea2',
+                                collection: 'areas',
+                                type: 'yard',
+                            },
+                        },
+                    },
+                    {
+                        fact: 'entity',
+                        operator: 'outside',
+                        params: {
+                            id: 'testAsset2',
+                            collection: 'assets',
+                            type: 'train',
+                            duration: 20000,
+                        },
+                        value: {
+                            fact: 'entity',
+                            params: {
+                                id: 'testArea1',
+                                collection: 'areas',
+                                type: 'yard',
+                            },
+                        },
+                    },
+                    {
+                        fact: 'entity',
+                        operator: 'outside',
+                        params: {
+                            id: 'testAsset2',
+                            collection: 'assets',
+                            type: 'train',
+                            duration: 20000,
+                        },
+                        value: {
+                            fact: 'entity',
+                            params: {
+                                id: 'testArea2',
+                                collection: 'areas',
+                                type: 'yard',
+                            },
+                        },
                     },
                 ],
             },
@@ -544,7 +634,7 @@ const parsedConditions = {
                     {
                         any: [
                             {
-                                fact: 'state',
+                                fact: 'entity',
                                 operator: 'equal',
                                 params: {
                                     id: 'testAsset1',
@@ -557,7 +647,7 @@ const parsedConditions = {
                                 value: 50,
                             },
                             {
-                                fact: 'state',
+                                fact: 'entity',
                                 operator: 'equal',
                                 params: {
                                     id: 'testAsset2',
@@ -574,7 +664,7 @@ const parsedConditions = {
                     {
                         any: [
                             {
-                                fact: 'state',
+                                fact: 'entity',
                                 operator: 'equal',
                                 params: {
                                     id: 'testAsset1',
@@ -587,7 +677,7 @@ const parsedConditions = {
                                 value: 60,
                             },
                             {
-                                fact: 'state',
+                                fact: 'entity',
                                 operator: 'equal',
                                 params: {
                                     id: 'testAsset2',
@@ -606,7 +696,7 @@ const parsedConditions = {
             {
                 any: [
                     {
-                        fact: 'state',
+                        fact: 'entity',
                         operator: 'equal',
                         params: {
                             id: 'testAsset1',
@@ -619,7 +709,7 @@ const parsedConditions = {
                         value: 70,
                     },
                     {
-                        fact: 'state',
+                        fact: 'entity',
                         operator: 'equal',
                         params: {
                             id: 'testAsset2',
@@ -642,7 +732,7 @@ const parsedConditions = {
                     {
                         any: [
                             {
-                                fact: 'state',
+                                fact: 'entity',
                                 operator: 'equal',
                                 params: {
                                     id: 'testAsset1',
@@ -655,7 +745,7 @@ const parsedConditions = {
                                 value: 50,
                             },
                             {
-                                fact: 'state',
+                                fact: 'entity',
                                 operator: 'equal',
                                 params: {
                                     id: 'testAsset2',
@@ -672,7 +762,7 @@ const parsedConditions = {
                     {
                         any: [
                             {
-                                fact: 'state',
+                                fact: 'entity',
                                 operator: 'equal',
                                 params: {
                                     id: 'testAsset1',
@@ -685,7 +775,7 @@ const parsedConditions = {
                                 value: 60,
                             },
                             {
-                                fact: 'state',
+                                fact: 'entity',
                                 operator: 'equal',
                                 params: {
                                     id: 'testAsset2',
@@ -704,7 +794,7 @@ const parsedConditions = {
             {
                 any: [
                     {
-                        fact: 'state',
+                        fact: 'entity',
                         operator: 'equal',
                         params: {
                             id: 'testAsset1',
@@ -717,7 +807,7 @@ const parsedConditions = {
                         value: 70,
                     },
                     {
-                        fact: 'state',
+                        fact: 'entity',
                         operator: 'equal',
                         params: {
                             id: 'testAsset2',

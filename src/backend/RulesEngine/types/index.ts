@@ -94,7 +94,7 @@ export interface Relationship {
     attribute: string;
     attribute_type: EntityTypes;
     operator: string;
-    value: boolean | string | number;
+    value?: boolean | string | number;
     duration: Duration;
 }
 
@@ -142,13 +142,16 @@ export interface AreaParams {
 
 // Rule Processing
 
-export interface WithParsedCustomData extends Asset {
+type AssetsAndAreas = Asset & Areas;
+
+export interface WithParsedCustomData extends AssetsAndAreas {
     custom_data: Record<string, object>;
     entityType?: EntityTypes;
 }
 
 export interface ProcessedCondition {
     id: string;
+    associatedId: string;
     result: boolean;
     duration: number;
     timerStart: number;

@@ -569,6 +569,7 @@ const results = {
         [
             {
                 id: 'testAsset5',
+                associatedId: false,
                 result: true,
                 duration: null,
                 timerStart: 0,
@@ -577,6 +578,7 @@ const results = {
         [
             {
                 id: 'testAsset6',
+                associatedId: false,
                 result: false,
                 duration: null,
                 timerStart: 0,
@@ -587,12 +589,14 @@ const results = {
         [
             {
                 id: 'testAsset5',
+                associatedId: false,
                 result: true,
                 duration: 30000,
                 timerStart: 0,
             },
             {
                 id: 'testAsset6',
+                associatedId: false,
                 result: false,
                 duration: 30000,
                 timerStart: 0,
@@ -603,12 +607,14 @@ const results = {
         [
             {
                 id: 'testAsset5',
+                associatedId: false,
                 result: false,
                 duration: 30000,
                 timerStart: 0,
             },
             {
                 id: 'testAsset6',
+                associatedId: false,
                 result: false,
                 duration: 30000,
                 timerStart: 0,
@@ -617,12 +623,14 @@ const results = {
         [
             {
                 id: 'testAsset5',
+                associatedId: false,
                 result: false,
                 duration: 30000,
                 timerStart: 0,
             },
             {
                 id: 'testAsset7',
+                associatedId: false,
                 result: false,
                 duration: 30000,
                 timerStart: 0,
@@ -633,6 +641,7 @@ const results = {
         [
             {
                 id: 'testAsset5',
+                associatedId: false,
                 result: false,
                 duration: 30000,
                 timerStart: 0,
@@ -641,12 +650,14 @@ const results = {
         [
             {
                 id: 'testAsset6',
+                associatedId: false,
                 result: false,
                 duration: 30000,
                 timerStart: 0,
             },
             {
                 id: 'testAsset7',
+                associatedId: false,
                 result: false,
                 duration: 30000,
                 timerStart: 0,
@@ -657,12 +668,14 @@ const results = {
         [
             {
                 id: 'testAsset5',
+                associatedId: false,
                 result: true,
                 duration: 30000,
                 timerStart: 0,
             },
             {
                 id: 'testAsset6',
+                associatedId: false,
                 result: false,
                 duration: 30000,
                 timerStart: 0,
@@ -671,12 +684,14 @@ const results = {
         [
             {
                 id: 'testAsset1',
+                associatedId: false,
                 result: false,
                 duration: 30000,
                 timerStart: 0,
             },
             {
                 id: 'testAsset2',
+                associatedId: false,
                 result: false,
                 duration: 30000,
                 timerStart: 0,
@@ -687,12 +702,14 @@ const results = {
         [
             {
                 id: 'testAsset5',
+                associatedId: false,
                 result: true,
                 duration: null,
                 timerStart: 0,
             },
             {
                 id: 'testAsset1',
+                associatedId: false,
                 result: false,
                 duration: null,
                 timerStart: 0,
@@ -701,12 +718,14 @@ const results = {
         [
             {
                 id: 'testAsset6',
+                associatedId: false,
                 result: false,
                 duration: null,
                 timerStart: 0,
             },
             {
                 id: 'testAsset1',
+                associatedId: false,
                 result: false,
                 duration: null,
                 timerStart: 0,
@@ -715,12 +734,14 @@ const results = {
         [
             {
                 id: 'testAsset5',
+                associatedId: false,
                 result: true,
                 duration: null,
                 timerStart: 0,
             },
             {
                 id: 'testAsset2',
+                associatedId: false,
                 result: false,
                 duration: null,
                 timerStart: 0,
@@ -729,12 +750,14 @@ const results = {
         [
             {
                 id: 'testAsset6',
+                associatedId: false,
                 result: false,
                 duration: null,
                 timerStart: 0,
             },
             {
                 id: 'testAsset2',
+                associatedId: false,
                 result: false,
                 duration: null,
                 timerStart: 0,
@@ -745,18 +768,21 @@ const results = {
         [
             {
                 id: 'testAsset5',
+                associatedId: false,
                 result: false,
                 duration: 30000,
                 timerStart: 0,
             },
             {
                 id: 'testAsset1',
+                associatedId: false,
                 result: true,
                 duration: 10000,
                 timerStart: 0,
             },
             {
                 id: 'testAsset2',
+                associatedId: false,
                 result: false,
                 duration: 10000,
                 timerStart: 0,
@@ -765,18 +791,21 @@ const results = {
         [
             {
                 id: 'testAsset6',
+                associatedId: false,
                 result: false,
                 duration: 30000,
                 timerStart: 0,
             },
             {
                 id: 'testAsset1',
+                associatedId: false,
                 result: true,
                 duration: 10000,
                 timerStart: 0,
             },
             {
                 id: 'testAsset2',
+                associatedId: false,
                 result: false,
                 duration: 10000,
                 timerStart: 0,
@@ -785,18 +814,21 @@ const results = {
         [
             {
                 id: 'testAsset5',
+                associatedId: false,
                 result: false,
                 duration: 30000,
                 timerStart: 0,
             },
             {
                 id: 'testAsset3',
+                associatedId: false,
                 result: false,
                 duration: 20000,
                 timerStart: 0,
             },
             {
                 id: 'testAsset4',
+                associatedId: false,
                 result: false,
                 duration: 20000,
                 timerStart: 0,
@@ -805,18 +837,21 @@ const results = {
         [
             {
                 id: 'testAsset6',
+                associatedId: false,
                 result: false,
                 duration: 30000,
                 timerStart: 0,
             },
             {
                 id: 'testAsset3',
+                associatedId: false,
                 result: false,
                 duration: 20000,
                 timerStart: 0,
             },
             {
                 id: 'testAsset4',
+                associatedId: false,
                 result: false,
                 duration: 20000,
                 timerStart: 0,
@@ -827,12 +862,14 @@ const results = {
         [
             {
                 id: 'testAsset5',
+                associatedId: false,
                 result: false,
                 duration: null,
                 timerStart: 0,
             },
             {
                 id: 'testAsset6',
+                associatedId: false,
                 result: false,
                 duration: null,
                 timerStart: 0,
@@ -841,12 +878,14 @@ const results = {
         [
             {
                 id: 'testAsset3',
+                associatedId: false,
                 result: false,
                 duration: null,
                 timerStart: 0,
             },
             {
                 id: 'testAsset1',
+                associatedId: false,
                 result: false,
                 duration: null,
                 timerStart: 0,
@@ -855,12 +894,14 @@ const results = {
         [
             {
                 id: 'testAsset3',
+                associatedId: false,
                 result: false,
                 duration: null,
                 timerStart: 0,
             },
             {
                 id: 'testAsset2',
+                associatedId: false,
                 result: false,
                 duration: null,
                 timerStart: 0,

@@ -84,6 +84,9 @@ export class DurationEngine {
                         return;
                     } else {
                         ids.push(conditions[i].id);
+                        if (conditions[i].associatedId) {
+                            ids.push(conditions[i].associatedId);
+                        }
                     }
                 }
                 processSuccessfulEvent(ids, ruleParams, entities, actionTopic, incomingData);
@@ -254,13 +257,23 @@ function handleTrueCondition(incomingCondition: ProcessedCondition, existingTime
 }
 
 function getKey(combination: ProcessedCondition[]): string {
-    return combination.map(c => c.id).join('');
+    let key = '';
+    for (let i = 0; i < combination.length; i++) {
+        key += combination[i].id;
+        if (combination[i].associatedId) {
+            key += combination[i].associatedId;
+        }
+    }
+    return key;
 }
 
 function pickEntities(combination: ProcessedCondition[], entities: Entities): Entities {
     return combination.reduce((acc: Entities, entity) => {
         if (!acc[entity.id]) {
             acc[entity.id] = entities[entity.id];
+        }
+        if (entity.associatedId && !acc[entity.associatedId]) {
+            acc[entity.associatedId] = entities[entity.associatedId];
         }
         return acc;
     }, {});
