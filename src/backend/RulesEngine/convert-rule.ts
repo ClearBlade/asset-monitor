@@ -40,13 +40,119 @@ function calculateDuration(duration: Duration): number {
     return 0;
 }
 
-function getConditionProps(id: string, condition: Condition, isPartOfType?: boolean): ConditionProperties {
+interface LocationEntityInfo {
+    id: string;
+    collection: EntityTypes;
+    type?: string;
+}
+
+function getLocationConditionProps(
+    entityOne: LocationEntityInfo,
+    entityTwo: LocationEntityInfo,
+    operator: string,
+    duration: Duration,
+): ConditionProperties {
+    return {
+        fact: 'entity',
+        operator,
+        params: {
+            id: entityOne.id,
+            collection: entityOne.collection,
+            type: entityOne.type,
+            duration: calculateDuration(duration),
+        },
+        value: {
+            fact: 'entity',
+            params: {
+                id: entityTwo.id,
+                collection: entityTwo.collection,
+                type: entityTwo.type,
+            },
+        },
+    };
+}
+
+function getLocationConditions(
+    id: string,
+    condition: Condition,
+    isPartOfType?: boolean,
+): Promise<ConditionProperties[]> {
     const { relationship, entity } = condition;
+    let promise;
     switch (relationship.attribute_type) {
-        case EntityTypes.STATE:
+        case EntityTypes.ASSET_TYPE:
+            promise = getAllAssetsForType(relationship.attribute).then(assets => {
+                return assets.map(asset =>
+                    getLocationConditionProps(
+                        {
+                            id,
+                            collection: getCollectionName(entity.entity_type),
+                            type: isPartOfType ? entity.id : undefined,
+                        },
+                        {
+                            id: asset.id as string,
+                            collection: getCollectionName(relationship.attribute_type),
+                            type: relationship.attribute,
+                        },
+                        relationship.operator,
+                        relationship.duration,
+                    ),
+                );
+            });
+            Promise.runQueue();
+            return promise;
+        case EntityTypes.AREA_TYPE:
+            promise = getAllAreasForType(relationship.attribute).then(areas => {
+                return areas.map(area =>
+                    getLocationConditionProps(
+                        {
+                            id,
+                            collection: getCollectionName(entity.entity_type),
+                            type: isPartOfType ? entity.id : undefined,
+                        },
+                        {
+                            id: area.id as string,
+                            collection: getCollectionName(relationship.attribute_type),
+                            type: relationship.attribute,
+                        },
+                        relationship.operator,
+                        relationship.duration,
+                    ),
+                );
+            });
+            Promise.runQueue();
+            return promise;
         default:
-            return {
-                fact: 'state',
+            return new Promise(res =>
+                res([
+                    getLocationConditionProps(
+                        {
+                            id,
+                            collection: getCollectionName(entity.entity_type),
+                            type: isPartOfType ? entity.id : undefined,
+                        },
+                        {
+                            id: relationship.attribute,
+                            collection: getCollectionName(relationship.attribute_type),
+                        },
+                        relationship.operator,
+                        relationship.duration,
+                    ),
+                ]),
+            );
+    }
+}
+
+function getStateConditionProps(
+    id: string,
+    condition: Condition,
+    isPartOfType?: boolean,
+): Promise<ConditionProperties[]> {
+    const { relationship, entity } = condition;
+    return new Promise(res => {
+        res([
+            {
+                fact: 'entity',
                 operator: relationship.operator,
                 params: {
                     id,
@@ -57,25 +163,21 @@ function getConditionProps(id: string, condition: Condition, isPartOfType?: bool
                 },
                 path: `.data.custom_data.${relationship.attribute}`,
                 value: relationship.value,
-            };
-    }
+            },
+        ]);
+    });
 }
 
 function formatConditionForEntity(
     entityId: string,
     condition: Condition,
     isPartOfType?: boolean,
-): ConditionProperties[] {
+): Promise<ConditionProperties[]> {
     const { attribute_type } = condition.relationship;
-    if (
-        attribute_type === EntityTypes.ASSET ||
-        attribute_type === EntityTypes.AREA ||
-        attribute_type === EntityTypes.STATE
-    ) {
-        return [getConditionProps(entityId, condition, isPartOfType)];
+    if (attribute_type === EntityTypes.STATE) {
+        return getStateConditionProps(entityId, condition, isPartOfType);
     } else {
-        // handle asset type and area type
-        return [];
+        return getLocationConditions(entityId, condition, isPartOfType);
     }
 }
 
@@ -85,79 +187,38 @@ function createConditionsForType(condition: Condition): Promise<ConditionPropert
     switch (condition.entity.entity_type) {
         case EntityTypes.ASSET_TYPE:
             promise = getAllAssetsForType(condition.entity.id).then(assets => {
-                if (assets.length > 0) {
-                    for (let i = 0; i < assets.length; i++) {
-                        conditions.push(...formatConditionForEntity(assets[i].id as string, condition, true));
+                const promiseTwo = Promise.all(
+                    assets.map(asset => formatConditionForEntity(asset.id as string, condition, true)),
+                ).then(results => {
+                    for (let i = 0; i < results.length; i++) {
+                        conditions.push(...results[i]);
                     }
-                }
-                return conditions;
+                    return conditions;
+                });
+                Promise.runQueue();
+                return promiseTwo;
             });
-            Promise.runQueue();
-            return promise;
+            break;
         case EntityTypes.AREA_TYPE:
             promise = getAllAreasForType(condition.entity.id).then(areas => {
-                if (areas.length > 0) {
-                    for (let i = 0; i < areas.length; i++) {
-                        conditions.push(...formatConditionForEntity(areas[i].id as string, condition, true));
+                const promiseTwo = Promise.all(
+                    areas.map(area => formatConditionForEntity(area.id as string, condition, true)),
+                ).then(results => {
+                    for (let i = 0; i < results.length; i++) {
+                        conditions.push(...results[i]);
                     }
-                }
-                return conditions;
+                    return conditions;
+                });
+                Promise.runQueue();
+                return promiseTwo;
             });
-            Promise.runQueue();
-            return promise;
+            break;
         default:
-            return new Promise(res => res(conditions));
+            promise = new Promise(res => res(conditions));
     }
+    Promise.runQueue();
+    return promise as Promise<ConditionProperties[]>;
 }
-
-/////////////////////////////////////////////// SAVING THIS FOR ADDING PROPERTIES FOR AREA/PROX/OCC CONDITIONS WITH TYPES IN RELATIONSHIP
-// function createConditionsForAttribute(
-//     id: string,
-//     relationship: Relationship,
-// ): Promise<AnyConditions | undefined> {
-//     const rule: AnyConditions = {
-//         any: []
-//     }
-//     let promise;
-//     switch (relationship.attribute_type) {
-//         case EntityTypes.ASSET_TYPE:
-//             promise = getAllAssetsForType(relationship.attribute).then(assets => {
-//                 if (assets.length > 0) {
-//                     const rval: OperatorAndValue = GetOperatorAndValue(relationship.operator, relationship.value);
-//                     for (let i = 0; i < assets.length; i++) {
-//                         // AddDuration(ruleInfo.id, ruleInfo.id, assets[i].id as string, relationship.duration);
-//                         rule.any.push({
-//                             fact: assets[i].id as string,
-//                             operator: rval.operator,
-//                             value: rval.value,
-//                         });
-//                     }
-//                     return rule;
-//                 }
-//             });
-//             Promise.runQueue();
-//             return promise;
-//         case EntityTypes.AREA_TYPE:
-//             promise = getAllAreasForType(relationship.attribute).then(areas => {
-//                 if (areas.length > 0) {
-//                     const rval2: OperatorAndValue = GetOperatorAndValue(relationship.operator, relationship.value);
-//                     for (let i = 0; i < areas.length; i++) {
-//                         // AddDuration(ruleInfo.id, ruleInfo.id, areas[i].id as string, relationship.duration);
-//                         rule.any.push({
-//                             fact: areas[i].id as string,
-//                             operator: rval2.operator,
-//                             value: rval2.value,
-//                         });
-//                     }
-//                     return rule;
-//                 }
-//             });
-//             Promise.runQueue();
-//             return promise;
-//         default:
-//             return new Promise(res => res());
-//     }
-// }
 
 function addConditions(ruleId: string, condition: Condition): Promise<AnyConditions> {
     const rule: AnyConditions = {
@@ -175,8 +236,10 @@ function addConditions(ruleId: string, condition: Condition): Promise<AnyConditi
             return rule;
         });
     } else {
-        rule.any.push(...formatConditionForEntity(condition.entity.id, condition));
-        promise = new Promise(res => res(rule));
+        promise = formatConditionForEntity(condition.entity.id, condition).then(condish => {
+            rule.any.push(...condish);
+            return rule;
+        });
     }
     Promise.runQueue();
     return promise as Promise<AnyConditions>;

@@ -29,13 +29,15 @@ export class RulesEngine {
         this.engine = new Engine([], {
             allowUndefinedFacts: true,
         })
-            .addFact('state', (params, almanac) => handleStateCondition(params as StateParams, almanac))
+            .addFact('entity', (params, almanac) => handleEntityFact(params as StateParams, almanac))
             .on('success', (event, almanac, ruleResult) =>
                 this.handleRuleFinished(event, almanac, ruleResult, this.actionTopic),
             )
             .on('failure', (event, almanac, ruleResult) =>
                 this.handleRuleFinished(event, almanac, ruleResult, this.actionTopic),
             );
+        this.engine.addOperator('outside', handleOutsideOperator);
+        this.engine.addOperator('inside', handleInsideOperator);
     }
 
     async addRule(ruleData: Rules): Promise<Rule> {
@@ -169,7 +171,31 @@ export class RulesEngine {
     }
 }
 
-function handleStateCondition(params: StateParams, almanac: Almanac): Promise<FactData> {
+function handleInsideOperator(asset: FactData, area: FactData): boolean {
+    const parsedPoly = JSON.parse((area.data.polygon as string) || '[]');
+    const hasCoords = (asset.data.latitude as number) && (asset.data.longitude as number);
+    if (hasCoords && parsedPoly.length >= 3) {
+        const geoObj = new geo('polar');
+        const point = geoObj.Point(asset.data.latitude as number, asset.data.longitude as number);
+        const poly = geoObj.Polygon(parsedPoly.map((p: { lat: number; long: number }) => geoObj.Point(p.lat, p.long)));
+        return geoObj.Within(poly, point);
+    }
+    return false;
+}
+
+function handleOutsideOperator(asset: FactData, area: FactData): boolean {
+    const parsedPoly = JSON.parse((area.data.polygon as string) || '[]');
+    const hasCoords = (asset.data.latitude as number) && (asset.data.longitude as number);
+    if (hasCoords && parsedPoly.length >= 3) {
+        const geoObj = new geo('polar');
+        const point = geoObj.Point(asset.data.latitude as number, asset.data.longitude as number);
+        const poly = geoObj.Polygon(parsedPoly.map((p: { lat: number; long: number }) => geoObj.Point(p.lat, p.long)));
+        return !geoObj.Within(poly, point);
+    }
+    return false;
+}
+
+function handleEntityFact(params: StateParams, almanac: Almanac): Promise<FactData> {
     const promise = almanac.factValue<WithParsedCustomData>('incomingData').then(incomingData => {
         const isIncoming = params.id === incomingData.id;
         const isDifferentType = params.type !== incomingData.type;

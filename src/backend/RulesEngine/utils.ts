@@ -75,6 +75,7 @@ export type ParentOperator = 'all' | 'any';
 function buildProcessedCondition(fact: ConditionProperties): ProcessedCondition {
     return {
         id: (fact.params as Record<string, string>).id,
+        associatedId: typeof fact.value === 'object' && fact.value.params.id,
         // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
         // @ts-ignore json-rule-engine types does not include result
         result: fact.result,
@@ -195,7 +196,12 @@ export function filterProcessedRule(processedRule: Array<ProcessedCondition[]>, 
             }
             if (hasId) {
                 if (allTrue && !hasDuration) {
-                    filteredRule.trues.push(...combination.map(c => c.id));
+                    for (let j = 0; j < combination.length; j++) {
+                        filteredRule.trues.push(combination[j].id);
+                        if (combination[j].associatedId) {
+                            filteredRule.trues.push(combination[j].associatedId);
+                        }
+                    }
                 } else if (hasDuration) {
                     const sorted = combination.sort((a, b) => {
                         if (a.duration === b.duration) {
@@ -240,6 +246,11 @@ export function aggregateFactMap(processedRule: ProcessedFiltered, almanac: Alma
                 // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
                 // @ts-ignore json-rule-engine types does not include factMap
                 acc[combination[i].id] = almanac.factMap.get(combination[i].id).value.data;
+            }
+            if (combination[i].associatedId && !acc[combination[i].associatedId]) {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+                // @ts-ignore json-rule-engine types does not include factMap
+                acc[combination[i].associatedId] = almanac.factMap.get(combination[i].associatedId).value.data;
             }
         }
         return acc;
