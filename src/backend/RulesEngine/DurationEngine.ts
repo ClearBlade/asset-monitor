@@ -11,7 +11,7 @@ interface Timer {
     timedEntity: ProcessedCondition; // entity whose duration is currently counting for the whole event
 }
 
-interface Timers {
+export interface Timers {
     [x: string]: Timer;
 }
 
@@ -24,8 +24,8 @@ export class DurationEngine {
     timerCache: CbServer.Cache<Timers>;
     messaging: CbServer.Messaging;
 
-    constructor() {
-        this.timerCache = ClearBlade.Cache(DURATION_CACHE) as CbServer.Cache<Timers>;
+    constructor(cache = ClearBlade.Cache(DURATION_CACHE) as CbServer.Cache<Timers>) {
+        this.timerCache = cache;
         this.messaging = ClearBlade.Messaging();
     }
 
@@ -58,6 +58,13 @@ export class DurationEngine {
     }
 
     clearTimer(ruleId: string, key: string): void {
+        this.getCacheHandler(ruleId, data => {
+            const timer = data[key];
+            this.messaging.cancelCBTimeout(timer.timerId, cancelTimeoutCallback);
+        });
+    }
+
+    cancelAndClearTimer(ruleId: string, key: string): void {
         this.getCacheHandler(ruleId, data => {
             const timer = data[key];
             this.messaging.cancelCBTimeout(timer.timerId, cancelTimeoutCallback);
@@ -130,7 +137,6 @@ export class DurationEngine {
         if (!timedCondition.result) {
             delete existingTimer.timedEntity;
         }
-
         for (let i = 0; i < conditions.length; i++) {
             if (conditions[i].result) {
                 handleTrueCondition(conditions[i], existingTimer, i); // may update existingTimer if remaing time for any exceeds the current timed entity
@@ -138,7 +144,6 @@ export class DurationEngine {
                 existingTimer.conditions[i] = conditions[i];
             }
         }
-
         if (existingTimer.timedEntity) {
             // timer(s) ongoing
             if (timedCondition.id !== existingTimer.timedEntity.id || isNew) {
@@ -200,32 +205,39 @@ export class DurationEngine {
         entities: Entities,
         actionTopic: string,
         incomingData: WithParsedCustomData,
-    ): void {
+    ): Promise<unknown> {
         const ruleId = ruleParams.ruleID;
-        this.getCacheHandler(ruleId, data => {
-            Promise.all(
-                combinations.map(c => {
-                    const key = getKey(c);
-                    this.evaluateIncomingCombination(
-                        c,
-                        ruleParams,
-                        data[key],
-                        entities,
-                        actionTopic,
-                        incomingData,
-                    ).then(newTimer => {
-                        if (newTimer) {
-                            data[key] = newTimer;
-                        }
-                    });
-                }),
-            ).then(() => {
-                if (Object.keys(data).length) {
-                    this.timerCache.set(ruleId, data, setCacheCallback);
-                }
-            });
-            Promise.runQueue();
-        });
+        return new Promise(res =>
+            this.getCacheHandler(ruleId, data => {
+                Promise.all(
+                    combinations.map(c => {
+                        const key = getKey(c);
+                        this.evaluateIncomingCombination(
+                            c,
+                            ruleParams,
+                            data[key],
+                            entities,
+                            actionTopic,
+                            incomingData,
+                        ).then(newTimer => {
+                            if (newTimer) {
+                                data[key] = newTimer;
+                            } else if (data[key]) {
+                                delete data[key];
+                            }
+                        });
+                    }),
+                ).then(() => {
+                    if (Object.keys(data).length) {
+                        this.timerCache.set(ruleId, data, setCacheCallback);
+                    } else {
+                        this.clearTimersForRule(ruleId);
+                    }
+                    res();
+                });
+                Promise.runQueue();
+            }),
+        );
     }
 }
 
@@ -245,13 +257,10 @@ function handleTrueCondition(incomingCondition: ProcessedCondition, existingTime
     }
     const remainingIncomingTime =
         updatedCondition.duration && updatedCondition.duration - (Date.now() - updatedCondition.timerStart);
-    if (remainingIncomingTime) {
-        if (remainingExistingTime) {
-            if (!existingTimer.timedEntity || remainingIncomingTime > remainingExistingTime) {
-                existingTimer.timedEntity = updatedCondition;
-            } else {
-                existingTimer.timedEntity = updatedCondition;
-            }
+
+    if (remainingIncomingTime && remainingExistingTime) {
+        if (!existingTimer.timedEntity || remainingIncomingTime > remainingExistingTime) {
+            existingTimer.timedEntity = updatedCondition;
         }
     }
 }
