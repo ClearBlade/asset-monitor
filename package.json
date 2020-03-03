@@ -1,6 +1,6 @@
 {
     "name": "@clearblade/asset-monitor",
-    "version": "3.6.0",
+    "version": "3.6.1",
     "description": "Asset Monitor Biolerplate",
     "scripts": {
         "test": "jest",
