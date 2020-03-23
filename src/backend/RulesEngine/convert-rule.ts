@@ -147,24 +147,22 @@ function getStateConditionProps(
     id: string,
     condition: Condition,
     isPartOfType?: boolean,
-): Promise<ConditionProperties[]> {
+): Promise<ConditionProperties> {
     const { relationship, entity } = condition;
     return new Promise(res => {
-        res([
-            {
-                fact: 'entity',
-                operator: relationship.operator,
-                params: {
-                    id,
-                    attribute: relationship.attribute,
-                    collection: getCollectionName(entity.entity_type),
-                    type: isPartOfType ? entity.id : null,
-                    duration: calculateDuration(relationship.duration),
-                },
-                path: `.data.custom_data.${relationship.attribute}`,
-                value: relationship.value,
+        res({
+            fact: 'entity',
+            operator: relationship.operator,
+            params: {
+                id,
+                attribute: relationship.attribute,
+                collection: getCollectionName(entity.entity_type),
+                type: isPartOfType ? entity.id : null,
+                duration: calculateDuration(relationship.duration),
             },
-        ]);
+            path: `.data.custom_data.${relationship.attribute}`,
+            value: relationship.value,
+        });
     });
 }
 
@@ -172,7 +170,7 @@ function formatConditionForEntity(
     entityId: string,
     condition: Condition,
     isPartOfType?: boolean,
-): Promise<ConditionProperties[]> {
+): Promise<ConditionProperties[] | ConditionProperties> {
     const { attribute_type } = condition.relationship;
     if (attribute_type === EntityTypes.STATE) {
         return getStateConditionProps(entityId, condition, isPartOfType);
@@ -191,7 +189,11 @@ function createConditionsForType(condition: Condition): Promise<ConditionPropert
                     assets.map(asset => formatConditionForEntity(asset.id as string, condition, true)),
                 ).then(results => {
                     for (let i = 0; i < results.length; i++) {
-                        conditions.push(...results[i]);
+                        if (Array.isArray(results[i])) {
+                            conditions.push(...(results[i] as ConditionProperties[]));
+                        } else {
+                            conditions.push(results[i] as ConditionProperties);
+                        }
                     }
                     return conditions;
                 });
@@ -205,7 +207,11 @@ function createConditionsForType(condition: Condition): Promise<ConditionPropert
                     areas.map(area => formatConditionForEntity(area.id as string, condition, true)),
                 ).then(results => {
                     for (let i = 0; i < results.length; i++) {
-                        conditions.push(...results[i]);
+                        if (Array.isArray(results[i])) {
+                            conditions.push(...(results[i] as ConditionProperties[]));
+                        } else {
+                            conditions.push(results[i] as ConditionProperties);
+                        }
                     }
                     return conditions;
                 });
@@ -220,7 +226,7 @@ function createConditionsForType(condition: Condition): Promise<ConditionPropert
     return promise as Promise<ConditionProperties[]>;
 }
 
-function addConditions(ruleId: string, condition: Condition): Promise<AnyConditions> {
+function addConditions(ruleId: string, condition: Condition): Promise<AnyConditions | ConditionProperties> {
     const rule: AnyConditions = {
         any: [],
     };
@@ -237,15 +243,23 @@ function addConditions(ruleId: string, condition: Condition): Promise<AnyConditi
         });
     } else {
         promise = formatConditionForEntity(condition.entity.id, condition).then(condish => {
-            rule.any.push(...condish);
-            return rule;
+            if (Array.isArray(condish)) {
+                return {
+                    any: [...(condish as ConditionProperties[])],
+                };
+            } else {
+                return { ...condish };
+            }
         });
     }
     Promise.runQueue();
     return promise as Promise<AnyConditions>;
 }
 
-function convertCondition(ruleId: string, condition: Condition | Conditions): Promise<AnyConditions> {
+function convertCondition(
+    ruleId: string,
+    condition: Condition | Conditions,
+): Promise<AnyConditions | ConditionProperties> {
     if ((condition as Condition).entity) {
         // We have a condition
         const promise = addConditions(ruleId, condition as Condition);
@@ -262,7 +276,7 @@ function convertCondition(ruleId: string, condition: Condition | Conditions): Pr
 export function parseAndConvertConditions(
     ruleId: string,
     conditions: Conditions,
-): Promise<TopLevelCondition | AnyConditions | AllConditions> {
+): Promise<TopLevelCondition | AnyConditions | AllConditions | ConditionProperties> {
     const firstKey = Object.keys(conditions)[0] as ConditionalOperators;
     const subConditions = conditions[firstKey] as ConditionArray;
     const promise = Promise.all(subConditions.map(s => convertCondition(ruleId, s)))
@@ -277,6 +291,10 @@ export function parseAndConvertConditions(
                         any: [...rules],
                     };
                 }
+            } else if ((rules[0] as ConditionProperties).fact) {
+                return {
+                    any: [...rules],
+                };
             }
             return {
                 ...rules[0],

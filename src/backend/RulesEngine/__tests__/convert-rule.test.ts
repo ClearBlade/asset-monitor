@@ -20,6 +20,16 @@ describe('Convert Rules', function() {
             expect(convertedRule).toEqual(parsedConditions.BASIC_ASSET_TO_STATE);
         });
     });
+    it('converts basic double asset to state OR', function() {
+        return parseAndConvertConditions(id, conditions.DOUBLE_ASSET_TO_STATE_OR).then(convertedRule => {
+            expect(convertedRule).toEqual(parsedConditions.DOUBLE_ASSET_TO_STATE_OR);
+        });
+    });
+    it('converts basic double asset to state AND', function() {
+        return parseAndConvertConditions(id, conditions.DOUBLE_ASSET_TO_STATE_AND).then(convertedRule => {
+            expect(convertedRule).toEqual(parsedConditions.DOUBLE_ASSET_TO_STATE_AND);
+        });
+    });
     it('converts basic area to state', function() {
         return parseAndConvertConditions(id, conditions.BASIC_ASSET_TO_STATE).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.BASIC_ASSET_TO_STATE);
@@ -102,6 +112,78 @@ const conditions = {
                     value: 50,
                     duration: {
                         value: 10,
+                        unit: DurationUnits.SECONDS,
+                    },
+                },
+            },
+        ],
+    },
+    DOUBLE_ASSET_TO_STATE_OR: {
+        or: [
+            {
+                entity: {
+                    id: 'testAsset1',
+                    entity_type: EntityTypes.ASSET,
+                },
+                relationship: {
+                    attribute: 'speed',
+                    attribute_type: EntityTypes.STATE,
+                    operator: 'greaterThan',
+                    value: 50,
+                    duration: {
+                        value: 15,
+                        unit: DurationUnits.SECONDS,
+                    },
+                },
+            },
+            {
+                entity: {
+                    id: 'testAsset1',
+                    entity_type: EntityTypes.ASSET,
+                },
+                relationship: {
+                    attribute: 'speed',
+                    attribute_type: EntityTypes.STATE,
+                    operator: 'lessThan',
+                    value: 40,
+                    duration: {
+                        value: 15,
+                        unit: DurationUnits.SECONDS,
+                    },
+                },
+            },
+        ],
+    },
+    DOUBLE_ASSET_TO_STATE_AND: {
+        and: [
+            {
+                entity: {
+                    id: 'testAsset1',
+                    entity_type: EntityTypes.ASSET,
+                },
+                relationship: {
+                    attribute: 'speed',
+                    attribute_type: EntityTypes.STATE,
+                    operator: 'greaterThan',
+                    value: 50,
+                    duration: {
+                        value: 15,
+                        unit: DurationUnits.SECONDS,
+                    },
+                },
+            },
+            {
+                entity: {
+                    id: 'testAsset1',
+                    entity_type: EntityTypes.ASSET,
+                },
+                relationship: {
+                    attribute: 'speed',
+                    attribute_type: EntityTypes.STATE,
+                    operator: 'lessThan',
+                    value: 40,
+                    duration: {
+                        value: 15,
                         unit: DurationUnits.SECONDS,
                     },
                 },
@@ -387,6 +469,66 @@ const parsedConditions = {
                 },
                 path: '.data.custom_data.speed',
                 value: 50,
+            },
+        ],
+    },
+    DOUBLE_ASSET_TO_STATE_OR: {
+        any: [
+            {
+                fact: 'entity',
+                operator: 'greaterThan',
+                params: {
+                    id: 'testAsset1',
+                    attribute: 'speed',
+                    collection: 'assets',
+                    type: null,
+                    duration: 15000,
+                },
+                path: '.data.custom_data.speed',
+                value: 50,
+            },
+            {
+                fact: 'entity',
+                operator: 'lessThan',
+                params: {
+                    id: 'testAsset1',
+                    attribute: 'speed',
+                    collection: 'assets',
+                    type: null,
+                    duration: 15000,
+                },
+                path: '.data.custom_data.speed',
+                value: 40,
+            },
+        ],
+    },
+    DOUBLE_ASSET_TO_STATE_AND: {
+        all: [
+            {
+                fact: 'entity',
+                operator: 'greaterThan',
+                params: {
+                    id: 'testAsset1',
+                    attribute: 'speed',
+                    collection: 'assets',
+                    type: null,
+                    duration: 15000,
+                },
+                path: '.data.custom_data.speed',
+                value: 50,
+            },
+            {
+                fact: 'entity',
+                operator: 'lessThan',
+                params: {
+                    id: 'testAsset1',
+                    attribute: 'speed',
+                    collection: 'assets',
+                    type: null,
+                    duration: 15000,
+                },
+                path: '.data.custom_data.speed',
+                value: 40,
             },
         ],
     },

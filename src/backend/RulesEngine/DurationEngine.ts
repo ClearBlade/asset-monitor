@@ -57,13 +57,6 @@ export class DurationEngine {
         });
     }
 
-    clearTimer(ruleId: string, key: string): void {
-        this.getCacheHandler(ruleId, data => {
-            const timer = data[key];
-            this.messaging.cancelCBTimeout(timer.timerId, cancelTimeoutCallback);
-        });
-    }
-
     cancelAndClearTimer(ruleId: string, key: string): void {
         this.getCacheHandler(ruleId, data => {
             const timer = data[key];
@@ -87,7 +80,7 @@ export class DurationEngine {
                 const ids = [];
                 for (let i = 0; i < conditions.length; i++) {
                     if (!conditions[i].result) {
-                        this.clearTimer(ruleId, key);
+                        this.cancelAndClearTimer(ruleId, key);
                         return;
                     } else {
                         ids.push(conditions[i].id);
@@ -100,7 +93,7 @@ export class DurationEngine {
                 if (ruleParams.ruleType === 'any') {
                     this.clearTimersForRule(ruleId);
                 } else {
-                    this.clearTimer(ruleId, key);
+                    this.cancelAndClearTimer(ruleId, key);
                 }
             });
         }
@@ -171,7 +164,7 @@ export class DurationEngine {
         } else if (!isNew) {
             // no ongoing timers - clear it
             const key = getKey(conditions);
-            this.clearTimer(ruleId, key);
+            this.cancelAndClearTimer(ruleId, key);
         }
         return new Promise(res => res());
     }
@@ -270,7 +263,9 @@ function getKey(combination: ProcessedCondition[]): string {
     for (let i = 0; i < combination.length; i++) {
         key += combination[i].id;
         if (combination[i].associatedId) {
-            key += combination[i].associatedId;
+            key += combination[i].operator + combination[i].associatedId; // for area
+        } else {
+            key += combination[i].value; //for state
         }
     }
     return key;
