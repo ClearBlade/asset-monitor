@@ -2,56 +2,54 @@ jest.mock('../async');
 import { EntityTypes, DurationUnits } from '../types';
 import { parseAndConvertConditions } from '../convert-rule';
 
-const id = 'testRuleId';
-
 describe('Convert Rules', function() {
     it('converts basic asset type to state', function() {
-        return parseAndConvertConditions(id, conditions.BASIC_ASSET_TYPE_TO_STATE).then(convertedRule => {
+        return parseAndConvertConditions(conditions.BASIC_ASSET_TYPE_TO_STATE).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.BASIC_ASSET_TYPE_TO_STATE);
         });
     });
     it('converts basic area type to state', function() {
-        return parseAndConvertConditions(id, conditions.BASIC_AREA_TYPE_TO_STATE).then(convertedRule => {
+        return parseAndConvertConditions(conditions.BASIC_AREA_TYPE_TO_STATE).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.BASIC_AREA_TYPE_TO_STATE);
         });
     });
     it('converts basic asset to state', function() {
-        return parseAndConvertConditions(id, conditions.BASIC_ASSET_TO_STATE).then(convertedRule => {
+        return parseAndConvertConditions(conditions.BASIC_ASSET_TO_STATE).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.BASIC_ASSET_TO_STATE);
         });
     });
     it('converts basic double asset to state OR', function() {
-        return parseAndConvertConditions(id, conditions.DOUBLE_ASSET_TO_STATE_OR).then(convertedRule => {
+        return parseAndConvertConditions(conditions.DOUBLE_ASSET_TO_STATE_OR).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.DOUBLE_ASSET_TO_STATE_OR);
         });
     });
     it('converts basic double asset to state AND', function() {
-        return parseAndConvertConditions(id, conditions.DOUBLE_ASSET_TO_STATE_AND).then(convertedRule => {
+        return parseAndConvertConditions(conditions.DOUBLE_ASSET_TO_STATE_AND).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.DOUBLE_ASSET_TO_STATE_AND);
         });
     });
     it('converts basic area to state', function() {
-        return parseAndConvertConditions(id, conditions.BASIC_ASSET_TO_STATE).then(convertedRule => {
+        return parseAndConvertConditions(conditions.BASIC_ASSET_TO_STATE).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.BASIC_ASSET_TO_STATE);
         });
     });
     it('converts asset type to state and area AND', function() {
-        return parseAndConvertConditions(id, conditions.ASSET_TYPE_TO_STATE_AND_AREA_AND).then(convertedRule => {
+        return parseAndConvertConditions(conditions.ASSET_TYPE_TO_STATE_AND_AREA_AND).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.ASSET_TYPE_TO_STATE_AND_AREA_AND);
         });
     });
     it('converts asset type to state and area OR', function() {
-        return parseAndConvertConditions(id, conditions.ASSET_TYPE_TO_STATE_AND_AREA_OR).then(convertedRule => {
+        return parseAndConvertConditions(conditions.ASSET_TYPE_TO_STATE_AND_AREA_OR).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.ASSET_TYPE_TO_STATE_AND_AREA_OR);
         });
     });
     it('converts nested asset type to state AND', function() {
-        return parseAndConvertConditions(id, conditions.NESTED_ASSET_TYPE_TO_STATE_AND).then(convertedRule => {
+        return parseAndConvertConditions(conditions.NESTED_ASSET_TYPE_TO_STATE_AND).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.NESTED_ASSET_TYPE_TO_STATE_AND);
         });
     });
     it('converts nested asset type to state OR', function() {
-        return parseAndConvertConditions(id, conditions.NESTED_ASSET_TYPE_TO_STATE_OR).then(convertedRule => {
+        return parseAndConvertConditions(conditions.NESTED_ASSET_TYPE_TO_STATE_OR).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.NESTED_ASSET_TYPE_TO_STATE_OR);
         });
     });
@@ -662,110 +660,102 @@ const parsedConditions = {
     ASSET_TYPE_TO_STATE_AND_AREA_OR: {
         any: [
             {
-                any: [
-                    {
-                        fact: 'entity',
-                        operator: 'equal',
-                        params: {
-                            id: 'testAsset1',
-                            attribute: 'speed',
-                            collection: 'assets',
-                            type: 'train',
-                            duration: 10000,
-                        },
-                        path: '.data.custom_data.speed',
-                        value: 50,
-                    },
-                    {
-                        fact: 'entity',
-                        operator: 'equal',
-                        params: {
-                            id: 'testAsset2',
-                            attribute: 'speed',
-                            collection: 'assets',
-                            type: 'train',
-                            duration: 10000,
-                        },
-                        path: '.data.custom_data.speed',
-                        value: 50,
-                    },
-                ],
+                fact: 'entity',
+                operator: 'equal',
+                params: {
+                    id: 'testAsset1',
+                    attribute: 'speed',
+                    collection: 'assets',
+                    type: 'train',
+                    duration: 10000,
+                },
+                path: '.data.custom_data.speed',
+                value: 50,
             },
             {
-                any: [
-                    {
-                        fact: 'entity',
-                        operator: 'outside',
-                        params: {
-                            id: 'testAsset1',
-                            collection: 'assets',
-                            type: 'train',
-                            duration: 20000,
-                        },
-                        value: {
-                            fact: 'entity',
-                            params: {
-                                id: 'testArea1',
-                                collection: 'areas',
-                                type: 'yard',
-                            },
-                        },
+                fact: 'entity',
+                operator: 'equal',
+                params: {
+                    id: 'testAsset2',
+                    attribute: 'speed',
+                    collection: 'assets',
+                    type: 'train',
+                    duration: 10000,
+                },
+                path: '.data.custom_data.speed',
+                value: 50,
+            },
+            {
+                fact: 'entity',
+                operator: 'outside',
+                params: {
+                    id: 'testAsset1',
+                    collection: 'assets',
+                    type: 'train',
+                    duration: 20000,
+                },
+                value: {
+                    fact: 'entity',
+                    params: {
+                        id: 'testArea1',
+                        collection: 'areas',
+                        type: 'yard',
                     },
-                    {
-                        fact: 'entity',
-                        operator: 'outside',
-                        params: {
-                            id: 'testAsset1',
-                            collection: 'assets',
-                            type: 'train',
-                            duration: 20000,
-                        },
-                        value: {
-                            fact: 'entity',
-                            params: {
-                                id: 'testArea2',
-                                collection: 'areas',
-                                type: 'yard',
-                            },
-                        },
+                },
+            },
+            {
+                fact: 'entity',
+                operator: 'outside',
+                params: {
+                    id: 'testAsset1',
+                    collection: 'assets',
+                    type: 'train',
+                    duration: 20000,
+                },
+                value: {
+                    fact: 'entity',
+                    params: {
+                        id: 'testArea2',
+                        collection: 'areas',
+                        type: 'yard',
                     },
-                    {
-                        fact: 'entity',
-                        operator: 'outside',
-                        params: {
-                            id: 'testAsset2',
-                            collection: 'assets',
-                            type: 'train',
-                            duration: 20000,
-                        },
-                        value: {
-                            fact: 'entity',
-                            params: {
-                                id: 'testArea1',
-                                collection: 'areas',
-                                type: 'yard',
-                            },
-                        },
+                },
+            },
+            {
+                fact: 'entity',
+                operator: 'outside',
+                params: {
+                    id: 'testAsset2',
+                    collection: 'assets',
+                    type: 'train',
+                    duration: 20000,
+                },
+                value: {
+                    fact: 'entity',
+                    params: {
+                        id: 'testArea1',
+                        collection: 'areas',
+                        type: 'yard',
                     },
-                    {
-                        fact: 'entity',
-                        operator: 'outside',
-                        params: {
-                            id: 'testAsset2',
-                            collection: 'assets',
-                            type: 'train',
-                            duration: 20000,
-                        },
-                        value: {
-                            fact: 'entity',
-                            params: {
-                                id: 'testArea2',
-                                collection: 'areas',
-                                type: 'yard',
-                            },
-                        },
+                },
+            },
+            {
+                fact: 'entity',
+                operator: 'outside',
+                params: {
+                    id: 'testAsset2',
+                    collection: 'assets',
+                    type: 'train',
+                    duration: 20000,
+                },
+                value: {
+                    fact: 'entity',
+                    params: {
+                        id: 'testArea2',
+                        collection: 'areas',
+                        type: 'yard',
                     },
-                ],
+                },
             },
         ],
     },
@@ -774,64 +764,56 @@ const parsedConditions = {
             {
                 any: [
                     {
-                        any: [
-                            {
-                                fact: 'entity',
-                                operator: 'equal',
-                                params: {
-                                    id: 'testAsset1',
-                                    attribute: 'speed',
-                                    collection: 'assets',
-                                    type: 'train',
-                                    duration: 10000,
-                                },
-                                path: '.data.custom_data.speed',
-                                value: 50,
-                            },
-                            {
-                                fact: 'entity',
-                                operator: 'equal',
-                                params: {
-                                    id: 'testAsset2',
-                                    attribute: 'speed',
-                                    collection: 'assets',
-                                    type: 'train',
-                                    duration: 10000,
-                                },
-                                path: '.data.custom_data.speed',
-                                value: 50,
-                            },
-                        ],
+                        fact: 'entity',
+                        operator: 'equal',
+                        params: {
+                            id: 'testAsset1',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: 'train',
+                            duration: 10000,
+                        },
+                        path: '.data.custom_data.speed',
+                        value: 50,
                     },
                     {
-                        any: [
-                            {
-                                fact: 'entity',
-                                operator: 'equal',
-                                params: {
-                                    id: 'testAsset1',
-                                    attribute: 'speed',
-                                    collection: 'assets',
-                                    type: 'train',
-                                    duration: 20000,
-                                },
-                                path: '.data.custom_data.speed',
-                                value: 60,
-                            },
-                            {
-                                fact: 'entity',
-                                operator: 'equal',
-                                params: {
-                                    id: 'testAsset2',
-                                    attribute: 'speed',
-                                    collection: 'assets',
-                                    type: 'train',
-                                    duration: 20000,
-                                },
-                                path: '.data.custom_data.speed',
-                                value: 60,
-                            },
-                        ],
+                        fact: 'entity',
+                        operator: 'equal',
+                        params: {
+                            id: 'testAsset2',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: 'train',
+                            duration: 10000,
+                        },
+                        path: '.data.custom_data.speed',
+                        value: 50,
+                    },
+                    {
+                        fact: 'entity',
+                        operator: 'equal',
+                        params: {
+                            id: 'testAsset1',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: 'train',
+                            duration: 20000,
+                        },
+                        path: '.data.custom_data.speed',
+                        value: 60,
+                    },
+                    {
+                        fact: 'entity',
+                        operator: 'equal',
+                        params: {
+                            id: 'testAsset2',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: 'train',
+                            duration: 20000,
+                        },
+                        path: '.data.custom_data.speed',
+                        value: 60,
                     },
                 ],
             },
@@ -934,34 +916,30 @@ const parsedConditions = {
                 ],
             },
             {
-                any: [
-                    {
-                        fact: 'entity',
-                        operator: 'equal',
-                        params: {
-                            id: 'testAsset1',
-                            attribute: 'speed',
-                            collection: 'assets',
-                            type: 'train',
-                            duration: 30000,
-                        },
-                        path: '.data.custom_data.speed',
-                        value: 70,
-                    },
-                    {
-                        fact: 'entity',
-                        operator: 'equal',
-                        params: {
-                            id: 'testAsset2',
-                            attribute: 'speed',
-                            collection: 'assets',
-                            type: 'train',
-                            duration: 30000,
-                        },
-                        path: '.data.custom_data.speed',
-                        value: 70,
-                    },
-                ],
+                fact: 'entity',
+                operator: 'equal',
+                params: {
+                    id: 'testAsset1',
+                    attribute: 'speed',
+                    collection: 'assets',
+                    type: 'train',
+                    duration: 30000,
+                },
+                path: '.data.custom_data.speed',
+                value: 70,
+            },
+            {
+                fact: 'entity',
+                operator: 'equal',
+                params: {
+                    id: 'testAsset2',
+                    attribute: 'speed',
+                    collection: 'assets',
+                    type: 'train',
+                    duration: 30000,
+                },
+                path: '.data.custom_data.speed',
+                value: 70,
             },
         ],
     },

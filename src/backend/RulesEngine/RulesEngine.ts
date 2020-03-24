@@ -99,7 +99,7 @@ export class RulesEngine {
         const parsedTimeframe = timeframe ? JSON.parse(timeframe) : timeframe;
         const parsedActionIDs = action_ids ? JSON.parse(action_ids) : action_ids;
 
-        const promise = parseAndConvertConditions(id as string, parsedConditions).then(convertedConditions => {
+        const promise = parseAndConvertConditions(parsedConditions).then(convertedConditions => {
             return new Rule({
                 name: id as string,
                 conditions: convertedConditions as TopLevelCondition,

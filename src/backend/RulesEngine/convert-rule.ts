@@ -226,7 +226,7 @@ function createConditionsForType(condition: Condition): Promise<ConditionPropert
     return promise as Promise<ConditionProperties[]>;
 }
 
-function addConditions(ruleId: string, condition: Condition): Promise<AnyConditions | ConditionProperties> {
+function addConditions(condition: Condition): Promise<AnyConditions | ConditionProperties> {
     const rule: AnyConditions = {
         any: [],
     };
@@ -256,30 +256,26 @@ function addConditions(ruleId: string, condition: Condition): Promise<AnyConditi
     return promise as Promise<AnyConditions>;
 }
 
-function convertCondition(
-    ruleId: string,
-    condition: Condition | Conditions,
-): Promise<AnyConditions | ConditionProperties> {
+function convertCondition(condition: Condition | Conditions): Promise<AnyConditions | ConditionProperties> {
     if ((condition as Condition).entity) {
         // We have a condition
-        const promise = addConditions(ruleId, condition as Condition);
+        const promise = addConditions(condition as Condition);
         Promise.runQueue();
         return promise;
     } else {
         // Seems like we have nested conditions
-        const promise = parseAndConvertConditions(ruleId, condition as Conditions);
+        const promise = parseAndConvertConditions(condition as Conditions);
         Promise.runQueue();
         return promise as Promise<AnyConditions>;
     }
 }
 
 export function parseAndConvertConditions(
-    ruleId: string,
     conditions: Conditions,
 ): Promise<TopLevelCondition | AnyConditions | AllConditions | ConditionProperties> {
     const firstKey = Object.keys(conditions)[0] as ConditionalOperators;
     const subConditions = conditions[firstKey] as ConditionArray;
-    const promise = Promise.all(subConditions.map(s => convertCondition(ruleId, s)))
+    const promise = Promise.all(subConditions.map(convertCondition))
         .then(rules => {
             if (rules.length > 1) {
                 if (firstKey === 'and') {
@@ -291,10 +287,6 @@ export function parseAndConvertConditions(
                         any: [...rules],
                     };
                 }
-            } else if ((rules[0] as ConditionProperties).fact) {
-                return {
-                    any: [...rules],
-                };
             }
             return {
                 ...rules[0],
