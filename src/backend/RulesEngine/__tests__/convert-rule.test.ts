@@ -503,30 +503,38 @@ const parsedConditions = {
     DOUBLE_ASSET_TO_STATE_AND: {
         all: [
             {
-                fact: 'entity',
-                operator: 'greaterThan',
-                params: {
-                    id: 'testAsset1',
-                    attribute: 'speed',
-                    collection: 'assets',
-                    type: null,
-                    duration: 15000,
-                },
-                path: '.data.custom_data.speed',
-                value: 50,
+                any: [
+                    {
+                        fact: 'entity',
+                        operator: 'greaterThan',
+                        params: {
+                            id: 'testAsset1',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: null,
+                            duration: 15000,
+                        },
+                        path: '.data.custom_data.speed',
+                        value: 50,
+                    },
+                ],
             },
             {
-                fact: 'entity',
-                operator: 'lessThan',
-                params: {
-                    id: 'testAsset1',
-                    attribute: 'speed',
-                    collection: 'assets',
-                    type: null,
-                    duration: 15000,
-                },
-                path: '.data.custom_data.speed',
-                value: 40,
+                any: [
+                    {
+                        fact: 'entity',
+                        operator: 'lessThan',
+                        params: {
+                            id: 'testAsset1',
+                            attribute: 'speed',
+                            collection: 'assets',
+                            type: null,
+                            duration: 15000,
+                        },
+                        path: '.data.custom_data.speed',
+                        value: 40,
+                    },
+                ],
             },
         ],
     },
