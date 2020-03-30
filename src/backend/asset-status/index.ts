@@ -55,7 +55,11 @@ export function updateAssetStatusSS({
             const dataStr = (data.DATA[0] as Asset)['custom_data'] as string;
             let customData;
             try {
-                customData = JSON.parse(dataStr);
+                if (dataStr == "") {
+                    customData = {};
+                } else {
+                    customData = JSON.parse(dataStr);
+                }
             } catch (e) {
                 logger.publishLog(LogLevels.ERROR, 'Failed while parsing: ', e.message);
                 return Promise.reject(new Error('Failed while parsing: ' + e.message));
