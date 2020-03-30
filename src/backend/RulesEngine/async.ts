@@ -48,24 +48,24 @@ function compareAssetsOrAreas(oldEntities: Entities, newEntities: Entities): boo
     const newKeys = uniqueArray(Object.keys(newEntities));
     const additions = [];
     let hasOverlap = false;
+    if (oldKeys.length && newKeys.length) {
+        for (let i = 0; i < newKeys.length; i++) {
+            const oldIndex = oldKeys.indexOf(newKeys[i]);
+            if (oldIndex > -1) {
+                oldKeys.splice(oldIndex, 1);
+                hasOverlap = true;
+            } else {
+                additions.push(newKeys[i]);
+            }
+        }
 
-    for (let i = 0; i < newKeys.length; i++) {
-        const oldIndex = oldKeys.indexOf(newKeys[i]);
-        if (oldIndex > -1) {
-            oldKeys.splice(oldIndex, 1);
-            hasOverlap = true;
-        } else {
-            additions.push(newKeys[i]);
+        if (!oldKeys.length && !additions.length) {
+            return true; // all ids are overlapping - do nothing
+        } else if (hasOverlap) {
+            return additions; // need to update existing event with additions
         }
     }
-
-    if (!oldKeys.length && !additions.length) {
-        return true; // all ids are overlapping - do nothing
-    } else if (hasOverlap) {
-        return additions; // need to update existing event with additions
-    } else {
-        return false; // no overlaps - need to keep looking or make new event
-    }
+    return false; // no items in old or new OR no overlaps - need to keep looking or make new event
 }
 
 function aggregateEntities(newEntities: Entities, oldEntities: Entities): Entities {
