@@ -55,7 +55,7 @@ export function updateAssetStatusSS({
             const dataStr = (data.DATA[0] as Asset)['custom_data'] as string;
             let customData;
             try {
-                if (dataStr == "") {
+                if (dataStr == '') {
                     customData = {};
                 } else {
                     customData = JSON.parse(dataStr);

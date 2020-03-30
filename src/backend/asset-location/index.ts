@@ -101,7 +101,7 @@ export function updateAssetLocationSS({
         newAsset['last_updated'] = newAsset['last_updated'] ? newAsset['last_updated'] : date;
         newAsset['id'] = assetID;
         try {
-            newAsset['custom_data'] = JSON.stringify(!!assetData['custom_data'] ? assetData['custom_data'] : {});
+            newAsset['custom_data'] = JSON.stringify(assetData['custom_data'] ? assetData['custom_data'] : {});
         } catch (e) {
             logger.publishLog(LogLevels.ERROR, 'ERROR Failed to stringify ', e.message);
             return Promise.reject(new Error('Failed to stringify ' + e.message));
