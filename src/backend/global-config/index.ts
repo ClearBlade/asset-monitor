@@ -155,6 +155,7 @@ const globalConfig: GlobalConfig = {
             'longitude',
             'last_updated',
             'last_location_updated',
+            'group_id',
         ],
         CREATE_NEW_ASSET_IF_MISSING: false,
         LOG_SETTING: LogLevels.DEBUG,
