@@ -41,6 +41,7 @@ export interface UpdateAssetStatusOptions {
     LOG_SETTING: LogLevels;
     UPDATE_METHOD: AssetStatusUpdateMethod;
     LOG_SERVICE_NAME: string;
+    CREATE_NEW_ASSET_IF_MISSING?: boolean;
 }
 export declare enum KeyStorageSettings {
     NO = "no",

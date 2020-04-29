@@ -16,6 +16,7 @@ const defaultOptions = {
     LOG_SETTING: GC.UPDATE_ASSET_STATUS_OPTIONS.LOG_SETTING,
     UPDATE_METHOD: GC.UPDATE_ASSET_STATUS_OPTIONS.UPDATE_METHOD,
     LOG_SERVICE_NAME: GC.UPDATE_ASSET_STATUS_OPTIONS.LOG_SERVICE_NAME,
+    CREATE_NEW_ASSET_IF_MISSING: GC.UPDATE_ASSET_STATUS_OPTIONS.CREATE_NEW_ASSET_IF_MISSING,
 };
 export function updateAssetStatusSS({
     req,
@@ -24,6 +25,7 @@ export function updateAssetStatusSS({
         LOG_SETTING = defaultOptions.LOG_SETTING,
         UPDATE_METHOD = defaultOptions.UPDATE_METHOD,
         LOG_SERVICE_NAME = defaultOptions.LOG_SERVICE_NAME,
+        CREATE_NEW_ASSET_IF_MISSING = defaultOptions.CREATE_NEW_ASSET_IF_MISSING,
     } = defaultOptions,
 }: UpdateAssetStatusConfig): void {
     ClearBlade.init({ request: req });
@@ -38,45 +40,80 @@ export function updateAssetStatusSS({
         logger.publishLog(LogLevels.ERROR, 'Failed ', getErrorMessage(error.message));
     }
 
+    function createAsset(assetID: string, assetData: Asset): Promise<unknown> {
+        logger.publishLog(LogLevels.DEBUG, 'DEBUG: ', 'in Create Asset');
+
+        const assetsCol = CbCollectionLib(CollectionName.ASSETS);
+        const newAsset = assetData;
+
+        const date = new Date().toISOString();
+        newAsset['id'] = assetID;
+        newAsset['type'] = newAsset['type'] ? newAsset['type'] : '';
+        newAsset['last_location_updated'] = newAsset['last_location_updated']
+            ? newAsset['last_location_updated']
+            : date;
+        newAsset['last_updated'] = newAsset['last_updated'] ? newAsset['last_updated'] : date;
+
+        try {
+            newAsset['custom_data'] = JSON.stringify(assetData['custom_data'] ? assetData['custom_data'] : {});
+        } catch (e) {
+            logger.publishLog(LogLevels.ERROR, 'ERROR Failed to stringify ', e.message);
+            return Promise.reject(new Error('Failed to stringify ' + e.message));
+        }
+
+        return assetsCol.cbCreatePromise({ item: [newAsset] as Record<string, unknown>[] });
+    }
+
+    function updateAsset(savedAsset: Asset, incomingAsset: Asset): Promise<unknown> {
+        const assetsCol = CbCollectionLib(CollectionName.ASSETS);
+        const dataStr = savedAsset['custom_data'] as string;
+        let customData;
+        try {
+            if (dataStr == '') {
+                customData = {};
+            } else {
+                customData = JSON.parse(dataStr);
+            }
+        } catch (e) {
+            logger.publishLog(LogLevels.ERROR, 'Failed while parsing: ', e.message);
+            return Promise.reject(new Error('Failed while parsing: ' + e.message));
+        }
+        const incomingCustomData = incomingAsset['custom_data'];
+        for (const key of Object.keys(incomingCustomData as object)) {
+            customData[key] = (incomingCustomData as Record<string, unknown>)[key];
+        }
+
+        const currDate = new Date().toISOString();
+        const assetsQuery = ClearBlade.Query({ collectionName: CollectionName.ASSETS }).equalTo(
+            'id',
+            savedAsset.id as string,
+        );
+        const statusChanges: Asset = { custom_data: JSON.stringify(customData), last_updated: currDate };
+        logger.publishLog(LogLevels.DEBUG, 'Status Changes: ', statusChanges);
+        return assetsCol.cbUpdatePromise({
+            query: assetsQuery,
+            changes: statusChanges as Record<string, unknown>,
+        });
+    }
+
     function MergeAsset(assetID: string, msg: Asset): Promise<unknown> {
         const assetsCol = CbCollectionLib(CollectionName.ASSETS);
         const assetFetchQuery = ClearBlade.Query({ collectionName: CollectionName.ASSETS }).equalTo('id', assetID);
         const promise = assetsCol.cbFetchPromise({ query: assetFetchQuery }).then(function(data) {
-            if (data.DATA.length <= 0) {
-                //TODO think of a better way to handle this
-                logger.publishLog(LogLevels.ERROR, 'No asset found for id ', assetID);
-                return Promise.reject(new Error('No asset found for id ' + assetID));
-            }
-            if (data.DATA.length > 1) {
-                logger.publishLog(LogLevels.ERROR, 'Multiple Assets found for id ', assetID);
+            if (data.DATA.length === 1) {
+                return updateAsset(data.DATA[0] as Asset, msg);
+            } else if (data.DATA.length === 0) {
+                if (CREATE_NEW_ASSET_IF_MISSING) {
+                    logger.publishLog(LogLevels.DEBUG, "Creating Asset since it doesn't exist");
+                    return createAsset(assetID, msg);
+                } else {
+                    logger.publishLog(LogLevels.DEBUG, 'DEBUG: ', " Asset doesn't exist so, ignoring: ", data);
+                    return Promise.reject(new Error('No asset found for id ' + assetID));
+                }
+            } else {
+                logger.publishLog(LogLevels.ERROR, 'ERROR: Multiple Assets with same assetId exists: ', data);
                 return Promise.reject(new Error('Multiple Assets found for id ' + assetID));
             }
-
-            const dataStr = (data.DATA[0] as Asset)['custom_data'] as string;
-            let customData;
-            try {
-                if (dataStr == '') {
-                    customData = {};
-                } else {
-                    customData = JSON.parse(dataStr);
-                }
-            } catch (e) {
-                logger.publishLog(LogLevels.ERROR, 'Failed while parsing: ', e.message);
-                return Promise.reject(new Error('Failed while parsing: ' + e.message));
-            }
-            const incomingCustomData = msg['custom_data'];
-            for (const key of Object.keys(incomingCustomData as object)) {
-                customData[key] = (incomingCustomData as Record<string, unknown>)[key];
-            }
-
-            const currDate = new Date().toISOString();
-            const assetsQuery = ClearBlade.Query({ collectionName: CollectionName.ASSETS }).equalTo('id', assetID);
-            const statusChanges: Asset = { custom_data: JSON.stringify(customData), last_updated: currDate };
-            logger.publishLog(LogLevels.DEBUG, 'Status Changes: ', statusChanges);
-            return assetsCol.cbUpdatePromise({
-                query: assetsQuery,
-                changes: statusChanges as Record<string, unknown>,
-            });
         });
 
         return promise;
