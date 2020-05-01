@@ -18,6 +18,16 @@ describe('Convert Rules', function() {
             expect(convertedRule).toEqual(parsedConditions.BASIC_ASSET_TO_STATE);
         });
     });
+    it('converts all asset to state', function() {
+        return parseAndConvertConditions(conditions.ALL_ASSET_TO_STATE).then(convertedRule => {
+            expect(convertedRule).toEqual(parsedConditions.ALL_ASSET_TO_STATE);
+        });
+    });
+    it('converts all asset to area', function() {
+        return parseAndConvertConditions(conditions.ALL_ASSET_TO_AREA).then(convertedRule => {
+            expect(convertedRule).toEqual(parsedConditions.ALL_ASSET_TO_AREA);
+        });
+    });
     it('converts basic double asset to state OR', function() {
         return parseAndConvertConditions(conditions.DOUBLE_ASSET_TO_STATE_OR).then(convertedRule => {
             expect(convertedRule).toEqual(parsedConditions.DOUBLE_ASSET_TO_STATE_OR);
@@ -110,6 +120,45 @@ const conditions = {
                     value: 50,
                     duration: {
                         value: 10,
+                        unit: DurationUnits.SECONDS,
+                    },
+                },
+            },
+        ],
+    },
+    ALL_ASSET_TO_STATE: {
+        and: [
+            {
+                entity: {
+                    id: '',
+                    entity_type: EntityTypes.ASSET,
+                },
+                relationship: {
+                    operator: 'equal',
+                    attribute: 'speed',
+                    attribute_type: EntityTypes.STATE,
+                    value: 50,
+                    duration: {
+                        value: 10,
+                        unit: DurationUnits.SECONDS,
+                    },
+                },
+            },
+        ],
+    },
+    ALL_ASSET_TO_AREA: {
+        and: [
+            {
+                entity: {
+                    id: '',
+                    entity_type: EntityTypes.ASSET,
+                },
+                relationship: {
+                    operator: 'inside',
+                    attribute: '',
+                    attribute_type: EntityTypes.AREA,
+                    duration: {
+                        value: 20,
                         unit: DurationUnits.SECONDS,
                     },
                 },
@@ -467,6 +516,112 @@ const parsedConditions = {
                 },
                 path: '.data.custom_data.speed',
                 value: 50,
+            },
+        ],
+    },
+    ALL_ASSET_TO_STATE: {
+        any: [
+            {
+                fact: 'entity',
+                operator: 'equal',
+                params: {
+                    id: 'testAsset1',
+                    attribute: 'speed',
+                    collection: 'assets',
+                    type: null,
+                    duration: 10000,
+                },
+                path: '.data.custom_data.speed',
+                value: 50,
+            },
+            {
+                fact: 'entity',
+                operator: 'equal',
+                params: {
+                    id: 'testAsset2',
+                    attribute: 'speed',
+                    collection: 'assets',
+                    type: null,
+                    duration: 10000,
+                },
+                path: '.data.custom_data.speed',
+                value: 50,
+            },
+        ],
+    },
+    ALL_ASSET_TO_AREA: {
+        any: [
+            {
+                fact: 'entity',
+                operator: 'inside',
+                params: {
+                    id: 'testAsset1',
+                    collection: 'assets',
+                    type: '',
+                    duration: 20000,
+                },
+                value: {
+                    fact: 'entity',
+                    params: {
+                        id: 'testArea1',
+                        collection: 'areas',
+                        type: '',
+                    },
+                },
+            },
+            {
+                fact: 'entity',
+                operator: 'inside',
+                params: {
+                    id: 'testAsset1',
+                    collection: 'assets',
+                    type: '',
+                    duration: 20000,
+                },
+                value: {
+                    fact: 'entity',
+                    params: {
+                        id: 'testArea2',
+                        collection: 'areas',
+                        type: '',
+                    },
+                },
+            },
+            {
+                fact: 'entity',
+                operator: 'inside',
+                params: {
+                    id: 'testAsset2',
+                    collection: 'assets',
+                    type: '',
+                    duration: 20000,
+                },
+                value: {
+                    fact: 'entity',
+                    params: {
+                        id: 'testArea1',
+                        collection: 'areas',
+                        type: '',
+                    },
+                },
+            },
+            {
+                fact: 'entity',
+                operator: 'inside',
+                params: {
+                    id: 'testAsset2',
+                    collection: 'assets',
+                    type: '',
+                    duration: 20000,
+                },
+                value: {
+                    fact: 'entity',
+                    params: {
+                        id: 'testArea2',
+                        collection: 'areas',
+                        type: '',
+                    },
+                },
             },
         ],
     },

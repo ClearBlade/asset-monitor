@@ -32,6 +32,28 @@ export function getAllAreasForType(areaType: string): Promise<Array<CbServer.Col
     return promise;
 }
 
+export function getAllAssets(): Promise<Array<CbServer.CollectionSchema<Asset>>> {
+    const assetsCollection = CbCollectionLib(CollectionName.ASSETS);
+    const assetsCollectionQuery = ClearBlade.Query({ collectionName: CollectionName.ASSETS });
+
+    const promise = assetsCollection.cbFetchPromise({ query: assetsCollectionQuery }).then(data => {
+        return Array.isArray(data.DATA) ? data.DATA : [];
+    });
+    Promise.runQueue();
+    return promise;
+}
+
+export function getAllAreas(): Promise<Array<CbServer.CollectionSchema<Areas>>> {
+    const areasCollection = CbCollectionLib(CollectionName.AREAS);
+    const areasCollectionQuery = ClearBlade.Query({ collectionName: CollectionName.AREAS });
+
+    const promise = areasCollection.cbFetchPromise({ query: areasCollectionQuery }).then(data => {
+        return Array.isArray(data.DATA) ? data.DATA : [];
+    });
+    Promise.runQueue();
+    return promise;
+}
+
 export function getActionByID(actionID: string): Promise<Actions> {
     const actionsCollection = CbCollectionLib(CollectionName.ACTIONS);
     const actionsCollectionQuery = ClearBlade.Query({ collectionName: CollectionName.ACTIONS }).equalTo('id', actionID);

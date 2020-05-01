@@ -6,10 +6,14 @@ import {
     ConditionArray,
     Duration,
     DurationUnits,
+    Relationship,
+    Entity,
 } from './types';
 import '../../static/promise-polyfill';
-import { getAllAreasForType, getAllAssetsForType } from './async';
+import { getAllAreasForType, getAllAssetsForType, getAllAssets, getAllAreas } from './async';
 import { TopLevelCondition, AnyConditions, AllConditions, ConditionProperties } from 'json-rules-engine';
+import { Asset } from '../collection-schema/Assets';
+import { Areas } from '../collection-schema/Areas';
 
 function getCollectionName(entityType: EntityTypes): EntityTypes {
     switch (entityType) {
@@ -72,6 +76,31 @@ function getLocationConditionProps(
     };
 }
 
+function onFetchEntitiesForLocation(
+    entities: CbServer.CollectionSchema<Asset | Areas>[],
+    id: string,
+    entity: Entity,
+    relationship: Relationship,
+    isPartOfType?: boolean,
+): ConditionProperties[] {
+    return entities.map(asset =>
+        getLocationConditionProps(
+            {
+                id,
+                collection: getCollectionName(entity.entity_type),
+                type: isPartOfType ? entity.id : '',
+            },
+            {
+                id: asset.id as string,
+                collection: getCollectionName(relationship.attribute_type),
+                type: relationship.attribute,
+            },
+            relationship.operator,
+            relationship.duration,
+        ),
+    );
+}
+
 function getLocationConditions(
     id: string,
     condition: Condition,
@@ -79,67 +108,48 @@ function getLocationConditions(
 ): Promise<ConditionProperties[]> {
     const { relationship, entity } = condition;
     let promise;
-    switch (relationship.attribute_type) {
-        case EntityTypes.ASSET_TYPE:
-            promise = getAllAssetsForType(relationship.attribute).then(assets => {
-                return assets.map(asset =>
-                    getLocationConditionProps(
-                        {
-                            id,
-                            collection: getCollectionName(entity.entity_type),
-                            type: isPartOfType ? entity.id : undefined,
-                        },
-                        {
-                            id: asset.id as string,
-                            collection: getCollectionName(relationship.attribute_type),
-                            type: relationship.attribute,
-                        },
-                        relationship.operator,
-                        relationship.duration,
-                    ),
-                );
-            });
-            Promise.runQueue();
-            return promise;
-        case EntityTypes.AREA_TYPE:
-            promise = getAllAreasForType(relationship.attribute).then(areas => {
-                return areas.map(area =>
-                    getLocationConditionProps(
-                        {
-                            id,
-                            collection: getCollectionName(entity.entity_type),
-                            type: isPartOfType ? entity.id : undefined,
-                        },
-                        {
-                            id: area.id as string,
-                            collection: getCollectionName(relationship.attribute_type),
-                            type: relationship.attribute,
-                        },
-                        relationship.operator,
-                        relationship.duration,
-                    ),
-                );
-            });
-            Promise.runQueue();
-            return promise;
-        default:
-            return new Promise(res =>
-                res([
-                    getLocationConditionProps(
-                        {
-                            id,
-                            collection: getCollectionName(entity.entity_type),
-                            type: isPartOfType ? entity.id : undefined,
-                        },
-                        {
-                            id: relationship.attribute,
-                            collection: getCollectionName(relationship.attribute_type),
-                        },
-                        relationship.operator,
-                        relationship.duration,
-                    ),
-                ]),
-            );
+    if (relationship.attribute_type === EntityTypes.ASSET_TYPE) {
+        promise = getAllAssetsForType(relationship.attribute).then(assets => {
+            return onFetchEntitiesForLocation(assets, id, entity, relationship, isPartOfType);
+        });
+        Promise.runQueue();
+        return promise;
+    } else if (relationship.attribute_type === EntityTypes.AREA_TYPE) {
+        promise = getAllAreasForType(relationship.attribute).then(areas => {
+            return onFetchEntitiesForLocation(areas, id, entity, relationship, isPartOfType);
+        });
+        Promise.runQueue();
+        return promise;
+    } else if (relationship.attribute_type === EntityTypes.ASSET && relationship.attribute === '') {
+        promise = getAllAssets().then(assets => {
+            return onFetchEntitiesForLocation(assets, id, entity, relationship, isPartOfType);
+        });
+        Promise.runQueue();
+        return promise;
+    } else if (relationship.attribute_type === EntityTypes.AREA && relationship.attribute === '') {
+        promise = getAllAreasForType(relationship.attribute).then(areas => {
+            return onFetchEntitiesForLocation(areas, id, entity, relationship, isPartOfType);
+        });
+        Promise.runQueue();
+        return promise;
+    } else {
+        return new Promise(res =>
+            res([
+                getLocationConditionProps(
+                    {
+                        id,
+                        collection: getCollectionName(entity.entity_type),
+                        type: isPartOfType ? entity.id : '',
+                    },
+                    {
+                        id: relationship.attribute,
+                        collection: getCollectionName(relationship.attribute_type),
+                    },
+                    relationship.operator,
+                    relationship.duration,
+                ),
+            ]),
+        );
     }
 }
 
@@ -181,36 +191,46 @@ function formatConditionForEntity(
     }
 }
 
+function onFetchEntitiesForState(
+    entities: CbServer.CollectionSchema<Asset | Areas>[],
+    condition: Condition,
+    conditions: ConditionProperties[],
+    isPartOfType?: boolean,
+): Promise<ConditionProperties[]> {
+    const promise = Promise.all(
+        entities.map(entity => formatConditionForEntity(entity.id as string, condition, isPartOfType)),
+    ).then(results => {
+        for (let i = 0; i < results.length; i++) {
+            conditions.push(...results[i]);
+        }
+        return conditions;
+    });
+    Promise.runQueue();
+    return promise;
+}
+
 function createConditionsForType(condition: Condition): Promise<ConditionProperties[]> {
     let promise;
     const conditions: ConditionProperties[] = [];
     switch (condition.entity.entity_type) {
         case EntityTypes.ASSET_TYPE:
             promise = getAllAssetsForType(condition.entity.id).then(assets => {
-                const promiseTwo = Promise.all(
-                    assets.map(asset => formatConditionForEntity(asset.id as string, condition, true)),
-                ).then(results => {
-                    for (let i = 0; i < results.length; i++) {
-                        conditions.push(...results[i]);
-                    }
-                    return conditions;
-                });
-                Promise.runQueue();
-                return promiseTwo;
+                return onFetchEntitiesForState(assets, condition, conditions, true);
             });
             break;
         case EntityTypes.AREA_TYPE:
             promise = getAllAreasForType(condition.entity.id).then(areas => {
-                const promiseTwo = Promise.all(
-                    areas.map(area => formatConditionForEntity(area.id as string, condition, true)),
-                ).then(results => {
-                    for (let i = 0; i < results.length; i++) {
-                        conditions.push(...results[i]);
-                    }
-                    return conditions;
-                });
-                Promise.runQueue();
-                return promiseTwo;
+                return onFetchEntitiesForState(areas, condition, conditions, true);
+            });
+            break;
+        case EntityTypes.ASSET:
+            promise = getAllAssets().then(assets => {
+                return onFetchEntitiesForState(assets, condition, conditions);
+            });
+            break;
+        case EntityTypes.AREA:
+            promise = getAllAreas().then(areas => {
+                return onFetchEntitiesForState(areas, condition, conditions);
             });
             break;
         default:
@@ -227,7 +247,8 @@ function addConditions(condition: Condition): Promise<AnyConditions | ConditionP
     let promise;
     if (
         condition.entity.entity_type === EntityTypes.ASSET_TYPE ||
-        condition.entity.entity_type === EntityTypes.AREA_TYPE
+        condition.entity.entity_type === EntityTypes.AREA_TYPE ||
+        condition.entity.id === '' // wants all entities
     ) {
         promise = createConditionsForType(condition).then(entityConditions => {
             if (entityConditions.length) {
