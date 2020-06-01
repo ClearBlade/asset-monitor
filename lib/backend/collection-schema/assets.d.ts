@@ -21,5 +21,6 @@ export interface Asset extends Partial<ThreeDCoord>, Partial<GeoCoord> {
     owners?: string;
     parent?: string;
     type?: string;
+    group_id?: string;
 }
 export declare type AssetsSchema = Asset & CbServer.CollectionSchema;
