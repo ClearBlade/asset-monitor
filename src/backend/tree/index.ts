@@ -1,15 +1,120 @@
-import "./tree";
-import { Tree, ITreeNode } from "./tree";
+import './tree';
+import '../collection-lib';
+import { CollectionName, LogLevels } from '../global-config';
+import { CbCollectionLib } from '../collection-lib';
+import { AssetTree } from '../collection-schema/AssetTree';
+import { TreeNode, Tree, CreateNewTree, Trees } from './tree';
 
+export function removeNode<T>(treeID: string, nodeID: string): Promise<Tree<TreeNode>> {
+    // fetch the tree row
+    // create a tree out of it
+    // remove a subtree from it, can be just a node...
+    // create a new tree using that subtree
+    // add it to the trees collection
+    // update the treeID column for all the elements(assets) of the subtree
+    // update the trees collection for the current tree
+    // return the node (with the subtree)
+    const removeNodePromise = getTree(treeID).then(performDelete);
+    // .catch(function(reject) {
+    //     console.log('Top Level Reject: ', reject);
+    // });
 
-export function removeNodeFromTree<T>(treeID:String, id:String) :Promise<T> {
-        throw new Error('Method not implemented.');
+    function performDelete(treeObj: Tree<TreeNode>): Promise<Tree<TreeNode>> {
+        const tree = CreateNewTree(treeObj as Trees<TreeNode>);
+        const removedTree = tree.removeChild(nodeID);
+        const assetCol = CbCollectionLib(CollectionName.ASSETS);
+        const assetIDs = removedTree.getSubtreeIDs(removedTree.rootID);
+        const assetUpdateQuery = ClearBlade.Query({ collectionName: CollectionName.ASSETS });
+        assetIDs.forEach(element => {
+            const q = ClearBlade.Query({ collectionName: CollectionName.ASSETS });
+            q.equalTo('id', element);
+            assetUpdateQuery.or(q);
+        });
+
+        const addToTreesCol = addNewTree(removedTree);
+        const updateOldTree = updateTree(tree);
+        const updateAssets = assetCol.cbUpdatePromise({
+            query: assetUpdateQuery,
+            changes: {
+                treeID: removedTree.id,
+            },
+        });
+
+        return Promise.all([addToTreesCol, updateOldTree, updateAssets])
+            .then(function() {
+                return Promise.resolve(removedTree);
+            })
+            .catch(function(rejection) {
+                return Promise.reject(rejection);
+            });
+    }
+    return removeNodePromise;
 }
 
-export function addNode<T>(treeID:String, node:Object):Promise<unknown>{
-    throw new Error('Method not implemented.');
+export function addNode<T>(treeID: string, node: TreeNode, parentID: string): Promise<Tree<TreeNode>> {
+    return getTree(treeID)
+        .then(function(treeObj) {
+            const tree = CreateNewTree(treeObj as Trees<TreeNode>);
+            tree.addChild(node, parentID);
+            return Promise.resolve(tree);
+        })
+        .catch(function(rejection) {
+            return Promise.reject(rejection);
+        });
 }
 
-export function moveNode<T>(srcID:String, destID:String, id:String):Promise<T>{
+export function getTree<T>(treeID: string): Promise<Trees<TreeNode>> {
+    const fetchQuery = ClearBlade.Query({ collectionName: CollectionName.ASSET_TREE }).equalTo('id', treeID);
+    const treeCol = CbCollectionLib(CollectionName.ASSET_TREE);
+    const promise = treeCol
+        .cbFetchPromise({
+            query: fetchQuery,
+        })
+        .then(function(data) {
+            if (data.DATA.length != 1) {
+                return Promise.reject(new Error(data.DATA.length + 'trees found for id ' + treeID));
+            }
+            const dataStr = (data.DATA[0] as AssetTree)['tree'];
+            try {
+                //const treeObj = JSON.parse(dataStr);
+                return Promise.resolve(dataStr);
+            } catch (e) {
+                console.log('error while parsing', e);
+                return Promise.reject(new Error('Failed while parsing: ' + e.message));
+            }
+        });
+    return promise;
+}
+
+export function addNewTree(newTree: Tree<TreeNode>): Promise<unknown> {
+    const treeCol = CbCollectionLib(CollectionName.ASSET_TREE);
+
+    const addToTreesCol = treeCol.cbCreatePromise({
+        item: {
+            id: newTree.id,
+            tree: {
+                rootID: newTree.rootID,
+                nodes: newTree.nodes,
+            },
+        },
+    });
+    return addToTreesCol;
+}
+
+export function updateTree(tree: Tree<TreeNode>): Promise<unknown> {
+    const treeCol = CbCollectionLib(CollectionName.ASSET_TREE);
+    const treeUpdateQuery = ClearBlade.Query({ collectionName: CollectionName.ASSET_TREE }).equalTo('id', tree.id);
+
+    const promise = treeCol.cbUpdatePromise({
+        query: treeUpdateQuery,
+        changes: {
+            tree: tree.getTree(),
+        },
+    });
+
+    return promise;
+}
+
+export function moveNode<T>(srcID: string, destID: string, id: string): Promise<T> {
     throw new Error('Method not implemented.');
 }
