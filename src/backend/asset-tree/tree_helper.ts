@@ -72,7 +72,7 @@ export function getTree(treeID: string): Promise<Trees<TreeNode>> {
             if (data.DATA.length != 1) {
                 return Promise.reject(new Error(data.DATA.length + 'trees found for id ' + treeID));
             }
-            const dataStr = (data.DATA[0] as AssetTree)['tree'];
+            const dataStr = (data.DATA[0] as AssetTree)['tree'] as Trees<TreeNode>;
             try {
                 //const treeObj = JSON.parse(dataStr);
                 return Promise.resolve(dataStr);
