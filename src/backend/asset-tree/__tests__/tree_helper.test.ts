@@ -1,8 +1,8 @@
-import '../index.ts';
+import '../tree_helper.ts';
 import '../../collection-lib';
 import { CbCollectionLib } from '../../collection-lib';
 import { CollectionName } from '../../global-config';
-import { addNode, removeNode } from '..';
+import { addNode, removeNode, getTree } from '../tree_helper';
 import { TreeNode } from '../tree';
 
 const value1 = {
@@ -117,17 +117,27 @@ describe('test suite', () => {
         });
     });
 
-    it('2. remove node', () => {
-        // const col = CbCollectionLib(CollectionName.ASSET_TREE);
-        // col.cbCreatePromise({
-        //     item: value1,
-        // });
+    it('2. get Tree', () => {
+        fetchFn = (): Record<string, unknown> => updatedCbValue;
+        const p = getTree('11');
+        p.then(function(tree) {
+            expect(tree).toEqual(updatedTree.tree);
+        });
+    });
+
+    it('3. remove node', () => {
         fetchFn = (): Record<string, unknown> => updatedCbValue;
         const p = removeNode('11', '2');
-        //CbCollectionLib(CollectionName.ASSET_TREE).cbFetchPromise
         p.then(function(tree) {
             expect(tree.getTree()).toEqual(removedTree.tree);
         });
-        //expect(p).resolves.toEqual(value1);
+    });
+
+    it('4. remove node from an non-existant tree', () => {
+        fetchFn = (): Record<string, unknown> => updatedCbValue;
+        const p = removeNode('1', '2');
+        p.catch(function(rej) {
+            expect(rej).toEqual(new Error('Node doesnt exist'));
+        });
     });
 });

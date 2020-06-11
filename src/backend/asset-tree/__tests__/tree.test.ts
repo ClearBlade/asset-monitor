@@ -40,8 +40,6 @@ describe('Tree Test', () => {
         expect(tree.nodes[node2.id]).toBeUndefined();
         expect(tree.nodes[node3.id]).toBeUndefined();
         expect(tree.nodes[node1.id].children).toEqual([]);
-        //expect(node2.children).toEqual([]);
-        // console.log('Remove Child tests Part 1::::::: ', node2, node3);
     });
 
     it('Add Child Part 2', () => {

@@ -22,7 +22,7 @@ export enum CollectionName {
     ASSETS = 'assets',
     ASSET_HISTORY = 'asset_history',
     ASSET_TYPES = 'asset_types',
-    ASSET_TREE = 'asset_tree',
+    ASSET_TREES = 'asset_trees',
     AREAS = 'areas',
     ACTIONS = 'actions',
     EVENT_TYPES = 'event_types',

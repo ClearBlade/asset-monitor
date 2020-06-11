@@ -12,7 +12,7 @@ global.ClearBlade = {
     Collection: function(): object {
         return {};
     },
-    Query: function(): { equalTo: () => void } {
+    Query: function(): { equalTo: () => void; or: () => void } {
         return {
             equalTo: (): void => undefined,
             or: (): void => undefined,
