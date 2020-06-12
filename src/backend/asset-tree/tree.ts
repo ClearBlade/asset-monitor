@@ -1,3 +1,5 @@
+import uuid = require('uuid');
+
 export interface TreeNode {
     id: string;
     children: Array<TreeNode['id']>;
@@ -15,15 +17,12 @@ export interface Trees<T extends TreeNode> {
 }
 
 export class Tree<T extends TreeNode> implements Trees<T> {
-    generateTreeId(): string {
-        return '';
-    }
     id: string; // A treeID will be generated everytime a new tree is created
     constructor(rootNode: T) {
         this.rootID = rootNode['id'];
         this.nodes = {};
         this.nodes[this.rootID as string] = { ...rootNode };
-        this.id = this.generateTreeId();
+        this.id = uuid();
     }
     rootID: string;
     nodes: NodeDict<T>;

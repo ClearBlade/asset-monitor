@@ -54,10 +54,12 @@ export function addNode<T>(treeID: string, node: TreeNode, parentID: string): Pr
         .then(function(treeObj) {
             const tree = CreateNewTree(treeObj as Trees<TreeNode>);
             tree.addChild(node, parentID);
+            log('Inside add node child method');
+            log(tree.getTree());
             return Promise.resolve(tree);
         })
         .catch(function(rejection) {
-            return Promise.reject(rejection);
+            return Promise.reject('Rejected in get Tree' + rejection);
         });
 }
 
@@ -86,14 +88,14 @@ export function getTree(treeID: string): Promise<Trees<TreeNode>> {
 
 export function addNewTree(newTree: Tree<TreeNode>): Promise<unknown> {
     const treeCol = CbCollectionLib(CollectionName.ASSET_TREES);
-
+    const flattenedTree = JSON.stringify({
+        rootID: newTree.rootID,
+        nodes: newTree.nodes,
+    });
     const addToTreesCol = treeCol.cbCreatePromise({
         item: {
             id: newTree.id,
-            tree: {
-                rootID: newTree.rootID,
-                nodes: newTree.nodes,
-            },
+            tree: flattenedTree,
         },
     });
     return addToTreesCol;
