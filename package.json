@@ -8,6 +8,7 @@
         "prepublish": "tsc",
         "prebuild": "del lib/",
         "build": "tsc",
+        "bundle": "webpack",
         "postbuild": "cpy 'static/promise-polyfill/**' ../lib/ --cwd=src/ --parents",
         "lint": "eslint . --ext .ts",
         "lint:fix": "eslint . --ext .ts --fix"

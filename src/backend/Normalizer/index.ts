@@ -111,6 +111,10 @@ export function normalizer(config: NormalizerConfig): void {
     Promise.runQueue();
 }
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// @ts-ignore
+global.normalizer = normalizer;
+
 export const api = {
     default: normalizer,
     publisher,
