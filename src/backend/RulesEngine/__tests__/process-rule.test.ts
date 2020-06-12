@@ -573,6 +573,8 @@ const results = {
                 result: true,
                 duration: null,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
         ],
         [
@@ -582,6 +584,8 @@ const results = {
                 result: false,
                 duration: null,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
         ],
     ],
@@ -593,6 +597,8 @@ const results = {
                 result: true,
                 duration: 30000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
             {
                 id: 'testAsset6',
@@ -600,6 +606,8 @@ const results = {
                 result: false,
                 duration: 30000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
         ],
     ],
@@ -611,6 +619,8 @@ const results = {
                 result: false,
                 duration: 30000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
             {
                 id: 'testAsset6',
@@ -618,6 +628,8 @@ const results = {
                 result: false,
                 duration: 30000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
         ],
         [
@@ -627,6 +639,8 @@ const results = {
                 result: false,
                 duration: 30000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
             {
                 id: 'testAsset7',
@@ -634,6 +648,8 @@ const results = {
                 result: false,
                 duration: 30000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
         ],
     ],
@@ -645,6 +661,8 @@ const results = {
                 result: false,
                 duration: 30000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
         ],
         [
@@ -654,6 +672,8 @@ const results = {
                 result: false,
                 duration: 30000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
             {
                 id: 'testAsset7',
@@ -661,6 +681,8 @@ const results = {
                 result: false,
                 duration: 30000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
         ],
     ],
@@ -672,6 +694,8 @@ const results = {
                 result: true,
                 duration: 30000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
             {
                 id: 'testAsset6',
@@ -679,6 +703,8 @@ const results = {
                 result: false,
                 duration: 30000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
         ],
         [
@@ -688,6 +714,8 @@ const results = {
                 result: false,
                 duration: 30000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
             {
                 id: 'testAsset2',
@@ -695,6 +723,8 @@ const results = {
                 result: false,
                 duration: 30000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
         ],
     ],
@@ -706,6 +736,8 @@ const results = {
                 result: true,
                 duration: null,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
             {
                 id: 'testAsset1',
@@ -713,6 +745,8 @@ const results = {
                 result: false,
                 duration: null,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
         ],
         [
@@ -722,6 +756,8 @@ const results = {
                 result: false,
                 duration: null,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
             {
                 id: 'testAsset1',
@@ -729,6 +765,8 @@ const results = {
                 result: false,
                 duration: null,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
         ],
         [
@@ -738,6 +776,8 @@ const results = {
                 result: true,
                 duration: null,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
             {
                 id: 'testAsset2',
@@ -745,6 +785,8 @@ const results = {
                 result: false,
                 duration: null,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
         ],
         [
@@ -754,6 +796,8 @@ const results = {
                 result: false,
                 duration: null,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
             {
                 id: 'testAsset2',
@@ -761,6 +805,8 @@ const results = {
                 result: false,
                 duration: null,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
         ],
     ],
@@ -772,6 +818,8 @@ const results = {
                 result: false,
                 duration: 30000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
             {
                 id: 'testAsset1',
@@ -779,6 +827,8 @@ const results = {
                 result: true,
                 duration: 10000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 50,
             },
             {
                 id: 'testAsset2',
@@ -786,6 +836,8 @@ const results = {
                 result: false,
                 duration: 10000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 50,
             },
         ],
         [
@@ -795,6 +847,8 @@ const results = {
                 result: false,
                 duration: 30000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
             {
                 id: 'testAsset1',
@@ -802,6 +856,8 @@ const results = {
                 result: true,
                 duration: 10000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 50,
             },
             {
                 id: 'testAsset2',
@@ -809,6 +865,8 @@ const results = {
                 result: false,
                 duration: 10000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 50,
             },
         ],
         [
@@ -818,6 +876,8 @@ const results = {
                 result: false,
                 duration: 30000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
             {
                 id: 'testAsset3',
@@ -825,6 +885,8 @@ const results = {
                 result: false,
                 duration: 20000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 60,
             },
             {
                 id: 'testAsset4',
@@ -832,6 +894,8 @@ const results = {
                 result: false,
                 duration: 20000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 60,
             },
         ],
         [
@@ -841,6 +905,8 @@ const results = {
                 result: false,
                 duration: 30000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
             {
                 id: 'testAsset3',
@@ -848,6 +914,8 @@ const results = {
                 result: false,
                 duration: 20000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 60,
             },
             {
                 id: 'testAsset4',
@@ -855,6 +923,8 @@ const results = {
                 result: false,
                 duration: 20000,
                 timerStart: 0,
+                operator: 'equal',
+                value: 60,
             },
         ],
     ],
@@ -866,6 +936,8 @@ const results = {
                 result: false,
                 duration: null,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
             {
                 id: 'testAsset6',
@@ -873,6 +945,8 @@ const results = {
                 result: false,
                 duration: null,
                 timerStart: 0,
+                operator: 'equal',
+                value: 70,
             },
         ],
         [
@@ -882,6 +956,8 @@ const results = {
                 result: false,
                 duration: null,
                 timerStart: 0,
+                operator: 'equal',
+                value: 60,
             },
             {
                 id: 'testAsset1',
@@ -889,6 +965,8 @@ const results = {
                 result: false,
                 duration: null,
                 timerStart: 0,
+                operator: 'equal',
+                value: 50,
             },
         ],
         [
@@ -898,6 +976,8 @@ const results = {
                 result: false,
                 duration: null,
                 timerStart: 0,
+                operator: 'equal',
+                value: 60,
             },
             {
                 id: 'testAsset2',
@@ -905,6 +985,8 @@ const results = {
                 result: false,
                 duration: null,
                 timerStart: 0,
+                operator: 'equal',
+                value: 50,
             },
         ],
     ],

@@ -6,10 +6,14 @@ import {
     ConditionArray,
     Duration,
     DurationUnits,
+    Relationship,
+    Entity,
 } from './types';
 import '../../static/promise-polyfill';
-import { getAllAreasForType, getAllAssetsForType } from './async';
+import { getAllAreasForType, getAllAssetsForType, getAllAssets, getAllAreas } from './async';
 import { TopLevelCondition, AnyConditions, AllConditions, ConditionProperties } from 'json-rules-engine';
+import { Asset } from '../collection-schema/Assets';
+import { Areas } from '../collection-schema/Areas';
 
 function getCollectionName(entityType: EntityTypes): EntityTypes {
     switch (entityType) {
@@ -72,6 +76,31 @@ function getLocationConditionProps(
     };
 }
 
+function onFetchEntitiesForLocation(
+    entities: CbServer.CollectionSchema<Asset | Areas>[],
+    id: string,
+    entity: Entity,
+    relationship: Relationship,
+    isPartOfType?: boolean,
+): ConditionProperties[] {
+    return entities.map(asset =>
+        getLocationConditionProps(
+            {
+                id,
+                collection: getCollectionName(entity.entity_type),
+                type: isPartOfType ? entity.id : '',
+            },
+            {
+                id: asset.id as string,
+                collection: getCollectionName(relationship.attribute_type),
+                type: relationship.attribute,
+            },
+            relationship.operator,
+            relationship.duration,
+        ),
+    );
+}
+
 function getLocationConditions(
     id: string,
     condition: Condition,
@@ -79,67 +108,48 @@ function getLocationConditions(
 ): Promise<ConditionProperties[]> {
     const { relationship, entity } = condition;
     let promise;
-    switch (relationship.attribute_type) {
-        case EntityTypes.ASSET_TYPE:
-            promise = getAllAssetsForType(relationship.attribute).then(assets => {
-                return assets.map(asset =>
-                    getLocationConditionProps(
-                        {
-                            id,
-                            collection: getCollectionName(entity.entity_type),
-                            type: isPartOfType ? entity.id : undefined,
-                        },
-                        {
-                            id: asset.id as string,
-                            collection: getCollectionName(relationship.attribute_type),
-                            type: relationship.attribute,
-                        },
-                        relationship.operator,
-                        relationship.duration,
-                    ),
-                );
-            });
-            Promise.runQueue();
-            return promise;
-        case EntityTypes.AREA_TYPE:
-            promise = getAllAreasForType(relationship.attribute).then(areas => {
-                return areas.map(area =>
-                    getLocationConditionProps(
-                        {
-                            id,
-                            collection: getCollectionName(entity.entity_type),
-                            type: isPartOfType ? entity.id : undefined,
-                        },
-                        {
-                            id: area.id as string,
-                            collection: getCollectionName(relationship.attribute_type),
-                            type: relationship.attribute,
-                        },
-                        relationship.operator,
-                        relationship.duration,
-                    ),
-                );
-            });
-            Promise.runQueue();
-            return promise;
-        default:
-            return new Promise(res =>
-                res([
-                    getLocationConditionProps(
-                        {
-                            id,
-                            collection: getCollectionName(entity.entity_type),
-                            type: isPartOfType ? entity.id : undefined,
-                        },
-                        {
-                            id: relationship.attribute,
-                            collection: getCollectionName(relationship.attribute_type),
-                        },
-                        relationship.operator,
-                        relationship.duration,
-                    ),
-                ]),
-            );
+    if (relationship.attribute_type === EntityTypes.ASSET_TYPE) {
+        promise = getAllAssetsForType(relationship.attribute).then(assets => {
+            return onFetchEntitiesForLocation(assets, id, entity, relationship, isPartOfType);
+        });
+        Promise.runQueue();
+        return promise;
+    } else if (relationship.attribute_type === EntityTypes.AREA_TYPE) {
+        promise = getAllAreasForType(relationship.attribute).then(areas => {
+            return onFetchEntitiesForLocation(areas, id, entity, relationship, isPartOfType);
+        });
+        Promise.runQueue();
+        return promise;
+    } else if (relationship.attribute_type === EntityTypes.ASSET && relationship.attribute === '') {
+        promise = getAllAssets().then(assets => {
+            return onFetchEntitiesForLocation(assets, id, entity, relationship, isPartOfType);
+        });
+        Promise.runQueue();
+        return promise;
+    } else if (relationship.attribute_type === EntityTypes.AREA && relationship.attribute === '') {
+        promise = getAllAreasForType(relationship.attribute).then(areas => {
+            return onFetchEntitiesForLocation(areas, id, entity, relationship, isPartOfType);
+        });
+        Promise.runQueue();
+        return promise;
+    } else {
+        return new Promise(res =>
+            res([
+                getLocationConditionProps(
+                    {
+                        id,
+                        collection: getCollectionName(entity.entity_type),
+                        type: isPartOfType ? entity.id : '',
+                    },
+                    {
+                        id: relationship.attribute,
+                        collection: getCollectionName(relationship.attribute_type),
+                    },
+                    relationship.operator,
+                    relationship.duration,
+                ),
+            ]),
+        );
     }
 }
 
@@ -181,36 +191,46 @@ function formatConditionForEntity(
     }
 }
 
+function onFetchEntitiesForState(
+    entities: CbServer.CollectionSchema<Asset | Areas>[],
+    condition: Condition,
+    conditions: ConditionProperties[],
+    isPartOfType?: boolean,
+): Promise<ConditionProperties[]> {
+    const promise = Promise.all(
+        entities.map(entity => formatConditionForEntity(entity.id as string, condition, isPartOfType)),
+    ).then(results => {
+        for (let i = 0; i < results.length; i++) {
+            conditions.push(...results[i]);
+        }
+        return conditions;
+    });
+    Promise.runQueue();
+    return promise;
+}
+
 function createConditionsForType(condition: Condition): Promise<ConditionProperties[]> {
     let promise;
     const conditions: ConditionProperties[] = [];
     switch (condition.entity.entity_type) {
         case EntityTypes.ASSET_TYPE:
             promise = getAllAssetsForType(condition.entity.id).then(assets => {
-                const promiseTwo = Promise.all(
-                    assets.map(asset => formatConditionForEntity(asset.id as string, condition, true)),
-                ).then(results => {
-                    for (let i = 0; i < results.length; i++) {
-                        conditions.push(...results[i]);
-                    }
-                    return conditions;
-                });
-                Promise.runQueue();
-                return promiseTwo;
+                return onFetchEntitiesForState(assets, condition, conditions, true);
             });
             break;
         case EntityTypes.AREA_TYPE:
             promise = getAllAreasForType(condition.entity.id).then(areas => {
-                const promiseTwo = Promise.all(
-                    areas.map(area => formatConditionForEntity(area.id as string, condition, true)),
-                ).then(results => {
-                    for (let i = 0; i < results.length; i++) {
-                        conditions.push(...results[i]);
-                    }
-                    return conditions;
-                });
-                Promise.runQueue();
-                return promiseTwo;
+                return onFetchEntitiesForState(areas, condition, conditions, true);
+            });
+            break;
+        case EntityTypes.ASSET:
+            promise = getAllAssets().then(assets => {
+                return onFetchEntitiesForState(assets, condition, conditions);
+            });
+            break;
+        case EntityTypes.AREA:
+            promise = getAllAreas().then(areas => {
+                return onFetchEntitiesForState(areas, condition, conditions);
             });
             break;
         default:
@@ -220,14 +240,15 @@ function createConditionsForType(condition: Condition): Promise<ConditionPropert
     return promise as Promise<ConditionProperties[]>;
 }
 
-function addConditions(ruleId: string, condition: Condition): Promise<AnyConditions> {
+function addConditions(condition: Condition): Promise<AnyConditions | ConditionProperties> {
     const rule: AnyConditions = {
         any: [],
     };
     let promise;
     if (
         condition.entity.entity_type === EntityTypes.ASSET_TYPE ||
-        condition.entity.entity_type === EntityTypes.AREA_TYPE
+        condition.entity.entity_type === EntityTypes.AREA_TYPE ||
+        condition.entity.id === '' // wants all entities
     ) {
         promise = createConditionsForType(condition).then(entityConditions => {
             if (entityConditions.length) {
@@ -237,44 +258,64 @@ function addConditions(ruleId: string, condition: Condition): Promise<AnyConditi
         });
     } else {
         promise = formatConditionForEntity(condition.entity.id, condition).then(condish => {
-            rule.any.push(...condish);
-            return rule;
+            return {
+                any: [...(condish as ConditionProperties[])],
+            };
         });
     }
     Promise.runQueue();
     return promise as Promise<AnyConditions>;
 }
 
-function convertCondition(ruleId: string, condition: Condition | Conditions): Promise<AnyConditions> {
+function convertCondition(
+    condition: Condition | Conditions,
+    parent: TopLevelCondition,
+): Promise<AnyConditions | ConditionProperties> {
     if ((condition as Condition).entity) {
         // We have a condition
-        const promise = addConditions(ruleId, condition as Condition);
+        const promise = addConditions(condition as Condition);
         Promise.runQueue();
         return promise;
     } else {
         // Seems like we have nested conditions
-        const promise = parseAndConvertConditions(ruleId, condition as Conditions);
+        const promise = parseAndConvertConditions(condition as Conditions, parent);
         Promise.runQueue();
         return promise as Promise<AnyConditions>;
     }
 }
 
 export function parseAndConvertConditions(
-    ruleId: string,
     conditions: Conditions,
-): Promise<TopLevelCondition | AnyConditions | AllConditions> {
+    parent?: TopLevelCondition,
+): Promise<TopLevelCondition | AnyConditions | AllConditions | ConditionProperties> {
+    let level: TopLevelCondition;
     const firstKey = Object.keys(conditions)[0] as ConditionalOperators;
     const subConditions = conditions[firstKey] as ConditionArray;
-    const promise = Promise.all(subConditions.map(s => convertCondition(ruleId, s)))
+    const promise = Promise.all(subConditions.map(c => convertCondition(c, level as TopLevelCondition)))
         .then(rules => {
             if (rules.length > 1) {
-                if (firstKey === 'and') {
-                    return {
-                        all: [...rules],
+                if (firstKey === 'or') {
+                    level = {
+                        any: [],
                     };
+                    rules.forEach(rule => {
+                        const operatorKey = Object.keys(rule)[0];
+                        if (operatorKey === 'any') {
+                            if (parent) {
+                                (parent as AnyConditions).any.push(rule);
+                            } else {
+                                (level as AnyConditions).any.push(...(rule as AnyConditions).any);
+                            }
+                        } else {
+                            (level as AnyConditions).any.push(rule);
+                        }
+                    });
+                    if ((level as AnyConditions).any.length) {
+                        return level;
+                    }
                 } else {
                     return {
-                        any: [...rules],
+                        all: [...rules],
                     };
                 }
             }

@@ -8,7 +8,19 @@ export function getAllAssetsForType(): Promise<Array<CbServer.CollectionSchema<A
     });
 }
 
-export function getAllAreasForType(): Promise<Array<CbServer.CollectionSchema<Asset>>> {
+export function getAllAreasForType(): Promise<Array<CbServer.CollectionSchema<Areas>>> {
+    return new Promise(resolve => {
+        resolve(areas);
+    });
+}
+
+export function getAllAssets(): Promise<Array<CbServer.CollectionSchema<Asset>>> {
+    return new Promise(resolve => {
+        resolve(assets);
+    });
+}
+
+export function getAllAreas(): Promise<Array<CbServer.CollectionSchema<Areas>>> {
     return new Promise(resolve => {
         resolve(areas);
     });

@@ -99,28 +99,26 @@ export class RulesEngine {
         const parsedTimeframe = timeframe ? JSON.parse(timeframe) : timeframe;
         const parsedActionIDs = action_ids ? JSON.parse(action_ids) : action_ids;
 
-        const promise = parseAndConvertConditions(id as string, parsedConditions).then(
-            (convertedConditions: TopLevelCondition) => {
-                return new Rule({
-                    name: id as string,
-                    conditions: convertedConditions,
-                    event: {
-                        type: label as string,
-                        params: {
-                            eventTypeID: event_type_id,
-                            actionIDs: parsedActionIDs,
-                            priority,
-                            severity,
-                            timeframe: parsedTimeframe,
-                            ruleID: id,
-                            ruleName: label,
-                            ruleType: Object.keys(convertedConditions)[0],
-                            closesIds: JSON.parse(closes_ids || '[]'),
-                        },
+        const promise = parseAndConvertConditions(parsedConditions).then(convertedConditions => {
+            return new Rule({
+                name: id as string,
+                conditions: convertedConditions as TopLevelCondition,
+                event: {
+                    type: label as string,
+                    params: {
+                        eventTypeID: event_type_id,
+                        actionIDs: parsedActionIDs,
+                        priority,
+                        severity,
+                        timeframe: parsedTimeframe,
+                        ruleID: id,
+                        ruleName: label,
+                        ruleType: Object.keys(convertedConditions as TopLevelCondition)[0],
+                        closesIds: JSON.parse(closes_ids || '[]'),
                     },
-                });
-            },
-        );
+                },
+            });
+        });
         Promise.runQueue();
         return promise;
     }

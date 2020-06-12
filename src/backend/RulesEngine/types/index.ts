@@ -155,6 +155,8 @@ export interface ProcessedCondition {
     result: boolean;
     duration: number;
     timerStart: number;
+    value: string | number | boolean;
+    operator: string;
 }
 
 export interface Entities {

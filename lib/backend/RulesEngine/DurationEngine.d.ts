@@ -20,7 +20,6 @@ export declare class DurationEngine {
     static getInstance(): DurationEngine;
     getCacheHandler(ruleId: string, callback: (data: Timers) => void): void;
     clearTimersForRule(ruleId: string): void;
-    clearTimer(ruleId: string, key: string): void;
     cancelAndClearTimer(ruleId: string, key: string): void;
     timerExecuted(err: boolean, data: string | null): void;
     startTimerAndGetId(key: string, ruleId: string, timer: Timer): Promise<string>;

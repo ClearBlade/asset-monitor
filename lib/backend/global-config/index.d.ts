@@ -38,6 +38,7 @@ export interface UpdateAssetLocationOptions {
     LOG_SERVICE_NAME: string;
 }
 export interface UpdateAssetStatusOptions {
+    CREATE_NEW_ASSET_IF_MISSING?: boolean;
     LOG_SETTING: LogLevels;
     UPDATE_METHOD: AssetStatusUpdateMethod;
     LOG_SERVICE_NAME: string;

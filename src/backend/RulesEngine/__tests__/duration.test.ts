@@ -173,7 +173,7 @@ const incomingDataThree: WithParsedCustomData = {
 };
 
 const storedTimers: Timers = {
-    testAsset1testAsset2: {
+    testAsset1undefinedtestAsset2undefined: {
         conditions: incomingCombinations[0],
         entities,
         actionTopic,
@@ -188,7 +188,7 @@ const storedTimers: Timers = {
 };
 
 const storedTimersTwo: Timers = {
-    testAsset1testAsset2: {
+    testAsset1undefinedtestAsset2undefined: {
         conditions: incomingCombinationsTwo[0],
         entities,
         actionTopic,

@@ -21,10 +21,10 @@ export function collectAndBuildFact(
     return new Promise(res => {
         const collection = CbCollectionLib(collectionName);
         const query = ClearBlade.Query({ collectionName });
-        if (id === incomingData.id) {
-            query.equalTo('id', id);
-        } else {
+        if (type) {
             query.equalTo('type', type);
+        } else {
+            query.equalTo('id', id);
         }
         const promise = collection
             .cbFetchPromise({ query })
@@ -80,6 +80,8 @@ function buildProcessedCondition(fact: ConditionProperties): ProcessedCondition 
         // @ts-ignore json-rule-engine types does not include result
         result: fact.result,
         duration: (fact.params as Record<string, number>).duration,
+        value: fact.value,
+        operator: fact.operator,
         timerStart: 0,
     };
 }

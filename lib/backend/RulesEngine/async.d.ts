@@ -5,6 +5,8 @@ import { EventSchema } from '../collection-schema/Events';
 import { SplitEntities } from './types';
 export declare function getAllAssetsForType(assetType: string): Promise<Array<CbServer.CollectionSchema<Asset>>>;
 export declare function getAllAreasForType(areaType: string): Promise<Array<CbServer.CollectionSchema<Areas>>>;
+export declare function getAllAssets(): Promise<Array<CbServer.CollectionSchema<Asset>>>;
+export declare function getAllAreas(): Promise<Array<CbServer.CollectionSchema<Areas>>>;
 export declare function getActionByID(actionID: string): Promise<Actions>;
 export declare function compareOverlappingEntities(event: EventSchema, splitEntities: SplitEntities): boolean | SplitEntities;
 export declare function shouldCreateOrUpdateEvent(ruleID: string, splitEntities: SplitEntities): Promise<boolean>;
