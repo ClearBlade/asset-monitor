@@ -14,21 +14,22 @@ export interface NodeDict<T extends TreeNode> {
 export interface Trees<T extends TreeNode> {
     rootID: string;
     nodes: NodeDict<T>;
+    treeID: string;
 }
 
 export class Tree<T extends TreeNode> implements Trees<T> {
-    id: string; // A treeID will be generated everytime a new tree is created
-    constructor(rootNode: T) {
+    treeID: string; // A treeID will be generated everytime a new tree is created
+    constructor(rootNode: T, treeID: string) {
         this.rootID = rootNode['id'];
         this.nodes = {};
         this.nodes[this.rootID as string] = { ...rootNode };
-        this.id = uuid();
+        this.treeID = treeID || uuid();
     }
     rootID: string;
     nodes: NodeDict<T>;
 
     createNewTree(rootID: TreeNode['id'], treeNodes: NodeDict<T>): Tree<T> {
-        const tree = new Tree(treeNodes[rootID as string]);
+        const tree = new Tree(treeNodes[rootID as string], '');
         tree.nodes = treeNodes;
         return tree;
     }
@@ -42,6 +43,9 @@ export class Tree<T extends TreeNode> implements Trees<T> {
         //adds child to the parent node's list
         //adds child T to the NodeDict
         //returns tree as promise
+        if (!node.children) {
+            throw new Error('children key is missing in the node..');
+        }
         if (node.children.length > 0) {
             throw new Error('A new born cannot have children, Duh..');
         }
@@ -115,7 +119,7 @@ export class Tree<T extends TreeNode> implements Trees<T> {
         subTreeIDs.forEach(id => {
             subTreeDict['id'] = this.nodes[id as string];
         });
-        const tree = new Tree(subTreeDict[currentNode['id'] as string]);
+        const tree = new Tree(subTreeDict[currentNode['id'] as string], '');
 
         return tree;
     }
@@ -124,12 +128,13 @@ export class Tree<T extends TreeNode> implements Trees<T> {
         return {
             rootID: this.rootID,
             nodes: this.nodes,
+            treeID: this.treeID,
         };
     }
 }
 
-export function CreateNewTree(tree: Trees<TreeNode>): Tree<TreeNode> {
-    const newTree = new Tree(tree.nodes[tree.rootID as string]);
+export function CreateTree(tree: Trees<TreeNode>): Tree<TreeNode> {
+    const newTree = new Tree(tree.nodes[tree.rootID as string], tree.treeID);
     newTree.nodes = tree.nodes;
     return newTree;
 }

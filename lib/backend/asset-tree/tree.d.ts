@@ -10,10 +10,11 @@ export interface NodeDict<T extends TreeNode> {
 export interface Trees<T extends TreeNode> {
     rootID: string;
     nodes: NodeDict<T>;
+    treeID: string;
 }
 export declare class Tree<T extends TreeNode> implements Trees<T> {
-    id: string;
-    constructor(rootNode: T);
+    treeID: string;
+    constructor(rootNode: T, treeID: string);
     rootID: string;
     nodes: NodeDict<T>;
     createNewTree(rootID: TreeNode['id'], treeNodes: NodeDict<T>): Tree<T>;
@@ -25,4 +26,4 @@ export declare class Tree<T extends TreeNode> implements Trees<T> {
     getSubtreeByID(nodeID: string): Tree<T>;
     getTree(): Trees<T>;
 }
-export declare function CreateNewTree(tree: Trees<TreeNode>): Tree<TreeNode>;
+export declare function CreateTree(tree: Trees<TreeNode>): Tree<TreeNode>;
