@@ -1,4 +1,4 @@
-import '../../static/promise-polyfill';
+import '@clearblade/promise-polyfill';
 import 'core-js/features/map';
 import { Engine, Event, Almanac, RuleResult, Rule } from 'json-rules-engine';
 import { WithParsedCustomData } from './types';

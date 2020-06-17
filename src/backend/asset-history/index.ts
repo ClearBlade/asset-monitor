@@ -5,7 +5,7 @@ import { CbCollectionLib } from '../collection-lib';
 import { Logger } from '../Logger';
 import { Topics, getErrorMessage } from '../Util';
 import { bulkSubscriber } from '../Normalizer';
-import '../../static/promise-polyfill';
+import '@clearblade/promise-polyfill';
 
 interface CreateAssetHistoryConfig {
     req: CbServer.BasicReq;

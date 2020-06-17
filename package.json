@@ -9,7 +9,6 @@
         "prebuild": "del lib/",
         "build": "tsc",
         "bundle": "webpack",
-        "postbuild": "cpy 'static/promise-polyfill/**' ../lib/ --cwd=src/ --parents",
         "lint": "eslint . --ext .ts",
         "lint:fix": "eslint . --ext .ts --fix"
     },
@@ -101,8 +100,9 @@
         "lib": "lib"
     },
     "dependencies": {
-        "@clearblade/messaging-utils": "^1.0.2",
-        "@clearblade/one-way-sync": "^1.1.6",
+        "@clearblade/messaging-utils": "^1.0.3",
+        "@clearblade/one-way-sync": "^1.1.8",
+        "@clearblade/promise-polyfill": "^1.0.0",
         "core-js": "^3.6.2",
         "json-rules-engine": "^5.0.0",
         "selectn": "^1.1.2",
