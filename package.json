@@ -101,8 +101,8 @@
         "lib": "lib"
     },
     "dependencies": {
-        "@clearblade/messaging-utils": "^1.0.1",
-        "@clearblade/one-way-sync": "^1.1.2",
+        "@clearblade/messaging-utils": "^1.0.2",
+        "@clearblade/one-way-sync": "^1.1.5",
         "core-js": "^3.6.2",
         "json-rules-engine": "^5.0.0",
         "selectn": "^1.1.2",
