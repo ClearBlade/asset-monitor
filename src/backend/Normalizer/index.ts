@@ -3,7 +3,7 @@ import { GC, LogLevels } from '../global-config';
 import { Asset } from '../collection-schema/Assets';
 import { getErrorMessage } from '../Util';
 import { subscriber, bulkSubscriber } from '@clearblade/messaging-utils';
-import '../../static/promise-polyfill/index.js';
+import '@clearblade/promise-polyfill';
 
 export type MessageParser = (err: boolean, msg: string, topic: string) => Promise<Array<Asset>>;
 // parses message and returns normalized format
@@ -110,6 +110,10 @@ export function normalizer(config: NormalizerConfig): void {
 
     Promise.runQueue();
 }
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// @ts-ignore
+global.normalizer = normalizer;
 
 export const api = {
     default: normalizer,

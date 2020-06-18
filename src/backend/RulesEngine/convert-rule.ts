@@ -9,7 +9,7 @@ import {
     Relationship,
     Entity,
 } from './types';
-import '../../static/promise-polyfill';
+import '@clearblade/promise-polyfill';
 import { getAllAreasForType, getAllAssetsForType, getAllAssets, getAllAreas } from './async';
 import { TopLevelCondition, AnyConditions, AllConditions, ConditionProperties } from 'json-rules-engine';
 import { Asset } from '../collection-schema/Assets';

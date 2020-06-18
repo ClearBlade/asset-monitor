@@ -1,5 +1,5 @@
 import { RuleParams, Entities, SplitEntities, WithParsedCustomData } from './types';
-import '../../static/promise-polyfill';
+import '@clearblade/promise-polyfill';
 import {
     getActionByID,
     getStateForEvent,

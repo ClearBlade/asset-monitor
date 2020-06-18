@@ -4,7 +4,7 @@ import { Logger } from '../Logger';
 import { Topics, getErrorMessage } from '../Util';
 import { Asset } from '../collection-schema/Assets';
 import { bulkSubscriber } from '../Normalizer';
-import '../../static/promise-polyfill';
+import '@clearblade/promise-polyfill';
 
 interface UpdateAssetStatusConfig {
     req: CbServer.BasicReq;

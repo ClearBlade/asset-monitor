@@ -2,7 +2,7 @@ import { normalizer, MessageParser, PublishConfig } from '@clearblade/asset-moni
 import { isNormalizedDataValid } from '@clearblade/asset-monitor/lib/backend/Util';
 import { LogLevels, NormalizerDeviceMap } from '@clearblade/asset-monitor/lib/backend/global-config';
 import { Asset } from '@clearblade/asset-monitor/lib/backend/collection-schema/Assets';
-import '@clearblade/asset-monitor/lib/static/promise-polyfill/index.js';
+import '@clearblade/promise-polyfill';
 import { Logger } from '@clearblade/asset-monitor/lib/backend/Logger';
 // @ts-ignore
 let ClearBlade: CbServer.ClearBladeInt = global.ClearBlade;
