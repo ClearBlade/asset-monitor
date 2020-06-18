@@ -87,6 +87,9 @@
             "node_modules",
             "src"
         ],
+        "moduleNameMapper": {
+            "@clearblade/promise-polyfill(.*)": "<rootDir>/src/jest-promise-polyfill.js"
+        },
         "transform": {
             "^.+\\.jsx?$": "babel-jest",
             "^.+\\.tsx?$": "ts-jest"
@@ -100,9 +103,9 @@
         "lib": "lib"
     },
     "dependencies": {
-        "@clearblade/messaging-utils": "^1.0.3",
-        "@clearblade/one-way-sync": "^1.1.8",
-        "@clearblade/promise-polyfill": "^1.0.0",
+        "@clearblade/messaging-utils": "^1.0.4",
+        "@clearblade/one-way-sync": "^1.1.9",
+        "@clearblade/promise-polyfill": "^1.0.1",
         "core-js": "^3.6.2",
         "json-rules-engine": "^5.0.0",
         "selectn": "^1.1.2",
