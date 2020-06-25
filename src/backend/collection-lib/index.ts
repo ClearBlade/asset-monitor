@@ -13,10 +13,15 @@ interface CollectionFetchOptions {
     query: CbServer.QueryObj;
 }
 
+interface CollectionDeleteOptions {
+    query: CbServer.QueryObj;
+}
+
 interface CbCollectionLib {
     cbCreatePromise: (opts: CollectionCreateOptions) => Promise<CbServer.CollectionSchema[]>;
     cbUpdatePromise: (opts: CollectionUpdateOptions) => Promise<'success'>;
     cbFetchPromise: (opts: CollectionFetchOptions) => Promise<CbServer.CollectionFetchData>;
+    cbRemovePromise: (opts: CollectionDeleteOptions) => Promise<'success'>;
 }
 
 export function CbCollectionLib(collectionName: CollectionName): CbCollectionLib {
@@ -98,9 +103,28 @@ export function CbCollectionLib(collectionName: CollectionName): CbCollectionLib
         });
     }
 
+    function cbRemovePromise(opts: CollectionDeleteOptions): Promise<'success'> {
+        return new Promise(function(resolve, reject) {
+            const col = ClearBlade.Collection({ collectionName: collectionName });
+            const query = opts.query;
+            if (!query) {
+                const errMsg = 'ERROR: query is missing';
+                reject(new Error(errMsg));
+            }
+            col.remove(query, function(err, res) {
+                if (err) {
+                    reject(new Error(JSON.stringify(res)));
+                } else {
+                    resolve('success');
+                }
+            });
+        });
+    }
+
     return {
         cbCreatePromise,
         cbUpdatePromise,
         cbFetchPromise,
+        cbRemovePromise,
     };
 }

@@ -1,7 +1,7 @@
 import { Tree } from '../tree';
 
 let tree;
-let node1, node2, node3;
+let node1, node2, node3, node4, node5;
 describe('Tree Test', () => {
     beforeEach(function() {
         node1 = {
@@ -22,7 +22,20 @@ describe('Tree Test', () => {
             meta: {},
             parentID: '',
         };
-        tree = new Tree(node1);
+        node4 = {
+            id: '4',
+            children: [],
+            meta: {},
+            parentID: '',
+        };
+        node5 = {
+            id: '5',
+            children: [],
+            meta: {},
+            parentID: '',
+        };
+
+        tree = new Tree(node1, '');
     });
     it('Add Child', () => {
         tree.addChild(node2, node1.id);
@@ -61,5 +74,16 @@ describe('Tree Test', () => {
         expect(() => {
             tree.removeChild(node1.id);
         }).toThrow('Root cannot be deleted.');
+    });
+
+    it('Add Child Tree', () => {
+        const tree2 = new Tree(node4, '');
+        tree2.addChild(node5, node4.id);
+        tree.addChild(node2, node1.id);
+        tree.addChildTree(tree2, node2.id);
+        expect(Object.values(tree.nodes)).toContainEqual({ ...node4, parentID: node2.id });
+        expect(tree.nodes[node5.id].parentID).toEqual(node4.id);
+        expect(Object.values(tree.nodes)).toContainEqual({ ...node5, parentID: node4.id });
+        expect(Object.values(tree.nodes)).toContainEqual({ ...node2, children: [node4.id], parentID: '1' });
     });
 });

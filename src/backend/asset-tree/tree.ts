@@ -1,9 +1,12 @@
 import uuid = require('uuid');
 
-export interface TreeNode {
+export interface OrphanTreeNode {
     id: string;
-    children: Array<TreeNode['id']>;
     meta: Record<string, unknown>;
+}
+export interface TreeNode extends OrphanTreeNode {
+    children: Array<TreeNode['id']>;
+
     parentID: string; // Assuming there is just one parent
 }
 
@@ -39,7 +42,18 @@ export class Tree<T extends TreeNode> implements Trees<T> {
         throw new Error('Method not implemented.' + nodeID);
     }
 
-    addChild(node: T, parentID: T['id']): Tree<T> {
+    addChildTree(childTree: Tree<T>, parentID: T['id']): Tree<T> {
+        const parentNode = this.nodes[parentID as string];
+        const childID = childTree.rootID;
+        const childNode = childTree.nodes[childID as string];
+        childNode.parentID = parentID;
+        parentNode.children.push(childID);
+        this.nodes = { ...this.nodes, ...childTree.getAllNodes() };
+        return this;
+    }
+
+    addChild(orphanNode: OrphanTreeNode, parentID: T['id']): Tree<T> {
+        const node = ConvertToTreeNode(orphanNode);
         //adds child to the parent node's list
         //adds child T to the NodeDict
         //returns tree as promise
@@ -131,10 +145,22 @@ export class Tree<T extends TreeNode> implements Trees<T> {
             treeID: this.treeID,
         };
     }
+
+    size(): number {
+        return Object.keys(this.nodes).length;
+    }
 }
 
 export function CreateTree(tree: Trees<TreeNode>): Tree<TreeNode> {
     const newTree = new Tree(tree.nodes[tree.rootID as string], tree.treeID);
     newTree.nodes = tree.nodes;
     return newTree;
+}
+
+export function ConvertToTreeNode<T extends OrphanTreeNode>(orphanNode: T): T extends TreeNode ? T : TreeNode {
+    return {
+        ...orphanNode,
+        children: [],
+        parentID: '',
+    };
 }
