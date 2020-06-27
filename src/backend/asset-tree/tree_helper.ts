@@ -4,11 +4,12 @@ import { AssetTree } from '../collection-schema/AssetTree';
 import { TreeNode, Tree, CreateTree, Trees, OrphanTreeNode } from './tree';
 import { Asset } from '../collection-schema/Assets';
 
-export function createTree(newTree: Tree<TreeNode>): Promise<unknown> {
+export function insertTree(newTree: Tree<TreeNode>): Promise<unknown> {
     const treeCol = CbCollectionLib(CollectionName.ASSET_TREES);
     const stringifiedTree = JSON.stringify({
         rootID: newTree.rootID,
         nodes: newTree.nodes,
+        treeID: newTree.treeID,
     });
     const addToTreesCol = treeCol.cbCreatePromise({
         item: {
@@ -30,12 +31,13 @@ export function removeTree(tree: Tree<TreeNode>): Promise<unknown> {
 
 export function updateTree(tree: Tree<TreeNode>): Promise<unknown> {
     const treeCol = CbCollectionLib(CollectionName.ASSET_TREES);
+    log('updateTree::: treeID', tree.treeID);
     const treeUpdateQuery = ClearBlade.Query({ collectionName: CollectionName.ASSET_TREES }).equalTo('id', tree.treeID);
-
+    const treeStr = JSON.stringify(tree.getTree());
     const promise = treeCol.cbUpdatePromise({
         query: treeUpdateQuery,
         changes: {
-            tree: tree.getTree(),
+            tree: treeStr,
         },
     });
 
@@ -58,7 +60,9 @@ export function getTree(treeID: string): Promise<Tree<TreeNode>> {
             }
             const dataStr = (data.DATA[0] as AssetTree)['tree'] as string;
             try {
-                const treeObj = JSON.parse(dataStr) as Trees<TreeNode>;
+                const treeObj = JSON.parse(dataStr);
+                //treeObj.treeID = treeID;
+                log('getTree::: ', treeObj);
                 const tree = CreateTree(treeObj as Trees<TreeNode>);
                 return Promise.resolve(tree);
             } catch (e) {
@@ -82,14 +86,14 @@ export function getTreeIdForAsset(assetID: string): Promise<string> {
                 return Promise.reject(new Error('.DATA is missing..'));
             }
             if (data.DATA.length != 1) {
-                return Promise.reject(new Error(data.DATA.length + ' assets found for id'));
+                return Promise.reject(new Error(data.DATA.length + ' assets found for assetID ' + assetID));
             }
             const treeID: string = (data.DATA[0] as Asset)['tree_id'] as string;
-            try {
-                return Promise.resolve(treeID);
-            } catch (e) {
-                return Promise.reject(new Error('Failed while parsing: ' + e.message));
+            log('getTreeIdForAsset:: TreeID: ', treeID, 'for assetID: ', assetID);
+            if (treeID === '') {
+                return Promise.reject('TreeID is missing for asset');
             }
+            return Promise.resolve(treeID);
         });
 }
 
@@ -97,10 +101,16 @@ export function getTreeByAssetID(assetID: string): Promise<Tree<TreeNode>> {
     return getTreeIdForAsset(assetID).then(getTree);
 }
 
-export function addChild<T>(parentID: string, child: OrphanTreeNode): Promise<Tree<TreeNode>> {
-    return getTreeByAssetID(parentID).then(function(parentTree: Tree<TreeNode>) {
-        return Promise.resolve(parentTree.addChild(child, parentID));
-    });
+export function addChild<T>(parentID: string, child: OrphanTreeNode): Promise<unknown> {
+    return getTreeIdForAsset(parentID)
+        .then(getTree)
+        .then(function(parentTree: Tree<TreeNode>) {
+            parentTree.addChild(child, parentID);
+            log('Added child to parentTree ', parentTree.getTree());
+            return updateTree(parentTree).then(function() {
+                return updateTreeIDForAssets(parentTree.treeID, [child.id]);
+            });
+        });
 }
 
 export function updateTreeIDForAssets(treeID: string, assets: Array<string>): Promise<unknown> {
@@ -111,7 +121,7 @@ export function updateTreeIDForAssets(treeID: string, assets: Array<string>): Pr
         q.equalTo('id', element);
         assetUpdateQuery.or(q);
     });
-    log('will update asset row for all lineage');
+    log("will update asset row for the entire lineage, if an asset doesn't exist there's no error");
     log(assets);
     return assetsCol.cbUpdatePromise({
         query: assetUpdateQuery,
@@ -126,11 +136,11 @@ export function moveNode<T>(parentID: string, child: TreeNode, currentTreeID: st
 
     const srcTree = getTree(currentTreeID);
 
-    Promise.all([destTree, srcTree]).then(function(resolved) {
+    return Promise.all([destTree, srcTree]).then(function(resolved) {
         let destT = resolved[0];
         const srcT = resolved[1];
         const srcDestSame = destT.treeID === srcT.treeID;
-        let treeToMove, removedTree, updateTreePromise, addTreePromise, removeTreePromise;
+        let treeToMove, updateTreePromise, removeTreePromise;
         const promises = [];
 
         if (child.id === srcT.rootID) {
@@ -147,7 +157,9 @@ export function moveNode<T>(parentID: string, child: TreeNode, currentTreeID: st
         if (srcT.size() <= 1) {
             // remove entry from trees collection!!
             log('srcTree size is less than 1, oops');
-            removeTreePromise = removeTree(srcT);
+            removeTreePromise = removeTree(srcT).then(function() {
+                return updateTreeIDForAssets('', [srcT.rootID]);
+            });
             promises.push(removeTreePromise);
         } else if (!srcDestSame) {
             // update entry in trees collection
@@ -173,28 +185,38 @@ export function removeChild<T>(childID: string, treeID: string): Promise<unknown
             let removedTree, updateTreePromise, addTreePromise, removeTreePromise;
             const promises = [];
             if (childID === tree.rootID) {
+                log('childID same as rootID of the tree');
                 removedTree = tree;
             } else {
                 removedTree = tree.removeChild(childID);
+                log('removedChild :: removedTree, removing child', removedTree.getTree());
             }
-            if (tree.size() <= 1) {
+            if (tree.size() <= 1 || childID === tree.rootID) {
                 // remove entry from trees collection!!
+                log('removeChild :: size of tree is less than 1 or child to remove is the root');
                 removeTreePromise = removeTree(tree);
                 promises.push(removeTreePromise);
             } else {
                 // update entry in trees collection
+                log('removeChild :: update entry in the trees collection');
                 updateTreePromise = updateTree(tree);
                 promises.push(updateTreePromise);
             }
-            if (removedTree.size() > 1) {
-                // add entry to trees collection
-                addTreePromise = createTree(removedTree);
-                promises.push(addTreePromise);
-            }
 
             const assetsToUpdate = removedTree.getSubtreeIDs(removedTree.rootID);
-            const assetUpdatePromise = updateTreeIDForAssets(removedTree.treeID, assetsToUpdate);
-            promises.push(assetUpdatePromise);
+
+            if (removedTree.size() > 1) {
+                // add entry to trees collection
+                log('removeChild :: Size of removed tree is greater than 1, add it as an new entry in the collection');
+                addTreePromise = insertTree(removedTree);
+                promises.push(addTreePromise);
+                const assetUpdatePromise = updateTreeIDForAssets(removedTree.treeID, assetsToUpdate);
+                promises.push(assetUpdatePromise);
+            } else {
+                log('removeChild :: Updating treeID to be empty string for these Assets');
+                const assetUpdatePromise = updateTreeIDForAssets('', assetsToUpdate);
+                promises.push(assetUpdatePromise);
+            }
 
             return Promise.all(promises);
         } catch (e) {

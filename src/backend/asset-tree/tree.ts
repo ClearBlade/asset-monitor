@@ -22,11 +22,11 @@ export interface Trees<T extends TreeNode> {
 
 export class Tree<T extends TreeNode> implements Trees<T> {
     treeID: string; // A treeID will be generated everytime a new tree is created
-    constructor(rootNode: T, treeID: string) {
+    constructor(rootNode: T, id: string) {
         this.rootID = rootNode['id'];
         this.nodes = {};
         this.nodes[this.rootID as string] = { ...rootNode };
-        this.treeID = treeID || uuid();
+        this.treeID = id || uuid();
     }
     rootID: string;
     nodes: NodeDict<T>;
@@ -67,7 +67,7 @@ export class Tree<T extends TreeNode> implements Trees<T> {
         const parentNode = this.nodes[parentID as string];
         const childID = node['id'];
         const child = { ...node, parentID };
-        this.nodes[childID as string] = child;
+        this.nodes[childID as string] = child as T;
         parentNode.children.push(childID);
         return this;
     }
@@ -96,6 +96,7 @@ export class Tree<T extends TreeNode> implements Trees<T> {
         }
 
         const parentID = currentNode['parentID'];
+        currentNode['parentID'] = ''; // reset parent...
         const childIndex = this.nodes[parentID as string].children.indexOf(currentNode['id']);
         this.nodes[parentID as string].children.splice(childIndex, 1);
 
@@ -152,12 +153,18 @@ export class Tree<T extends TreeNode> implements Trees<T> {
 }
 
 export function CreateTree(tree: Trees<TreeNode>): Tree<TreeNode> {
+    if (!tree.nodes[tree.rootID as string]) {
+        log('CreateTree:: rootID is missing');
+    }
+    if (!tree.treeID) {
+        log('CreateTree:: treeID is missing, new tree will be created with a new treeID');
+    }
     const newTree = new Tree(tree.nodes[tree.rootID as string], tree.treeID);
     newTree.nodes = tree.nodes;
     return newTree;
 }
 
-export function ConvertToTreeNode<T extends OrphanTreeNode>(orphanNode: T): T extends TreeNode ? T : TreeNode {
+export function ConvertToTreeNode(orphanNode: OrphanTreeNode): TreeNode {
     return {
         ...orphanNode,
         children: [],
