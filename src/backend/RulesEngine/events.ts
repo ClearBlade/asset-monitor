@@ -47,7 +47,7 @@ function getSplitEntities(entities: Entities): SplitEntities {
 }
 
 export function processEvent(
-    ruleParams: RuleParams,
+    ruleParams: Omit<RuleParams, 'ruleType' | 'ruleName'>,
     entities: Entities,
     actionTopic: string,
     trigger: WithParsedCustomData,

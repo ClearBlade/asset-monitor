@@ -148,3 +148,11 @@ export function getErrorMessage(error: Error | string): string {
         return error;
     }
 }
+
+export function tryParse(str: unknown, fallback: unknown): unknown {
+    try {
+        return JSON.parse(str as string);
+    } catch (e) {
+        return fallback;
+    }
+}
