@@ -6,7 +6,7 @@ import { processEvent } from './events';
 import { RulesEngine } from './RulesEngine';
 import { EntityTypes, TimeFrame } from './types';
 
-type RulesWithExternalInfo = Rules & { is_external: boolean };
+export type RulesWithExternalInfo = Rules & { is_external: boolean };
 
 interface RulesEngineAPI {
     resp: CbServer.Resp;
@@ -94,8 +94,8 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
                 } catch (e) {
                     resp.error('Invalid message structure: ' + JSON.stringify(e));
                 }
-                if (incomingData.is_external_rule_type) {
-                    const ruleId = incomingData.rule_id;
+                if (incomingData.meta?.is_external_rule_type) {
+                    const ruleId = incomingData.meta?.rule_id;
                     const found = externalRules.filter(r => r.id === ruleId)[0]; // I would use .find but requires a polyfill
                     if (found) {
                         processEvent(

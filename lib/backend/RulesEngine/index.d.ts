@@ -1,5 +1,5 @@
 import { Rules } from '../collection-schema/Rules';
-declare type RulesWithExternalInfo = Rules & {
+export declare type RulesWithExternalInfo = Rules & {
     is_external: boolean;
 };
 interface RulesEngineAPI {
