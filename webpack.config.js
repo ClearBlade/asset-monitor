@@ -4,7 +4,7 @@ var path = require('path');
 module.exports = env => {
     if (!env || !env.ENTRY_FILE || !env.OUTPUT_FILE_NAME) {
         throw new Error(
-            'Invalid usage. Must supply ENTRY_FILE and OUTPUT_FILE_NAME. e.g., npm run bundle --env.ENTRY_FILE=./src/backend/Normalizer/index.ts',
+            'Invalid usage. Must supply ENTRY_FILE and OUTPUT_FILE_NAME. e.g., npm run bundle -- --env.ENTRY_FILE=./src/backend/Normalizer/index.ts --env.OUTPUT_FILE_NAME=normalizer',
         );
     }
     console.log(`Building '${env.ENTRY_FILE}' and outputting to 'dist/${env.OUTPUT_FILE_NAME}.bundle.js'`);

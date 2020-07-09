@@ -128,6 +128,9 @@ export function normalizer(config: NormalizerConfig): void {
 // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
 // @ts-ignore
 global.normalizer = normalizer;
+// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// @ts-ignore
+global.publishExternalEvent = publishExternalEvent;
 
 export const api = {
     default: normalizer,
