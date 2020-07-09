@@ -113,7 +113,11 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
                             incomingData,
                         );
                     } else {
-                        // todo: publish/log error/warning that we couldn't find a matching id
+                        log(
+                            `Warning: Could not find external rule with rule_id '${ruleId}'`,
+                            'externalRules=',
+                            externalRules,
+                        );
                     }
                 } else {
                     const fact = { incomingData };
