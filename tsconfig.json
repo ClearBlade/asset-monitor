@@ -75,6 +75,7 @@
         "src/backend/rulesengine",
         "src/backend/asset-history",
         "src/backend/asset-location",
+        "src/backend/asset-type-tree",
         "src/backend/asset-status",
         "src/backend/edge"
     ],
