@@ -1,4 +1,5 @@
 import { CollectionName } from '../global-config';
+import { AssetType } from '../collection-schema/AssetType';
 import 'core-js/features/set';
 import 'core-js/features/array';
 
@@ -23,6 +24,7 @@ export class AssetTypeTree {
         this.treeID = treeID;
         this.resp = resp;
         this.nodes = assetTypeNodeDict;
+        this.syncAssetTypeTreeWithAssetTypes();
     }
 
     private createAssetTypeNode(
@@ -35,6 +37,10 @@ export class AssetTypeTree {
             parents: parents,
             children: children,
         };
+    }
+
+    getTree(): string {
+        return AssetTypeTree.treeToString(this.nodes);
     }
 
     updateCreatesCycle(parents: Set<AssetTypeID>, children: Set<AssetTypeID>): boolean {
@@ -53,6 +59,17 @@ export class AssetTypeTree {
     }
 
     createAssetType(
+        newAssetTypeID: AssetTypeID,
+        newAssetType: AssetType,
+        parents: Set<AssetTypeID> = new Set(),
+        children: Set<AssetTypeID> = new Set(),
+    ): void {
+        this.addToAssetTypesCollection(newAssetType);
+        this.addAssetTypeToTree(newAssetTypeID, parents, children);
+        this.updateAssetTypeTreeCollection();
+    }
+
+    addAssetTypeToTree(
         newAssetTypeID: AssetTypeID,
         parents: Set<AssetTypeID> = new Set(),
         children: Set<AssetTypeID> = new Set(),
@@ -79,8 +96,6 @@ export class AssetTypeTree {
             }
             this.nodes[childID].parents.add(assetTypeNode.id);
         });
-
-        this.updateCollection();
     }
 
     deleteAssetType(assetTypeID: AssetTypeID): void {
@@ -94,7 +109,9 @@ export class AssetTypeTree {
         });
 
         delete this.nodes[assetTypeID];
-        this.updateCollection();
+
+        this.deleteFromAssetTypesCollection(assetTypeID);
+        this.updateAssetTypeTreeCollection();
     }
 
     addRelationship(childID: AssetTypeID, parentID: AssetTypeID): void {
@@ -108,17 +125,17 @@ export class AssetTypeTree {
         this.nodes[childID].parents.add(parentID);
         this.nodes[parentID].children.add(childID);
 
-        this.updateCollection();
+        this.updateAssetTypeTreeCollection();
     }
 
     removeRelationship(childID: AssetTypeID, parentID: AssetTypeID): void {
         this.nodes[parentID].children.delete(childID);
         this.nodes[childID].parents.delete(parentID);
 
-        this.updateCollection();
+        this.updateAssetTypeTreeCollection();
     }
 
-    updateCollection(): void {
+    updateAssetTypeTreeCollection(): void {
         const updateTreeQuery = ClearBlade.Query({ collectionName: CollectionName.ASSET_TYPE_TREE }).equalTo(
             'item_id',
             this.treeID,
@@ -130,14 +147,77 @@ export class AssetTypeTree {
 
         const callback = (err: any, data: any): void => {
             if (err) {
-                this.resp.error('Error updating: ' + JSON.stringify(data));
-            } else {
-                // this.resp.success(data);
-                this.resp.send(AssetTypeTree.treeToString(this.nodes));
+                this.resp.error('Update Error: ' + JSON.stringify(data));
             }
         };
 
         updateTreeQuery.update(changes, callback);
+    }
+
+    addToAssetTypesCollection(newAssetType: AssetType) {
+        const assetTypesCollection = ClearBlade.Collection({ collectionName: CollectionName.ASSET_TYPES });
+
+        const callback = (err: any, data: any) => {
+            if (err) {
+                this.resp.error('Creation Error: ' + JSON.stringify(data));
+            }
+        };
+
+        const newAT = {
+            id: newAssetType.id,
+            label: newAssetType.label,
+            description: newAssetType.description,
+            icon: newAssetType.icon,
+            schema: newAssetType.schema,
+        };
+
+        assetTypesCollection.create(newAT, callback);
+    }
+
+    deleteFromAssetTypesCollection(assetTypeID: AssetTypeID): void {
+        const assetTypesCollection = ClearBlade.Collection({ collectionName: CollectionName.ASSET_TYPES });
+        const query = ClearBlade.Query().equalTo('id', assetTypeID);
+
+        const callback = (err: any, data: any) => {
+            if (err) {
+                this.resp.error('Update Error: ' + JSON.stringify(data));
+            }
+        };
+
+        assetTypesCollection.remove(query, callback);
+    }
+
+    syncAssetTypeTreeWithAssetTypes() {
+        const fetchQuery = ClearBlade.Query({ collectionName: CollectionName.ASSET_TYPES }).columns(['id']);
+
+        // TODO: Account for updates to asset type id.
+        const callback = (err: any, data: any) => {
+            if (err) {
+                this.resp.error('Error getting asset types: ' + JSON.stringify(JSON));
+            } else {
+                const typesFromAssetTypesCollection: Set<AssetTypeID> = new Set(
+                    data.DATA.map((assetType: AssetType) => assetType['id'] as AssetTypeID),
+                );
+                const typesFromTree = new Set(Object.keys(this.nodes));
+
+                // Types added to the asset_types collection that are not in the tree yet.
+                const typesToAddToTree = Array.from(typesFromAssetTypesCollection).filter(x => !typesFromTree.has(x));
+                typesToAddToTree.forEach(type => {
+                    this.addAssetTypeToTree(type);
+                });
+
+                // Types removed from the asset_types collection that need to be removed from the tree.
+                const typesToRemoveFromTree = Array.from(typesFromTree).filter(
+                    x => !typesFromAssetTypesCollection.has(x),
+                );
+                typesToRemoveFromTree.forEach(type => {
+                    this.deleteAssetType(type);
+                });
+            }
+        };
+
+        fetchQuery.fetch(callback);
+        this.updateAssetTypeTreeCollection();
     }
 
     static treeToString(assetTypeTree: AssetTypeNodeDict): string {
@@ -162,6 +242,7 @@ export class AssetTypeTree {
 }
 
 export enum AssetTypeTreeMethod {
+    GET_TREE = 'getTree',
     CREATE_ASSET_TYPE = 'createAssetType',
     DELETE_ASSET_TYPE = 'deleteAssetType',
     REMOVE_RELATIONSHIP = 'removeRelationship',
@@ -171,6 +252,7 @@ export enum AssetTypeTreeMethod {
 export interface AssetTypeTreeOptions {
     METHOD_NAME: AssetTypeTreeMethod;
     ASSET_TYPE_ID?: AssetTypeID;
+    NEW_ASSET_TYPE?: AssetType;
     PARENTS?: Array<AssetTypeID>;
     CHILDREN?: Array<AssetTypeID>;
     CHILD_ID?: AssetTypeID;
@@ -183,17 +265,21 @@ export function assetTypeTreeHandler(req: CbServer.BasicReq, resp: CbServer.Resp
 
     const callback = (err: any, data: any) => {
         if (err) {
-            resp.error('Error: ' + err.toString());
+            resp.error('Error: ' + err);
         } else {
             const itemID = data.DATA[0]['item_id'];
             const treeStr = data.DATA[0]['tree'];
             const assetTypeTree = new AssetTypeTree(itemID, resp, AssetTypeTree.treeFromString(treeStr));
 
             switch (options.METHOD_NAME) {
+                case AssetTypeTreeMethod.GET_TREE:
+                    resp.success(assetTypeTree.getTree());
+                    break;
                 case AssetTypeTreeMethod.CREATE_ASSET_TYPE:
-                    if (options.ASSET_TYPE_ID && options.PARENTS && options.CHILDREN) {
+                    if (options.ASSET_TYPE_ID && options.NEW_ASSET_TYPE && options.PARENTS && options.CHILDREN) {
                         assetTypeTree.createAssetType(
                             options.ASSET_TYPE_ID,
+                            options.NEW_ASSET_TYPE,
                             new Set(options.PARENTS),
                             new Set(options.CHILDREN),
                         );
@@ -217,7 +303,7 @@ export function assetTypeTreeHandler(req: CbServer.BasicReq, resp: CbServer.Resp
                 default:
                     break;
             }
-            // assetTypeTree.updateCollection();
+            resp.success(AssetTypeTree.treeToString(assetTypeTree.nodes));
         }
     };
 
