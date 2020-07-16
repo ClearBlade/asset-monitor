@@ -66,7 +66,6 @@ export class AssetTypeTree {
     ): void {
         this.addToAssetTypesCollection(newAssetType);
         this.addAssetTypeToTree(newAssetTypeID, parents, children);
-        this.updateAssetTypeTreeCollection();
     }
 
     addAssetTypeToTree(
@@ -96,6 +95,8 @@ export class AssetTypeTree {
             }
             this.nodes[childID].parents.add(assetTypeNode.id);
         });
+
+        this.updateAssetTypeTreeCollection();
     }
 
     deleteAssetType(assetTypeID: AssetTypeID): void {
