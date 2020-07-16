@@ -27,6 +27,46 @@ export class AssetTypeTree {
         this.syncAssetTypeTreeWithAssetTypes();
     }
 
+    getTree(): string {
+        return AssetTypeTree.treeToString(this.nodes);
+    }
+
+    createAssetType(
+        newAssetTypeID: AssetTypeID,
+        newAssetType: AssetType,
+        parents: Set<AssetTypeID> = new Set(),
+        children: Set<AssetTypeID> = new Set(),
+    ): void {
+        this.addAssetTypeToTree(newAssetTypeID, parents, children);
+        this.addToAssetTypesCollection(newAssetType);
+    }
+
+    deleteAssetType(assetTypeID: AssetTypeID): void {
+        this.deleteAssetTypeFromTree(assetTypeID);
+        this.deleteFromAssetTypesCollection(assetTypeID);
+    }
+
+    addRelationship(childID: AssetTypeID, parentID: AssetTypeID): void {
+        const parents = this.nodes[parentID].parents;
+        if (this.updateCreatesCycle(parents, new Set([childID]))) {
+            log('This will create a cycle, not adding relationship...');
+            this.resp.error('Error: Requested relationship will cause a cycle, operation cancelled.');
+            return;
+        }
+
+        this.nodes[childID].parents.add(parentID);
+        this.nodes[parentID].children.add(childID);
+
+        this.updateAssetTypeTreeCollection();
+    }
+
+    removeRelationship(childID: AssetTypeID, parentID: AssetTypeID): void {
+        this.nodes[parentID].children.delete(childID);
+        this.nodes[childID].parents.delete(parentID);
+
+        this.updateAssetTypeTreeCollection();
+    }
+
     private createAssetTypeNode(
         newAssetTypeID: AssetTypeID,
         parents: Set<AssetTypeID>,
@@ -39,11 +79,7 @@ export class AssetTypeTree {
         };
     }
 
-    getTree(): string {
-        return AssetTypeTree.treeToString(this.nodes);
-    }
-
-    updateCreatesCycle(parents: Set<AssetTypeID>, children: Set<AssetTypeID>): boolean {
+    private updateCreatesCycle(parents: Set<AssetTypeID>, children: Set<AssetTypeID>): boolean {
         // BFS 'up' through the parents and check if a parent is in the children.
         // If a parent is in the children set, this means there is a cycle.
         let queue = Array.from(parents);
@@ -58,17 +94,7 @@ export class AssetTypeTree {
         return false;
     }
 
-    createAssetType(
-        newAssetTypeID: AssetTypeID,
-        newAssetType: AssetType,
-        parents: Set<AssetTypeID> = new Set(),
-        children: Set<AssetTypeID> = new Set(),
-    ): void {
-        this.addToAssetTypesCollection(newAssetType);
-        this.addAssetTypeToTree(newAssetTypeID, parents, children);
-    }
-
-    addAssetTypeToTree(
+    private addAssetTypeToTree(
         newAssetTypeID: AssetTypeID,
         parents: Set<AssetTypeID> = new Set(),
         children: Set<AssetTypeID> = new Set(),
@@ -99,63 +125,7 @@ export class AssetTypeTree {
         this.updateAssetTypeTreeCollection();
     }
 
-    deleteAssetType(assetTypeID: AssetTypeID): void {
-        // Delete asset type from parents.
-        this.nodes[assetTypeID].parents.forEach(parentID => {
-            this.nodes[parentID].children.delete(assetTypeID);
-        });
-        // Delete asset type from children.
-        this.nodes[assetTypeID].children.forEach(childID => {
-            this.nodes[childID].parents.delete(assetTypeID);
-        });
-
-        delete this.nodes[assetTypeID];
-
-        this.deleteFromAssetTypesCollection(assetTypeID);
-        this.updateAssetTypeTreeCollection();
-    }
-
-    addRelationship(childID: AssetTypeID, parentID: AssetTypeID): void {
-        const parents = this.nodes[parentID].parents;
-        if (this.updateCreatesCycle(parents, new Set([childID]))) {
-            log('This will create a cycle, not adding relationship...');
-            this.resp.error('Error: Requested relationship will cause a cycle, operation cancelled.');
-            return;
-        }
-
-        this.nodes[childID].parents.add(parentID);
-        this.nodes[parentID].children.add(childID);
-
-        this.updateAssetTypeTreeCollection();
-    }
-
-    removeRelationship(childID: AssetTypeID, parentID: AssetTypeID): void {
-        this.nodes[parentID].children.delete(childID);
-        this.nodes[childID].parents.delete(parentID);
-
-        this.updateAssetTypeTreeCollection();
-    }
-
-    updateAssetTypeTreeCollection(): void {
-        const updateTreeQuery = ClearBlade.Query({ collectionName: CollectionName.ASSET_TYPE_TREE }).equalTo(
-            'item_id',
-            this.treeID,
-        );
-
-        const changes = {
-            tree: AssetTypeTree.treeToString(this.nodes),
-        };
-
-        const callback = (err: any, data: any): void => {
-            if (err) {
-                this.resp.error('Update Error: ' + JSON.stringify(data));
-            }
-        };
-
-        updateTreeQuery.update(changes, callback);
-    }
-
-    addToAssetTypesCollection(newAssetType: AssetType) {
+    private addToAssetTypesCollection(newAssetType: AssetType) {
         const assetTypesCollection = ClearBlade.Collection({ collectionName: CollectionName.ASSET_TYPES });
 
         const callback = (err: any, data: any) => {
@@ -175,7 +145,21 @@ export class AssetTypeTree {
         assetTypesCollection.create(newAT, callback);
     }
 
-    deleteFromAssetTypesCollection(assetTypeID: AssetTypeID): void {
+    private deleteAssetTypeFromTree(assetTypeID: AssetTypeID): void {
+        // Delete asset type from parents.
+        this.nodes[assetTypeID].parents.forEach(parentID => {
+            this.nodes[parentID].children.delete(assetTypeID);
+        });
+        // Delete asset type from children.
+        this.nodes[assetTypeID].children.forEach(childID => {
+            this.nodes[childID].parents.delete(assetTypeID);
+        });
+
+        delete this.nodes[assetTypeID];
+        this.updateAssetTypeTreeCollection();
+    }
+
+    private deleteFromAssetTypesCollection(assetTypeID: AssetTypeID): void {
         const assetTypesCollection = ClearBlade.Collection({ collectionName: CollectionName.ASSET_TYPES });
         const query = ClearBlade.Query().equalTo('id', assetTypeID);
 
@@ -186,6 +170,25 @@ export class AssetTypeTree {
         };
 
         assetTypesCollection.remove(query, callback);
+    }
+
+    updateAssetTypeTreeCollection(): void {
+        const updateTreeQuery = ClearBlade.Query({ collectionName: CollectionName.ASSET_TYPE_TREE }).equalTo(
+            'item_id',
+            this.treeID,
+        );
+
+        const changes = {
+            tree: AssetTypeTree.treeToString(this.nodes),
+        };
+
+        const callback = (err: any, data: any): void => {
+            if (err) {
+                this.resp.error('Update Error: ' + JSON.stringify(data));
+            }
+        };
+
+        updateTreeQuery.update(changes, callback);
     }
 
     syncAssetTypeTreeWithAssetTypes() {
@@ -212,7 +215,7 @@ export class AssetTypeTree {
                     x => !typesFromAssetTypesCollection.has(x),
                 );
                 typesToRemoveFromTree.forEach(type => {
-                    this.deleteAssetType(type);
+                    this.deleteAssetTypeFromTree(type);
                 });
             }
         };
