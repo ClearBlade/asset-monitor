@@ -37,21 +37,24 @@ export class AssetTypeTree {
             if (this.nodes[typeID].parents.size === 0) return typeID;
         });
 
-        const topLevelAssetTypes: AssetType[] = [];
+        let topLevelAssetTypes: AssetType[] = [];
 
         const callback = (err: any, data: any) => {
             if (err) {
                 this.resp.error('Error: ' + err);
             } else {
-                topLevelAssetTypes.push(data.DATA[0] as AssetType);
+                topLevelAssetTypes = data;
             }
         };
 
-        topLevelAssetTypesIDs.forEach(typeID => {
-            const query = ClearBlade.Query({ collectionName: CollectionName.ASSET_TYPES }).equalTo('id', typeID);
-            query.fetch(callback);
-        });
+        const idString = JSON.stringify(topLevelAssetTypesIDs)
+            .replace('[', '(')
+            .replace(']', ')');
 
+        const db = ClearBlade.Database();
+        const query = `SELECT * FROM asset_types WHERE id in ${idString}`;
+
+        db.query(query, callback);
         return topLevelAssetTypes;
     }
 
