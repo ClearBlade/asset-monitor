@@ -31,6 +31,30 @@ export class AssetTypeTree {
         return AssetTypeTree.treeToString(this.nodes);
     }
 
+    getTopLevelAssetTypes(): AssetType[] {
+        const typeIDs = Object.keys(this.nodes);
+        const topLevelAssetTypesIDs = typeIDs.filter(typeID => {
+            if (this.nodes[typeID].parents.size === 0) return typeID;
+        });
+
+        const topLevelAssetTypes: AssetType[] = [];
+
+        const callback = (err: any, data: any) => {
+            if (err) {
+                this.resp.error('Error: ' + err);
+            } else {
+                topLevelAssetTypes.push(data.DATA[0] as AssetType);
+            }
+        };
+
+        topLevelAssetTypesIDs.forEach(typeID => {
+            const query = ClearBlade.Query({ collectionName: CollectionName.ASSET_TYPES }).equalTo('id', typeID);
+            query.fetch(callback);
+        });
+
+        return topLevelAssetTypes;
+    }
+
     createAssetType(
         newAssetTypeID: AssetTypeID,
         newAssetType: AssetType,
@@ -230,6 +254,7 @@ export class AssetTypeTree {
 
 export enum AssetTypeTreeMethod {
     GET_TREE = 'getTree',
+    GET_TOP_LEVEL_ASSET_TYPES = 'getTopLevelAssetTypes',
     CREATE_ASSET_TYPE = 'createAssetType',
     DELETE_ASSET_TYPE = 'deleteAssetType',
     ADD_CHILD = 'addChild',
@@ -261,6 +286,9 @@ export function assetTypeTreeHandler(req: CbServer.BasicReq, resp: CbServer.Resp
             switch (options.METHOD_NAME) {
                 case AssetTypeTreeMethod.GET_TREE:
                     resp.success(assetTypeTree.getTree());
+                    break;
+                case AssetTypeTreeMethod.GET_TOP_LEVEL_ASSET_TYPES:
+                    resp.success(assetTypeTree.getTopLevelAssetTypes());
                     break;
                 case AssetTypeTreeMethod.CREATE_ASSET_TYPE:
                     if (options.ASSET_TYPE_ID && options.NEW_ASSET_TYPE && options.PARENTS && options.CHILDREN) {

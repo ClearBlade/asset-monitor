@@ -1,6 +1,6 @@
+import { AssetType } from '../collection-schema/AssetType';
 import 'core-js/features/set';
 import 'core-js/features/array';
-import { AssetType } from '../collection-schema/AssetType';
 export declare type AssetTypeID = string;
 export interface AssetTypeNode {
     id: AssetTypeID;
@@ -15,27 +15,30 @@ export declare class AssetTypeTree {
     resp: CbServer.Resp;
     nodes: AssetTypeNodeDict;
     constructor(treeID: string, resp: CbServer.Resp, assetTypeNodeDict?: AssetTypeNodeDict);
-    private createAssetTypeNode;
     getTree(): string;
-    updateCreatesCycle(parents: Set<AssetTypeID>, children: Set<AssetTypeID>): boolean;
-    createAssetType(newAssetTypeID: AssetTypeID, newAssetType: AssetType, parents?: Set<AssetTypeID>, children?: Set<AssetTypeID>): void;
-    addAssetTypeToTree(newAssetTypeID: AssetTypeID, parents?: Set<AssetTypeID>, children?: Set<AssetTypeID>): void;
+    getTopLevelAssetTypes(): AssetType[];
+    createAssetType(newAssetTypeID: AssetTypeID, newAssetType: AssetType, children?: Set<AssetTypeID>): void;
     deleteAssetType(assetTypeID: AssetTypeID): void;
-    addRelationship(childID: AssetTypeID, parentID: AssetTypeID): void;
-    removeRelationship(childID: AssetTypeID, parentID: AssetTypeID): void;
+    addChild(childID: AssetTypeID, parentID: AssetTypeID): void;
+    removeChild(childID: AssetTypeID, parentID: AssetTypeID): void;
+    private createAssetTypeNode;
+    private updateCreatesCycle;
+    private addAssetTypeToTree;
+    private addToAssetTypesCollection;
+    private deleteAssetTypeFromTree;
+    private deleteFromAssetTypesCollection;
     updateAssetTypeTreeCollection(): void;
-    addToAssetTypesCollection(newAssetType: AssetType): void;
-    deleteFromAssetTypesCollection(assetTypeID: AssetTypeID): void;
+    syncAssetTypeTreeWithAssetTypes(): void;
     static treeToString(assetTypeTree: AssetTypeNodeDict): string;
     static treeFromString(assetTypeTreeStr: string): AssetTypeNodeDict;
-    syncAssetTypeTreeWithAssetTypes(): void;
 }
 export declare enum AssetTypeTreeMethod {
     GET_TREE = "getTree",
+    GET_TOP_LEVEL_ASSET_TYPES = "getTopLevelAssetTypes",
     CREATE_ASSET_TYPE = "createAssetType",
     DELETE_ASSET_TYPE = "deleteAssetType",
-    REMOVE_RELATIONSHIP = "removeRelationship",
-    ADD_RELATIONSHIP = "addRelationship"
+    ADD_CHILD = "addChild",
+    REMOVE_CHILD = "removeChild"
 }
 export interface AssetTypeTreeOptions {
     METHOD_NAME: AssetTypeTreeMethod;
