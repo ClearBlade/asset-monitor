@@ -34,10 +34,9 @@ export class AssetTypeTree {
     createAssetType(
         newAssetTypeID: AssetTypeID,
         newAssetType: AssetType,
-        parents: Set<AssetTypeID> = new Set(),
         children: Set<AssetTypeID> = new Set(),
     ): void {
-        this.addAssetTypeToTree(newAssetTypeID, parents, children);
+        this.addAssetTypeToTree(newAssetTypeID, children);
         this.addToAssetTypesCollection(newAssetType);
     }
 
@@ -46,10 +45,10 @@ export class AssetTypeTree {
         this.deleteFromAssetTypesCollection(assetTypeID);
     }
 
-    addRelationship(childID: AssetTypeID, parentID: AssetTypeID): void {
+    addChild(childID: AssetTypeID, parentID: AssetTypeID): void {
         const parents = this.nodes[parentID].parents;
         if (this.updateCreatesCycle(parents, new Set([childID]))) {
-            log('This will create a cycle, not adding relationship...');
+            log('This will create a cycle, not adding child...');
             this.resp.error('Error: Requested relationship will cause a cycle, operation cancelled.');
             return;
         }
@@ -60,7 +59,7 @@ export class AssetTypeTree {
         this.updateAssetTypeTreeCollection();
     }
 
-    removeRelationship(childID: AssetTypeID, parentID: AssetTypeID): void {
+    removeChild(childID: AssetTypeID, parentID: AssetTypeID): void {
         this.nodes[parentID].children.delete(childID);
         this.nodes[childID].parents.delete(parentID);
 
@@ -94,30 +93,14 @@ export class AssetTypeTree {
         return false;
     }
 
-    private addAssetTypeToTree(
-        newAssetTypeID: AssetTypeID,
-        parents: Set<AssetTypeID> = new Set(),
-        children: Set<AssetTypeID> = new Set(),
-    ): void {
-        if (this.updateCreatesCycle(parents, children)) {
-            log('This will create a cycle, not adding asset type...');
-            this.resp.error('Error: Requested relationship will cause a cycle, operation cancelled.');
-            return;
-        }
-
-        const assetTypeNode = this.createAssetTypeNode(newAssetTypeID, parents, children);
+    private addAssetTypeToTree(newAssetTypeID: AssetTypeID, children: Set<AssetTypeID> = new Set()): void {
+        const assetTypeNode = this.createAssetTypeNode(newAssetTypeID, new Set(), children);
         this.nodes[newAssetTypeID] = assetTypeNode;
-
-        // Add asset type to parents.
-        assetTypeNode.parents.forEach(parentID => {
-            this.nodes[parentID]?.children.add(assetTypeNode.id);
-        });
 
         // Add asset type to children.
         assetTypeNode.children.forEach(childID => {
             if (!(childID in this.nodes)) {
-                const childNode = this.createAssetTypeNode(childID, new Set(), new Set());
-                this.nodes[childID] = childNode;
+                this.resp.error(`Error: ${childID} does not exist.`);
             }
             this.nodes[childID].parents.add(assetTypeNode.id);
         });
@@ -249,8 +232,8 @@ export enum AssetTypeTreeMethod {
     GET_TREE = 'getTree',
     CREATE_ASSET_TYPE = 'createAssetType',
     DELETE_ASSET_TYPE = 'deleteAssetType',
-    REMOVE_RELATIONSHIP = 'removeRelationship',
-    ADD_RELATIONSHIP = 'addRelationship',
+    ADD_CHILD = 'addChild',
+    REMOVE_CHILD = 'removeChild',
 }
 
 export interface AssetTypeTreeOptions {
@@ -284,7 +267,6 @@ export function assetTypeTreeHandler(req: CbServer.BasicReq, resp: CbServer.Resp
                         assetTypeTree.createAssetType(
                             options.ASSET_TYPE_ID,
                             options.NEW_ASSET_TYPE,
-                            new Set(options.PARENTS),
                             new Set(options.CHILDREN),
                         );
                     }
@@ -294,14 +276,14 @@ export function assetTypeTreeHandler(req: CbServer.BasicReq, resp: CbServer.Resp
                         assetTypeTree.deleteAssetType(options.ASSET_TYPE_ID);
                     }
                     break;
-                case AssetTypeTreeMethod.REMOVE_RELATIONSHIP:
+                case AssetTypeTreeMethod.REMOVE_CHILD:
                     if (options.CHILD_ID && options.PARENT_ID) {
-                        assetTypeTree.removeRelationship(options.CHILD_ID, options.PARENT_ID);
+                        assetTypeTree.removeChild(options.CHILD_ID, options.PARENT_ID);
                     }
                     break;
-                case AssetTypeTreeMethod.ADD_RELATIONSHIP:
+                case AssetTypeTreeMethod.ADD_CHILD:
                     if (options.CHILD_ID && options.PARENT_ID) {
-                        assetTypeTree.addRelationship(options.CHILD_ID, options.PARENT_ID);
+                        assetTypeTree.addChild(options.CHILD_ID, options.PARENT_ID);
                     }
                     break;
                 default:
