@@ -82,7 +82,7 @@ export class AssetTypeTree {
         const childID = addOrRemoveChildOptions.CHILD_ID;
 
         const parents = this.nodes[parentID].parents;
-        if (this.updateCreatesCycle(parents, new Set([childID]))) {
+        if (this.updateCreatesCycle(parents, new Set([childID])) || parentID === childID) {
             log('This will create a cycle, not adding child...');
             this.resp.error('Error: Requested relationship will cause a cycle, operation cancelled.');
             return;
