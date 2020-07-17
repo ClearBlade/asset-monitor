@@ -58,21 +58,29 @@ export class AssetTypeTree {
         return topLevelAssetTypes;
     }
 
-    createAssetType(
-        newAssetTypeID: AssetTypeID,
-        newAssetType: AssetType,
-        children: Set<AssetTypeID> = new Set(),
-    ): void {
-        this.addAssetTypeToTree(newAssetTypeID, children);
-        this.addToAssetTypesCollection(newAssetType);
+    createAssetType(createAssetTypeOptions: CreateAssetTypeOptions): void {
+        const assetType = createAssetTypeOptions.ASSET_TYPE;
+        const children = new Set(createAssetTypeOptions.CHILDREN);
+        const newAssetTypeID = assetType.id;
+
+        if (newAssetTypeID) {
+            this.addAssetTypeToTree(newAssetTypeID, children);
+            this.addToAssetTypesCollection(assetType);
+        } else {
+            this.resp.error('Error: Missing asset type id.');
+        }
     }
 
-    deleteAssetType(assetTypeID: AssetTypeID): void {
+    deleteAssetType(deleteAssetTypeoptions: DeleteAssetTypeOptions): void {
+        const assetTypeID = deleteAssetTypeoptions.ASSET_TYPE_ID;
         this.deleteAssetTypeFromTree(assetTypeID);
         this.deleteFromAssetTypesCollection(assetTypeID);
     }
 
-    addChild(childID: AssetTypeID, parentID: AssetTypeID): void {
+    addChild(addOrRemoveChildOptions: AddOrRemoveChildOptions): void {
+        const parentID = addOrRemoveChildOptions.PARENT_ID;
+        const childID = addOrRemoveChildOptions.CHILD_ID;
+
         const parents = this.nodes[parentID].parents;
         if (this.updateCreatesCycle(parents, new Set([childID]))) {
             log('This will create a cycle, not adding child...');
@@ -86,7 +94,10 @@ export class AssetTypeTree {
         this.updateAssetTypeTreeCollection();
     }
 
-    removeChild(childID: AssetTypeID, parentID: AssetTypeID): void {
+    removeChild(addOrRemoveChildOptions: AddOrRemoveChildOptions): void {
+        const parentID = addOrRemoveChildOptions.PARENT_ID;
+        const childID = addOrRemoveChildOptions.CHILD_ID;
+
         this.nodes[parentID].children.delete(childID);
         this.nodes[childID].parents.delete(parentID);
 
@@ -204,7 +215,6 @@ export class AssetTypeTree {
     syncAssetTypeTreeWithAssetTypes() {
         const fetchQuery = ClearBlade.Query({ collectionName: CollectionName.ASSET_TYPES }).columns(['id']);
 
-        // TODO: Account for updates to asset type id.
         const callback = (err: any, data: any) => {
             if (err) {
                 this.resp.error('Error getting asset types: ' + JSON.stringify(JSON));
@@ -264,14 +274,25 @@ export enum AssetTypeTreeMethod {
     REMOVE_CHILD = 'removeChild',
 }
 
+export interface CreateAssetTypeOptions {
+    ASSET_TYPE: AssetType;
+    CHILDREN?: Array<AssetTypeID>;
+}
+
+export interface DeleteAssetTypeOptions {
+    ASSET_TYPE_ID: AssetTypeID;
+}
+
+export interface AddOrRemoveChildOptions {
+    CHILD_ID: AssetTypeID;
+    PARENT_ID: AssetTypeID;
+}
+
 export interface AssetTypeTreeOptions {
     METHOD_NAME: AssetTypeTreeMethod;
-    ASSET_TYPE_ID?: AssetTypeID;
-    NEW_ASSET_TYPE?: AssetType;
-    PARENTS?: Array<AssetTypeID>;
-    CHILDREN?: Array<AssetTypeID>;
-    CHILD_ID?: AssetTypeID;
-    PARENT_ID?: AssetTypeID;
+    CREATE_TYPE_OPTIONS?: CreateAssetTypeOptions;
+    DELETE_TYPE_OPTIONS?: DeleteAssetTypeOptions;
+    ADD_OR_REMOVE_CHILD_OPTIONS?: AddOrRemoveChildOptions;
 }
 
 export function assetTypeTreeHandler(req: CbServer.BasicReq, resp: CbServer.Resp, options: AssetTypeTreeOptions): void {
@@ -294,27 +315,31 @@ export function assetTypeTreeHandler(req: CbServer.BasicReq, resp: CbServer.Resp
                     resp.success(assetTypeTree.getTopLevelAssetTypes());
                     break;
                 case AssetTypeTreeMethod.CREATE_ASSET_TYPE:
-                    if (options.ASSET_TYPE_ID && options.NEW_ASSET_TYPE && options.PARENTS && options.CHILDREN) {
-                        assetTypeTree.createAssetType(
-                            options.ASSET_TYPE_ID,
-                            options.NEW_ASSET_TYPE,
-                            new Set(options.CHILDREN),
-                        );
+                    if (options.CREATE_TYPE_OPTIONS) {
+                        assetTypeTree.createAssetType(options.CREATE_TYPE_OPTIONS);
+                    } else {
+                        resp.error('Error: Missing CreateAssetTypeOptions.');
                     }
                     break;
                 case AssetTypeTreeMethod.DELETE_ASSET_TYPE:
-                    if (options.ASSET_TYPE_ID) {
-                        assetTypeTree.deleteAssetType(options.ASSET_TYPE_ID);
+                    if (options.DELETE_TYPE_OPTIONS) {
+                        assetTypeTree.deleteAssetType(options.DELETE_TYPE_OPTIONS);
+                    } else {
+                        resp.error('Error: Missing DeleteAssetTypeOptions.');
                     }
                     break;
                 case AssetTypeTreeMethod.REMOVE_CHILD:
-                    if (options.CHILD_ID && options.PARENT_ID) {
-                        assetTypeTree.removeChild(options.CHILD_ID, options.PARENT_ID);
+                    if (options.ADD_OR_REMOVE_CHILD_OPTIONS) {
+                        assetTypeTree.removeChild(options.ADD_OR_REMOVE_CHILD_OPTIONS);
+                    } else {
+                        resp.error('Error: Missing AddOrRemoveChildOptions.');
                     }
                     break;
                 case AssetTypeTreeMethod.ADD_CHILD:
-                    if (options.CHILD_ID && options.PARENT_ID) {
-                        assetTypeTree.addChild(options.CHILD_ID, options.PARENT_ID);
+                    if (options.ADD_OR_REMOVE_CHILD_OPTIONS) {
+                        assetTypeTree.addChild(options.ADD_OR_REMOVE_CHILD_OPTIONS);
+                    } else {
+                        resp.error('Error: Missing AddOrRemoveChildOptions.');
                     }
                     break;
                 default:
