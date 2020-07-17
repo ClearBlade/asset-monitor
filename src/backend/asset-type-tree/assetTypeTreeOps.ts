@@ -17,14 +17,26 @@ export interface AssetTypeNodeDict {
 
 export class AssetTypeTree {
     treeID: string;
+    req: CbServer.BasicReq;
     resp: CbServer.Resp;
     nodes: AssetTypeNodeDict;
 
-    constructor(treeID: string, resp: CbServer.Resp, assetTypeNodeDict: AssetTypeNodeDict = {}) {
+    constructor(
+        treeID: string,
+        req: CbServer.BasicReq,
+        resp: CbServer.Resp,
+        assetTypeNodeDict: AssetTypeNodeDict = {},
+    ) {
         this.treeID = treeID;
+        this.req = req;
         this.resp = resp;
         this.nodes = assetTypeNodeDict;
-        this.syncAssetTypeTreeWithAssetTypes();
+
+        if (!req.params.trigger) {
+            this.syncAssetTypeTreeWithAssetTypes();
+        } else {
+            this.handleTrigger(req.params.trigger);
+        }
     }
 
     getTree(): string {
@@ -263,6 +275,18 @@ export class AssetTypeTree {
         };
         return JSON.parse(assetTypeTreeStr, reviver);
     }
+
+    private handleTrigger(trigger: string): void {
+        const assetType = (this.req.params['items'] as AssetType[])[0];
+        log(trigger);
+        log(assetType);
+        const assetTypeID = assetType.id;
+        if (trigger === 'Data::ItemCreated' && assetTypeID) {
+            this.addAssetTypeToTree(assetTypeID);
+        } else if (trigger === 'Data::ItemDeleted' && assetTypeID) {
+            this.deleteAssetTypeFromTree(assetTypeID);
+        }
+    }
 }
 
 export enum AssetTypeTreeMethod {
@@ -305,7 +329,7 @@ export function assetTypeTreeHandler(req: CbServer.BasicReq, resp: CbServer.Resp
         } else {
             const itemID = data.DATA[0]['item_id'];
             const treeStr = data.DATA[0]['tree'];
-            const assetTypeTree = new AssetTypeTree(itemID, resp, AssetTypeTree.treeFromString(treeStr));
+            const assetTypeTree = new AssetTypeTree(itemID, req, resp, AssetTypeTree.treeFromString(treeStr));
 
             switch (options.METHOD_NAME) {
                 case AssetTypeTreeMethod.GET_TREE:

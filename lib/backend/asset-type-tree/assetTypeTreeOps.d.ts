@@ -12,9 +12,10 @@ export interface AssetTypeNodeDict {
 }
 export declare class AssetTypeTree {
     treeID: string;
+    req: CbServer.BasicReq;
     resp: CbServer.Resp;
     nodes: AssetTypeNodeDict;
-    constructor(treeID: string, resp: CbServer.Resp, assetTypeNodeDict?: AssetTypeNodeDict);
+    constructor(treeID: string, req: CbServer.BasicReq, resp: CbServer.Resp, assetTypeNodeDict?: AssetTypeNodeDict);
     getTree(): string;
     getTopLevelAssetTypes(): AssetType[];
     createAssetType(createAssetTypeOptions: CreateAssetTypeOptions): void;
@@ -31,6 +32,7 @@ export declare class AssetTypeTree {
     syncAssetTypeTreeWithAssetTypes(): void;
     static treeToString(assetTypeTree: AssetTypeNodeDict): string;
     static treeFromString(assetTypeTreeStr: string): AssetTypeNodeDict;
+    private handleTrigger;
 }
 export declare enum AssetTypeTreeMethod {
     GET_TREE = "getTree",
