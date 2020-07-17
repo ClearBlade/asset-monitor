@@ -1,9 +1,9 @@
 import { Logger } from '../Logger';
 import { GC, LogLevels } from '../global-config';
 import { Asset } from '../collection-schema/Assets';
-import { getErrorMessage } from '../Util';
+import { getErrorMessage, Topics } from '../Util';
 import { subscriber, bulkSubscriber } from '@clearblade/messaging-utils';
-import '../../static/promise-polyfill/index.js';
+import '@clearblade/promise-polyfill';
 
 export type MessageParser = (err: boolean, msg: string, topic: string) => Promise<Array<Asset>>;
 // parses message and returns normalized format
@@ -55,6 +55,20 @@ export function bulkPublisher(
     Object.keys(normalizerPubConfig).forEach(function(key) {
         publisher(assets, normalizerPubConfig[key]);
     });
+}
+
+/*
+publishExternalEvent is a utility function for publishing external events to the rules topic with the correct format
+*/
+export function publishExternalEvent(
+    asset: Asset,
+    ruleId: string,
+    ruleTopicFn: typeof Topics.RulesAssetLocation = Topics.RulesAssetLocation,
+): void {
+    ClearBlade.Messaging().publish(
+        ruleTopicFn(asset.id as string),
+        JSON.stringify({ ...asset, meta: { rule_id: ruleId, is_external_rule_type: true } }),
+    );
 }
 
 export function normalizer(config: NormalizerConfig): void {
@@ -110,6 +124,13 @@ export function normalizer(config: NormalizerConfig): void {
 
     Promise.runQueue();
 }
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// @ts-ignore
+global.normalizer = normalizer;
+// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// @ts-ignore
+global.publishExternalEvent = publishExternalEvent;
 
 export const api = {
     default: normalizer,

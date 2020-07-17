@@ -94,7 +94,7 @@ export function cbFormatMacAddress(macAddr: string): string {
 
 export const Topics = {
     AssetLocation: (ASSETID: string): string => `_monitor/_asset/${ASSETID}/location`,
-    RulesAssetLocation: (ASSETID: string): string => `_rules/_monitor/_asset/${ASSETID}/location`,
+    RulesAssetLocation: (ASSETID: string): string => `_rules/_monitor/_asset/${ASSETID}`,
     DBUpdateAssetLocation: (ASSETID: string): string => `_dbupdate/_monitor/_asset/${ASSETID}/location`,
     HistoryAssetLocation: (ASSETID: string): string => `_history/_monitor/_asset/${ASSETID}/location`,
     AssetHistory: (ASSETID: string): string => `_history/_monitor/_asset/${ASSETID}/location`,
@@ -146,5 +146,13 @@ export function getErrorMessage(error: Error | string): string {
         }
     } else {
         return error;
+    }
+}
+
+export function tryParse(str: unknown, fallback: unknown): unknown {
+    try {
+        return JSON.parse(str as string);
+    } catch (e) {
+        return fallback;
     }
 }

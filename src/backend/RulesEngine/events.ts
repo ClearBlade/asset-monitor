@@ -1,5 +1,5 @@
 import { RuleParams, Entities, SplitEntities, WithParsedCustomData } from './types';
-import '../../static/promise-polyfill';
+import '@clearblade/promise-polyfill';
 import {
     getActionByID,
     getStateForEvent,
@@ -47,7 +47,7 @@ function getSplitEntities(entities: Entities): SplitEntities {
 }
 
 export function processEvent(
-    ruleParams: RuleParams,
+    ruleParams: Omit<RuleParams, 'ruleType' | 'ruleName'>,
     entities: Entities,
     actionTopic: string,
     trigger: WithParsedCustomData,

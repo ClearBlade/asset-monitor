@@ -1,5 +1,5 @@
 import { CollectionName } from '../global-config';
-import '../../static/promise-polyfill';
+import '@clearblade/promise-polyfill';
 interface CollectionUpdateOptions {
     query: CbServer.QueryObj;
     changes: Record<string, unknown>;

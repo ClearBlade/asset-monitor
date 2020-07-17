@@ -28,3 +28,4 @@ export declare function isEmpty(str: string): boolean;
  */
 export declare function isNormalizedDataValid(normalizedData: Array<Asset>): boolean;
 export declare function getErrorMessage(error: Error | string): string;
+export declare function tryParse(str: unknown, fallback: unknown): unknown;

@@ -5,7 +5,7 @@ import { CbCollectionLib } from '../collection-lib';
 import { Logger } from '../Logger';
 import { Topics, getErrorMessage } from '../Util';
 import { bulkSubscriber } from '../Normalizer';
-import '../../static/promise-polyfill';
+import '@clearblade/promise-polyfill';
 
 interface CreateAssetHistoryConfig {
     req: CbServer.BasicReq;
@@ -141,7 +141,7 @@ export function createAssetHistorySS({
     function HandleMessage(err: boolean, msg: string, topic: string): void {
         if (err) {
             logger.publishLog(LogLevels.ERROR, 'Failed to wait for message: ', err, ' ', msg, '  ', topic);
-            return;
+            resp.error('Failed to wait for message: ' + err + ' ' + msg + '  ' + topic);
         }
 
         let parsedMsg: Asset;
