@@ -150,9 +150,12 @@ export function getErrorMessage(error: Error | string): string {
 }
 
 export function tryParse(str: unknown, fallback: unknown): unknown {
-    try {
-        return JSON.parse(str as string);
-    } catch (e) {
-        return fallback;
+    if (str) {
+        try {
+            return JSON.parse(str as string);
+        } catch (e) {
+            return fallback;
+        }
     }
+    return fallback;
 }
