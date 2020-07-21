@@ -22,17 +22,17 @@ export declare class AssetTypeTree {
     deleteAssetType(deleteAssetTypeoptions: DeleteAssetTypeOptions): void;
     addChild(addOrRemoveChildOptions: AddOrRemoveChildOptions): void;
     removeChild(addOrRemoveChildOptions: AddOrRemoveChildOptions): void;
-    private createAssetTypeNode;
-    private updateCreatesCycle;
-    private addAssetTypeToTree;
-    private addToAssetTypesCollection;
-    private deleteAssetTypeFromTree;
-    private deleteFromAssetTypesCollection;
+    createAssetTypeNode(newAssetTypeID: AssetTypeID, parents: Set<AssetTypeID>, children: Set<AssetTypeID>): AssetTypeNode;
+    updateCreatesCycle(parents: Set<AssetTypeID>, children: Set<AssetTypeID>): boolean;
+    addAssetTypeToTree(newAssetTypeID: AssetTypeID, children?: Set<AssetTypeID>): void;
+    addToAssetTypesCollection(newAssetType: AssetType): void;
+    deleteAssetTypeFromTree(assetTypeID: AssetTypeID): void;
+    deleteFromAssetTypesCollection(assetTypeID: AssetTypeID): void;
     updateAssetTypeTreeCollection(): void;
     syncAssetTypeTreeWithAssetTypes(): void;
     static treeToString(assetTypeTree: AssetTypeNodeDict): string;
     static treeFromString(assetTypeTreeStr: string): AssetTypeNodeDict;
-    private handleTrigger;
+    handleTrigger(trigger: string): void;
 }
 export declare enum AssetTypeTreeMethod {
     GET_TREE = "getTree",
@@ -53,10 +53,9 @@ export interface AddOrRemoveChildOptions {
     CHILD_ID: AssetTypeID;
     PARENT_ID: AssetTypeID;
 }
+export declare type MethodOptions = CreateAssetTypeOptions | DeleteAssetTypeOptions | AddOrRemoveChildOptions;
 export interface AssetTypeTreeOptions {
     METHOD_NAME: AssetTypeTreeMethod;
-    CREATE_TYPE_OPTIONS?: CreateAssetTypeOptions;
-    DELETE_TYPE_OPTIONS?: DeleteAssetTypeOptions;
-    ADD_OR_REMOVE_CHILD_OPTIONS?: AddOrRemoveChildOptions;
+    METHOD_OPTIONS: MethodOptions;
 }
 export declare function assetTypeTreeHandler(req: CbServer.BasicReq, resp: CbServer.Resp, options: AssetTypeTreeOptions): void;
