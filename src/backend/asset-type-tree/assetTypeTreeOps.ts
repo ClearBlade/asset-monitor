@@ -44,10 +44,7 @@ export class AssetTypeTree {
     }
 
     getTopLevelAssetTypes(): AssetType[] {
-        const typeIDs = Object.keys(this.nodes);
-        const topLevelAssetTypesIDs = typeIDs.filter(typeID => {
-            if (this.nodes[typeID].parents.size === 0) return typeID;
-        });
+        const topLevelAssetTypesIDs = this.getTopLevelNodeIDs();
 
         let topLevelAssetTypes: AssetType[] = [];
 
@@ -115,6 +112,17 @@ export class AssetTypeTree {
         this.updateAssetTypeTreeCollection();
     }
 
+    getTopLevelNodeIDs(): AssetTypeID[] {
+        const typeIDs = Object.keys(this.nodes);
+        const topLevelAssetTypesIDs = typeIDs.filter(typeID => {
+            if (this.nodes[typeID].parents.size === 0) {
+                return typeID;
+            }
+        });
+
+        return topLevelAssetTypesIDs;
+    }
+
     private createAssetTypeNode(
         newAssetTypeID: AssetTypeID,
         parents: Set<AssetTypeID>,
@@ -144,15 +152,20 @@ export class AssetTypeTree {
 
     private addAssetTypeToTree(newAssetTypeID: AssetTypeID, children: Set<AssetTypeID> = new Set()): void {
         const assetTypeNode = this.createAssetTypeNode(newAssetTypeID, new Set(), children);
-        this.nodes[newAssetTypeID] = assetTypeNode;
-
+        let addToTree = true;
         // Add asset type to children.
         assetTypeNode.children.forEach(childID => {
             if (!(childID in this.nodes)) {
+                addToTree = false;
                 this.resp.error(`Error: ${childID} does not exist.`);
+            } else {
+                this.nodes[childID].parents.add(assetTypeNode.id);
             }
-            this.nodes[childID].parents.add(assetTypeNode.id);
         });
+
+        if (addToTree) {
+            this.nodes[newAssetTypeID] = assetTypeNode;
+        }
 
         this.updateAssetTypeTreeCollection();
     }

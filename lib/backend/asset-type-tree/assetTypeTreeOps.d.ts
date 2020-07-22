@@ -22,17 +22,18 @@ export declare class AssetTypeTree {
     deleteAssetType(deleteAssetTypeoptions: DeleteAssetTypeOptions): void;
     addChild(addOrRemoveChildOptions: AddOrRemoveChildOptions): void;
     removeChild(addOrRemoveChildOptions: AddOrRemoveChildOptions): void;
-    createAssetTypeNode(newAssetTypeID: AssetTypeID, parents: Set<AssetTypeID>, children: Set<AssetTypeID>): AssetTypeNode;
-    updateCreatesCycle(parents: Set<AssetTypeID>, children: Set<AssetTypeID>): boolean;
-    addAssetTypeToTree(newAssetTypeID: AssetTypeID, children?: Set<AssetTypeID>): void;
-    addToAssetTypesCollection(newAssetType: AssetType): void;
-    deleteAssetTypeFromTree(assetTypeID: AssetTypeID): void;
-    deleteFromAssetTypesCollection(assetTypeID: AssetTypeID): void;
+    getTopLevelNodeIDs(): AssetTypeID[];
+    private createAssetTypeNode;
+    private updateCreatesCycle;
+    private addAssetTypeToTree;
+    private addToAssetTypesCollection;
+    private deleteAssetTypeFromTree;
+    private deleteFromAssetTypesCollection;
     updateAssetTypeTreeCollection(): void;
     syncAssetTypeTreeWithAssetTypes(): void;
     static treeToString(assetTypeTree: AssetTypeNodeDict): string;
     static treeFromString(assetTypeTreeStr: string): AssetTypeNodeDict;
-    handleTrigger(trigger: string): void;
+    private handleTrigger;
 }
 export declare enum AssetTypeTreeMethod {
     GET_TREE = "getTree",
