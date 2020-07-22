@@ -2,8 +2,8 @@ import '../tree_helper.ts';
 import '../../collection-lib';
 import { CbCollectionLib } from '../../collection-lib';
 import { CollectionName } from '../../global-config';
-import { addNode, removeNode, getTree } from '../tree_helper';
-import { TreeNode } from '../tree';
+import { addChild, removeNode, getTree } from '../tree_helper';
+import { TreeNode, Tree } from '../tree';
 
 const value1 = {
     id: '11',
@@ -14,7 +14,7 @@ const value1 = {
                 id: '1',
                 parentID: '',
                 meta: {},
-                children: [],
+                children: new Set(),
             },
         },
     },
@@ -28,7 +28,7 @@ const node2: TreeNode = {
     id: '2',
     parentID: '',
     meta: {},
-    children: [],
+    children: new Set(),
 };
 
 const updatedTree = {
@@ -40,13 +40,13 @@ const updatedTree = {
                 id: '1',
                 parentID: '',
                 meta: {},
-                children: ['2'],
+                children: Set['2'],
             },
             '2': {
                 id: '2',
                 parentID: '1',
                 meta: {},
-                children: [],
+                children: new Set(),
             },
         },
     },
@@ -61,7 +61,7 @@ const removedTree = {
                 id: '2',
                 parentID: '1',
                 meta: {},
-                children: [],
+                children: new Set(),
             },
         },
     },
@@ -106,13 +106,13 @@ afterAll(() => {
 });
 
 describe('test suite', () => {
-    it('1. add node', () => {
+    it('1. add child', () => {
         // const col = CbCollectionLib(CollectionName.ASSET_TREE);
         // col.cbCreatePromise({
         //     item: value1,
         // });
-        const p = addNode('11', node2, '1');
-        p.then(function(tree) {
+        const p = addChild('1', node2);
+        p.then(function(tree: Tree<TreeNode>) {
             expect(tree.getTree()).toEqual(updatedTree.tree);
         });
     });

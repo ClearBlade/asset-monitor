@@ -1,7 +1,7 @@
 import { CollectionName } from '../global-config';
 import { CbCollectionLib } from '../collection-lib';
 import { AssetTree } from '../collection-schema/AssetTree';
-import { TreeNode, Tree, CreateTree, Trees, OrphanTreeNode } from './tree';
+import { TreeNode, Tree, CreateTree, Trees, OrphanTreeNode, ConvertToTreeNode } from './tree';
 import { Asset } from '../collection-schema/Assets';
 
 export function insertTree(newTree: Tree<TreeNode>): Promise<unknown> {
@@ -104,13 +104,33 @@ export function getTreeByAssetID(assetID: string): Promise<Tree<TreeNode>> {
 export function addChild<T>(parentID: string, child: OrphanTreeNode): Promise<unknown> {
     return getTreeIdForAsset(parentID)
         .then(getTree)
-        .then(function(parentTree: Tree<TreeNode>) {
-            parentTree.addChild(child, parentID);
-            log('Added child to parentTree ', parentTree.getTree());
-            return updateTree(parentTree).then(function() {
-                return updateTreeIDForAssets(parentTree.treeID, [child.id]);
-            });
-        });
+        .then(
+            function(parentTree: Tree<TreeNode>) {
+                parentTree.addChild(child, parentID);
+                log('Added child to parentTree ', parentTree.getTree());
+                return updateTree(parentTree).then(function() {
+                    return updateTreeIDForAssets(parentTree.treeID, [child.id]);
+                });
+            },
+            function(reject) {
+                log(
+                    'In reject, that is: the parentID is not part of a tree, hence creating a new tree. Reject Message ',
+                    reject,
+                );
+                const treeNode = ConvertToTreeNode({ id: parentID, meta: {} });
+                const nodes: Map<string, TreeNode> = new Map();
+                nodes.set(parentID, treeNode);
+                const baseTree = CreateTree({
+                    nodes,
+                    rootID: parentID,
+                    treeID: '',
+                });
+                baseTree.addChild(child, parentID);
+                return insertTree(baseTree).then(function() {
+                    return updateTreeIDForAssets(baseTree.treeID, baseTree.getSubtreeIDs(baseTree.rootID));
+                });
+            },
+        );
 }
 
 export function updateTreeIDForAssets(treeID: string, assets: Array<string>): Promise<unknown> {
@@ -131,7 +151,7 @@ export function updateTreeIDForAssets(treeID: string, assets: Array<string>): Pr
     });
 }
 
-export function moveNode<T>(parentID: string, child: TreeNode, currentTreeID: string): Promise<unknown> {
+export function moveChild<T>(parentID: string, child: TreeNode, currentTreeID: string): Promise<unknown> {
     const destTree = getTreeIdForAsset(parentID).then(getTree);
 
     const srcTree = getTree(currentTreeID);
@@ -144,6 +164,7 @@ export function moveNode<T>(parentID: string, child: TreeNode, currentTreeID: st
         const promises = [];
 
         if (child.id === srcT.rootID) {
+            log('srcT root itself is the new childTree');
             treeToMove = srcT;
         } else {
             treeToMove = srcT.removeChild(child.id);
@@ -154,9 +175,9 @@ export function moveNode<T>(parentID: string, child: TreeNode, currentTreeID: st
         destT.addChildTree(treeToMove, parentID);
         const destTPromise = updateTree(destT);
         promises.push(destTPromise);
-        if (srcT.size() <= 1) {
+        if (srcT.size() <= 1 || child.id === srcT.rootID) {
             // remove entry from trees collection!!
-            log('srcTree size is less than 1, oops');
+            log("removing the src tree because either it's size is less than 1 or the root is moved.. ");
             removeTreePromise = removeTree(srcT).then(function() {
                 return updateTreeIDForAssets('', [srcT.rootID]);
             });
@@ -168,10 +189,12 @@ export function moveNode<T>(parentID: string, child: TreeNode, currentTreeID: st
         }
 
         const assetsToUpdate = treeToMove.getSubtreeIDs(treeToMove.rootID);
-        const assetUpdatePromise = updateTreeIDForAssets(destT.treeID, assetsToUpdate);
-        promises.push(assetUpdatePromise);
+        //const assetUpdatePromise = updateTreeIDForAssets(destT.treeID, assetsToUpdate);
+        //promises.push(assetUpdatePromise);
 
-        return Promise.all(promises);
+        return Promise.all(promises).then(function() {
+            return updateTreeIDForAssets(destT.treeID, assetsToUpdate);
+        });
     });
 }
 
@@ -225,4 +248,17 @@ export function removeChild<T>(childID: string, treeID: string): Promise<unknown
     });
 }
 
-// need to create a remove child helper for remove tree and move tree
+// fetch all the rootIDs
+// write a query to get all those assets and assets with no treeIDs in their treeIDs column
+// Assumption: All the assets with no treeIDs are top level assets too.
+export function getTopLevelAssets(query: CbServer.Query): Promise<unknown> {
+    const db = ClearBlade.Database();
+    const getTreeQuery = 'select tree from asset_trees;';
+    db.query(getTreeQuery, function(err, data) {
+        if (err) {
+            resp.error('Parse error : ' + JSON.stringify(data));
+        } else {
+            resp.success(data);
+        }
+    });
+}
