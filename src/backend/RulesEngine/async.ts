@@ -225,11 +225,22 @@ export function closeRules(ids: string[], splitEntities: SplitEntities): Promise
                                     );
                                     if (hasOverlappingEntities) {
                                         shouldProceed = true;
+                                        const eventHistoryCollection = CbCollectionLib(CollectionName.EVENT_HISTORY);
                                         const query = ClearBlade.Query().equalTo('id', data.DATA[i].id as string);
-                                        return eventsCollection.cbUpdatePromise({
-                                            query,
-                                            changes: { state, is_open: false },
-                                        });
+                                        return Promise.all([
+                                            eventsCollection.cbUpdatePromise({
+                                                query,
+                                                changes: { state, is_open: false },
+                                            }),
+                                            eventHistoryCollection.cbCreatePromise({
+                                                item: {
+                                                    event_id: data.DATA[i].id,
+                                                    timestamp: new Date().toISOString(),
+                                                    transition_attribute: 'state',
+                                                    transition_value: state,
+                                                },
+                                            }),
+                                        ]);
                                     }
                                 }
                             });
