@@ -313,16 +313,8 @@ export interface CreateAssetTypeOptions {
     CHILDREN?: Array<AssetTypeID>;
 }
 
-function isCreateAssetTypeOptions(options: any): options is CreateAssetTypeOptions {
-    return (options as CreateAssetTypeOptions).ASSET_TYPE !== undefined;
-}
-
 export interface DeleteAssetTypeOptions {
     ASSET_TYPE_ID: AssetTypeID;
-}
-
-function isDeleteAssetTypeOptions(options: any): options is DeleteAssetTypeOptions {
-    return (options as DeleteAssetTypeOptions).ASSET_TYPE_ID !== undefined;
 }
 
 export interface AddOrRemoveChildOptions {
@@ -330,19 +322,47 @@ export interface AddOrRemoveChildOptions {
     PARENT_ID: AssetTypeID;
 }
 
-function isAddOrRemoveChildOptions(options: any): options is AddOrRemoveChildOptions {
-    options = options as AddOrRemoveChildOptions;
-    return options.CHILD_ID !== undefined && options.PARENT_ID != undefined;
+interface CreateOperation {
+    METHOD_NAME: AssetTypeTreeMethod.CREATE_ASSET_TYPE;
+    METHOD_OPTIONS: CreateAssetTypeOptions;
 }
 
-export type MethodOptions = CreateAssetTypeOptions | DeleteAssetTypeOptions | AddOrRemoveChildOptions;
-
-export interface AssetTypeTreeOptions {
-    METHOD_NAME: AssetTypeTreeMethod;
-    METHOD_OPTIONS: MethodOptions;
+interface DeleteOperation {
+    METHOD_NAME: AssetTypeTreeMethod.DELETE_ASSET_TYPE;
+    METHOD_OPTIONS: DeleteAssetTypeOptions;
 }
 
-export function assetTypeTreeHandler(req: CbServer.BasicReq, resp: CbServer.Resp, options: AssetTypeTreeOptions): void {
+interface AddChildOperation {
+    METHOD_NAME: AssetTypeTreeMethod.ADD_CHILD;
+    METHOD_OPTIONS: AddOrRemoveChildOptions;
+}
+
+interface RemoveChildOperation {
+    METHOD_NAME: AssetTypeTreeMethod.REMOVE_CHILD;
+    METHOD_OPTIONS: AddOrRemoveChildOptions;
+}
+
+interface GetTreeOperation {
+    METHOD_NAME: AssetTypeTreeMethod.GET_TREE;
+}
+
+interface GetTopLevelAssetTypesOperation {
+    METHOD_NAME: AssetTypeTreeMethod.GET_TOP_LEVEL_ASSET_TYPES;
+}
+
+export type AssetTypeTreeOperations =
+    | CreateOperation
+    | DeleteOperation
+    | AddChildOperation
+    | RemoveChildOperation
+    | GetTreeOperation
+    | GetTopLevelAssetTypesOperation;
+
+export function assetTypeTreeHandler(
+    req: CbServer.BasicReq,
+    resp: CbServer.Resp,
+    options: AssetTypeTreeOperations,
+): void {
     const assetTypeTreeCollection = ClearBlade.Collection({ collectionName: CollectionName.ASSET_TYPE_TREE });
     const getTreeQuery = ClearBlade.Query().setPage(1, 1);
 
@@ -362,32 +382,16 @@ export function assetTypeTreeHandler(req: CbServer.BasicReq, resp: CbServer.Resp
                     resp.success(assetTypeTree.getTopLevelAssetTypes());
                     break;
                 case AssetTypeTreeMethod.CREATE_ASSET_TYPE:
-                    if (isCreateAssetTypeOptions(options.METHOD_OPTIONS)) {
-                        assetTypeTree.createAssetType(options.METHOD_OPTIONS);
-                    } else {
-                        resp.error('Error: Missing CreateAssetTypeOptions.');
-                    }
+                    assetTypeTree.createAssetType(options.METHOD_OPTIONS);
                     break;
                 case AssetTypeTreeMethod.DELETE_ASSET_TYPE:
-                    if (isDeleteAssetTypeOptions(options.METHOD_OPTIONS)) {
-                        assetTypeTree.deleteAssetType(options.METHOD_OPTIONS);
-                    } else {
-                        resp.error('Error: Missing DeleteAssetTypeOptions.');
-                    }
+                    assetTypeTree.deleteAssetType(options.METHOD_OPTIONS);
                     break;
                 case AssetTypeTreeMethod.REMOVE_CHILD:
-                    if (isAddOrRemoveChildOptions(options.METHOD_OPTIONS)) {
-                        assetTypeTree.removeChild(options.METHOD_OPTIONS);
-                    } else {
-                        resp.error('Error: Missing AddOrRemoveChildOptions.');
-                    }
+                    assetTypeTree.removeChild(options.METHOD_OPTIONS);
                     break;
                 case AssetTypeTreeMethod.ADD_CHILD:
-                    if (isAddOrRemoveChildOptions(options.METHOD_OPTIONS)) {
-                        assetTypeTree.addChild(options.METHOD_OPTIONS);
-                    } else {
-                        resp.error('Error: Missing AddOrRemoveChildOptions.');
-                    }
+                    assetTypeTree.addChild(options.METHOD_OPTIONS);
                     break;
                 default:
                     break;
