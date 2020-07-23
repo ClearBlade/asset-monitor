@@ -25,7 +25,7 @@ export interface PublishConfig {
 export declare function publisher(assets: Array<Asset>, pubConfig: PublishConfig): void;
 export { subscriber, bulkSubscriber };
 export declare function bulkPublisher(assets: Array<Asset>, normalizerPubConfig?: NormalizerPublishConfig): void;
-export declare function publishExternalEvent(asset: Asset, ruleId: string, ruleTopicFn?: typeof Topics.RulesAssetLocation): void;
+export declare function publishExternalEvent(asset: Asset, ruleId: string, timestamp?: string, ruleTopicFn?: typeof Topics.RulesAssetLocation): void;
 export declare function normalizer(config: NormalizerConfig): void;
 export declare const api: {
     default: typeof normalizer;
