@@ -251,14 +251,135 @@ export function removeChild<T>(childID: string, treeID: string): Promise<unknown
 // fetch all the rootIDs
 // write a query to get all those assets and assets with no treeIDs in their treeIDs column
 // Assumption: All the assets with no treeIDs are top level assets too.
-export function getTopLevelAssets(query: CbServer.Query): Promise<unknown> {
-    const db = ClearBlade.Database();
-    const getTreeQuery = 'select tree from asset_trees;';
-    db.query(getTreeQuery, function(err, data) {
-        if (err) {
-            resp.error('Parse error : ' + JSON.stringify(data));
-        } else {
-            resp.success(data);
-        }
-    });
+// export function getTopLevelAssets(query: CbServer.Query): Promise<unknown> {
+//     const db = ClearBlade.Database();
+//     const getTreeQuery = 'select tree from asset_trees;';
+//     db.query(getTreeQuery, function(err, data) {
+//         if (err) {
+//             resp.error('Parse error : ' + JSON.stringify(data));
+//         } else {
+//             resp.success(data);
+//         }
+//     });
+// }
+
+export enum AssetTreeMethod {
+    GET_TREE = 'getTree',
+    GET_TOP_LEVEL_ASSETS = 'getTopLevelAssets',
+    CREATE_ASSET_TREE = 'createAssetTree',
+    ADD_CHILD = 'addChild',
+    REMOVE_CHILD = 'removeChild',
+    MOVE_CHILD = 'moveChild',
+}
+
+export interface CreateAssetTreeOptions {
+    TREE: AssetTree;
+}
+
+export interface AddChildOptions {
+    PARENT_ID: string;
+    NODE: TreeNode;
+}
+
+export interface RemoveChildOptions {
+    CHILD_ID: string;
+    TREE_ID: string;
+}
+
+export interface MoveChildOptions {
+    PARENT_ID: string;
+    CHILD_NODE: TreeNode;
+    CURRENT_TREE_ID: string;
+}
+
+export interface CreateOperation {
+    METHOD: AssetTreeMethod.CREATE_ASSET_TREE;
+    METHOD_OPTIONS: CreateAssetTreeOptions;
+}
+
+export interface AddChildOperation {
+    METHOD: AssetTreeMethod.ADD_CHILD;
+    METHOD_OPTIONS: AddChildOptions;
+}
+
+export interface RemoveChildOperation {
+    METHOD: AssetTreeMethod.REMOVE_CHILD;
+    METHOD_OPTIONS: RemoveChildOptions;
+}
+
+export interface MoveChildOperation {
+    METHOD: AssetTreeMethod.MOVE_CHILD;
+    METHOD_OPTIONS: MoveChildOptions;
+}
+
+export interface GetTopLevelAssetsOperation {
+    METHOD: AssetTreeMethod.GET_TOP_LEVEL_ASSETS;
+}
+
+export type AssetTreeOperations =
+    | CreateOperation
+    | AddChildOperation
+    | RemoveChildOperation
+    | MoveChildOperation
+    | GetTopLevelAssetsOperation;
+
+export function assetTreeHandler(req: CbServer.BasicReq, resp: CbServer.Resp, options: AssetTreeOperations): void {
+    log('in handler');
+    switch (options.METHOD) {
+        case AssetTreeMethod.CREATE_ASSET_TREE:
+            handleCreate(options.METHOD_OPTIONS);
+            break;
+        case AssetTreeMethod.ADD_CHILD:
+            handleAddChild(options.METHOD_OPTIONS);
+            break;
+        case AssetTreeMethod.REMOVE_CHILD:
+            handleRemoveChild(options.METHOD_OPTIONS);
+            break;
+        case AssetTreeMethod.MOVE_CHILD:
+            handleMoveChild(options.METHOD_OPTIONS);
+            break;
+        default:
+            break;
+    }
+
+    Promise.runQueue();
+
+    function handleCreate(options: CreateAssetTreeOptions) {
+        const tree = CreateTree(options.TREE as Trees<TreeNode>);
+        log('logging tree');
+        log(tree.getTree());
+        log(tree.treeID);
+        log('In tree create');
+        insertTree(tree)
+            .then(function() {
+                return updateTreeIDForAssets(tree.treeID, tree.getSubtreeIDs(tree.rootID));
+            })
+            .then(successFn)
+            .catch(failureFn);
+    }
+
+    function handleAddChild(options: AddChildOptions) {
+        log('Addding new child');
+        log(options);
+        addChild(options.PARENT_ID, options.NODE).then(successFn, failureFn);
+    }
+
+    function handleRemoveChild(options: RemoveChildOptions) {
+        // log('Removing a child/subTree');
+        // log(options);
+        removeChild(options.CHILD_ID, options.TREE_ID).then(successFn, failureFn);
+    }
+
+    function handleMoveChild(options: MoveChildOptions) {
+        moveChild(options.PARENT_ID, options.CHILD_NODE, options.CURRENT_TREE_ID)
+            .then(successFn)
+            .then(failureFn);
+    }
+
+    function successFn(data: unknown) {
+        resp.success(data);
+    }
+    function failureFn(data: unknown) {
+        resp.error(data);
+    }
 }
