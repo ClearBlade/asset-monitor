@@ -170,25 +170,33 @@ export class RulesEngine {
 }
 
 function handleInsideOperator(asset: FactData, area: FactData): boolean {
-    const parsedPoly = JSON.parse((area.data.polygon as string) || '[]');
-    const hasCoords = (asset.data.latitude as number) && (asset.data.longitude as number);
-    if (hasCoords && parsedPoly.length >= 3) {
-        const geoObj = new geo('polar');
-        const point = geoObj.Point(asset.data.latitude as number, asset.data.longitude as number);
-        const poly = geoObj.Polygon(parsedPoly.map((p: { lat: number; long: number }) => geoObj.Point(p.lat, p.long)));
-        return geoObj.Within(poly, point);
+    if (asset && area) {
+        const parsedPoly = JSON.parse((area.data.polygon as string) || '[]');
+        const hasCoords = (asset.data.latitude as number) && (asset.data.longitude as number);
+        if (hasCoords && parsedPoly.length >= 3) {
+            const geoObj = new geo('polar');
+            const point = geoObj.Point(asset.data.latitude as number, asset.data.longitude as number);
+            const poly = geoObj.Polygon(
+                parsedPoly.map((p: { lat: number; long: number }) => geoObj.Point(p.lat, p.long)),
+            );
+            return geoObj.Within(poly, point);
+        }
     }
     return false;
 }
 
 function handleOutsideOperator(asset: FactData, area: FactData): boolean {
-    const parsedPoly = JSON.parse((area.data.polygon as string) || '[]');
-    const hasCoords = (asset.data.latitude as number) && (asset.data.longitude as number);
-    if (hasCoords && parsedPoly.length >= 3) {
-        const geoObj = new geo('polar');
-        const point = geoObj.Point(asset.data.latitude as number, asset.data.longitude as number);
-        const poly = geoObj.Polygon(parsedPoly.map((p: { lat: number; long: number }) => geoObj.Point(p.lat, p.long)));
-        return !geoObj.Within(poly, point);
+    if (asset && area) {
+        const parsedPoly = JSON.parse((area.data.polygon as string) || '[]');
+        const hasCoords = (asset.data.latitude as number) && (asset.data.longitude as number);
+        if (hasCoords && parsedPoly.length >= 3) {
+            const geoObj = new geo('polar');
+            const point = geoObj.Point(asset.data.latitude as number, asset.data.longitude as number);
+            const poly = geoObj.Polygon(
+                parsedPoly.map((p: { lat: number; long: number }) => geoObj.Point(p.lat, p.long)),
+            );
+            return !geoObj.Within(poly, point);
+        }
     }
     return false;
 }

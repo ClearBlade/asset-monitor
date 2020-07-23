@@ -141,7 +141,7 @@ export function createAssetHistorySS({
     function HandleMessage(err: boolean, msg: string, topic: string): void {
         if (err) {
             logger.publishLog(LogLevels.ERROR, 'Failed to wait for message: ', err, ' ', msg, '  ', topic);
-            return;
+            resp.error('Failed to wait for message: ' + err + ' ' + msg + '  ' + topic);
         }
 
         let parsedMsg: Asset;

@@ -1,7 +1,10 @@
 import { Rules } from '../collection-schema/Rules';
+export declare type RulesWithExternalInfo = Rules & {
+    is_external: boolean;
+};
 interface RulesEngineAPI {
     resp: CbServer.Resp;
-    fetchRulesForEngine: () => Promise<Rules[]>;
+    fetchRulesForEngine: () => Promise<RulesWithExternalInfo[]>;
     incomingDataTopics: string[];
     actionTopic: string;
 }
