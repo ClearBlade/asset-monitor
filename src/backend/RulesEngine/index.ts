@@ -2,7 +2,7 @@ import { Rules } from '../collection-schema/Rules';
 import { subscriber } from '../Normalizer';
 import { tryParse } from '../Util';
 import { DurationEngine, DURATION_TOPIC } from './DurationEngine';
-import { processEvent } from './events';
+import { processEvent, getDefaultTimestamp } from './events';
 import { RulesEngine } from './RulesEngine';
 import { EntityTypes, TimeFrame } from './types';
 
@@ -107,6 +107,9 @@ export function rulesEngineSS({ resp, incomingDataTopics, fetchRulesForEngine, a
                                 timeframe: tryParse(found.timeframe, {}) as TimeFrame,
                                 ruleID: ruleId,
                                 closesIds: tryParse(found.closes_ids, []) as string[],
+                                timestamp: incomingData.meta.timestamp
+                                    ? incomingData.meta.timestamp
+                                    : getDefaultTimestamp(),
                             },
                             { [incomingData.id]: incomingData },
                             actionTopic,
