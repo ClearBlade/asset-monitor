@@ -1,4 +1,4 @@
-export interface AssetTree {
+export interface AssetTreeSchema {
     id?: string;
     tree?: string;
 }
