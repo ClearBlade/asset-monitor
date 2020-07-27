@@ -1,164 +1,132 @@
 import uuid = require('uuid');
+import 'core-js/features/map';
 
-export interface OrphanTreeNode {
-    id: string;
-    meta: Record<string, unknown>;
+export type AssetID = string;
+
+export interface AssetTreeNode {
+    id: AssetID;
+    parentID: AssetID;
+    children: Set<AssetID>;
 }
-export interface TreeNode extends OrphanTreeNode {
-    children: Set<TreeNode['id']>;
 
-    parentID: string; // Assuming there is just one parent
-}
-
-export interface Trees<T extends TreeNode> {
-    rootID: string;
-    nodes: Map<string, T>;
+export class AssetTree {
     treeID: string;
-}
+    rootID: AssetID;
+    nodes: Map<AssetID, AssetTreeNode>;
 
-// Need to add check for cycles
-// Need to throw error if adding fails
-
-export class Tree<T extends TreeNode> implements Trees<T> {
-    treeID: string; // A treeID will be generated everytime a new tree is created
-    rootID: string;
-    nodes: Map<string, T>;
-    constructor(rootNode: T, id: string) {
-        this.rootID = rootNode['id'];
-        this.nodes = new Map<string, T>();
-        if (!rootNode.children) {
-            rootNode.children = new Set<string>();
-        }
-        this.nodes.set(this.rootID as string, { ...rootNode });
-        this.treeID = id || uuid();
+    constructor(rootNode: AssetTreeNode, treeID?: string, nodes?: Map<AssetID, AssetTreeNode>) {
+        this.rootID = rootNode.id;
+        this.treeID = treeID || uuid(); // Check for possible collision?
+        this.nodes = nodes || new Map();
+        this.nodes.set(this.rootID, rootNode);
     }
 
-    createNewTree(rootID: TreeNode['id'], treeNodes: Map<string, T>): Tree<T> {
-        const rootNode = treeNodes.get(rootID as string);
-        if (!rootNode) {
-            throw new Error('The rootNode object is missing, please provide object for id: ' + rootID);
-        }
-        const tree = new Tree(rootNode, '');
-        tree.nodes = treeNodes;
+    static createAssetNode(id: AssetID, parentID?: AssetID, children?: Set<AssetID>): AssetTreeNode {
+        return {
+            id: id,
+            parentID: parentID || '',
+            children: children || new Set(),
+        };
+    }
+
+    createNewAssetTree(rootNode: AssetTreeNode, nodes: Map<AssetID, AssetTreeNode>): AssetTree {
+        const tree = new AssetTree(rootNode);
+        tree.nodes = nodes;
+
         return tree;
     }
 
-    getNodeByID(nodeID: string): T {
-        //returns T from the nodes object
-        const currNode = this.nodes.get(nodeID);
-        if (!currNode) {
-            throw new Error('The node with id' + nodeID + ' is missing');
-        }
-        return currNode;
-    }
+    addChildTree(childTree: AssetTree, parentID: AssetID): void {
+        const childRootID = childTree.rootID;
+        const childRootNode = childTree.nodes.get(childRootID);
+        const parentNode = this.nodes.get(parentID);
 
-    addChildTree(childTree: Tree<T>, parentID: T['id']): Tree<T> {
-        const childID = childTree.rootID;
-        const parentNode = this.nodes.get(parentID as string);
-        const childNode = childTree.nodes.get(childID as string);
-        if (this.nodes.has(childID as string)) {
-            throw new Error('A child already exists with the ID ' + childID);
-        }
-        if (!parentNode) {
-            throw new Error('The parent object is missing, please provide object for id: ' + parentID);
-        }
-        if (!childNode) {
-            throw new Error('The child object is missing, please provide object for id: ' + childID);
-        }
-        childNode.parentID = parentID;
-
-        if (!parentNode.children) {
-            parentNode.children = new Set();
-        }
-        parentNode.children.add(childID);
-        childTree.getAllNodes().forEach(n => {
-            this.nodes.set(n.id, n);
+        // Check if any assets from the tree being added already exist in the tree being added to.
+        childTree.nodes.forEach(assetNode => {
+            if (this.nodes.has(assetNode.id)) {
+                throw new Error(`Asset ${assetNode.id} from tree ${childTree.treeID} already exists in tree ${this.treeID}, not adding tree.`);
+            }
         });
-        return this;
+
+        if (!parentNode) {
+            throw new Error(`Tree ${this.treeID} does not have requested parent ${parentID}, not adding tree.`);
+        }
+
+        if (!childRootNode) {
+            throw new Error(`Child node ${childRootID} is missing from tree ${childTree.treeID}, not adding tree.`);
+        }
+
+        parentNode.children.add(childRootID);
+        childRootNode.parentID = parentID;
     }
 
-    addChild(orphanNode: OrphanTreeNode, parentID: T['id']): Tree<T> {
-        const node = ConvertToTreeNode(orphanNode);
-        const parentNode = this.nodes.get(parentID as string);
+    addChildLeaf(childNode: AssetTreeNode, parentID: AssetID): AssetTree {
+        const parentNode = this.nodes.get(parentID);
 
         if (!parentNode) {
             throw new Error('The parent object is missing, please provide object for id: ' + parentID);
         }
-        if (!node.children) {
-            throw new Error('children key is missing in the node..');
-        }
-        if (node.children.size > 0) {
+
+        if (childNode.children.size > 0) {
             throw new Error('A new born cannot have children, Duh..');
         }
 
-        const childID = node['id'];
-        const child = { ...node, parentID };
-        if (this.nodes.has(childID as string)) {
+        const childID = childNode.id;
+        childNode.parentID = parentID;
+
+        if (this.nodes.has(childID)) {
             throw new Error('A child already exists with the ID ' + childID);
         }
-        this.nodes.set(childID as string, child as T);
-        if (!parentNode.children) {
-            parentNode.children = new Set<string>();
-        }
+
+        this.nodes.set(childID, childNode);
         parentNode.children.add(childID);
         return this;
     }
 
-    getAllNodes(): Map<string, T> {
-        //returns the nodes' object/dict
-        //throw new Error('Method not implemented.');
-        return this.nodes;
-    }
-
-    removeChild(nodeID: string): Tree<T> {
-        //creates a new Tree
-        //removes the child & it's children recursively
-        //add them to the new Tree
-
-        //deleting the root is not allowed in this function
-        if (nodeID === this.rootID) {
-            throw new Error('Root cannot be deleted.');
+    removeChild(childID: AssetID): AssetTree {
+        if (childID === this.rootID) {
+            throw new Error(`${childID} is equal to the root ID, cannot remove root.`);
         }
 
-        const subTreeDict: Map<string, T> = new Map();
-        const currentNode = this.nodes.get(nodeID);
-
-        if (!currentNode) {
-            throw new Error("The node intended to delete doesn't exist: " + nodeID);
+        const childNode = this.nodes.get(childID);
+        if (!childNode) {
+            throw new Error(`Child root ${childID} does not exist in tree.`);
         }
 
-        const parentID = currentNode['parentID'];
-        currentNode['parentID'] = ''; // reset parent...
-        const parentNode = this.nodes.get(parentID);
+        const parentNode = this.nodes.get(childNode.parentID);
         if (!parentNode) {
-            throw new Error('The parent node: ' + parentID + 'of the node being deleted: ' + nodeID + ' is missing');
+            throw new Error(`Parent ${childNode.parentID} of child does not exist.`);
         }
-        parentNode.children.delete(currentNode['id']);
-        this.nodes.set(parentID, parentNode);
-        const subTreeIDs = this.getSubtreeIDs(nodeID);
 
-        subTreeIDs.forEach(id => {
-            const curr = this.nodes.get(id);
-            if (!curr) {
-                throw new Error('Subtree Node: ' + id + ' of node to be deleted: ' + nodeID + ' doesnt exist');
+        // Delete child from parent and parent from child.
+        parentNode.children.delete(childID);
+        childNode.parentID = '';
+
+        const subTreeMap = new Map<AssetID, AssetTreeNode>();
+        const subTreeIDs = this.getSubtreeIDs(childID);
+
+        // Add sub tree nodes to map and remove from this tree.
+        subTreeIDs.forEach(assetID => {
+            const node = this.nodes.get(assetID);
+
+            if (!node) {
+                throw new Error(`Subtree node ${assetID} does not exist.`);
             }
-            subTreeDict.set(id, { ...curr });
-            this.nodes.delete(id);
-        });
-        const tree = this.createNewTree(currentNode['id'], subTreeDict);
 
-        return tree;
-        // throw new Error('Method not implemented.');
-        // returns the subTree..
+            subTreeMap.set(assetID, node);
+            this.nodes.delete(assetID);
+        });
+
+        return new AssetTree(subTreeMap.get(childID)!);
     }
 
-    getSubtreeIDs(nodeID: string): Array<TreeNode['id']> {
-        const currNode = this.nodes.get(nodeID);
+    getSubtreeIDs(assetID: AssetID): Array<AssetID> {
+        const currNode = this.nodes.get(assetID);
         if (!currNode) {
-            throw new Error('The node: ' + nodeID + " whose subTree are being extracted doesn't exist: ");
+            throw new Error('The node: ' + assetID + " whose subTree are being extracted doesn't exist: ");
         }
 
-        let IDs: Array<TreeNode['id']> = [];
+        let IDs: Array<AssetID> = [];
         IDs.push(currNode['id']);
 
         currNode.children.forEach(child => {
@@ -168,61 +136,36 @@ export class Tree<T extends TreeNode> implements Trees<T> {
         return IDs;
     }
 
-    getSubtreeByID(nodeID: string): Tree<T> {
-        //creates a new Tree,
-        //clones the subtree from the tree
-        // returns the subTree with the given nodeID as the root..
-        const subTreeMap: Map<string, T> = new Map();
-        const currentNode = this.nodes.get(nodeID);
-
-        if (!currentNode) {
-            throw new Error('The node: ' + nodeID + " whose subTree by ID is being extracted doesn't exist: ");
-        }
-        const subTreeIDs = this.getSubtreeIDs(currentNode['id']);
-        subTreeIDs.forEach(id => {
-            const subtTreeNode = this.nodes.get(id);
-            if (!subtTreeNode) {
-                throw new Error('The node: ' + id + " whose subTreeNodes are being extracted doesn't exist: ");
+    static treeFromString(assetTreeStr: string): AssetTree {
+        const reviver = (key: string, value: any) => {
+            if (key === 'children') {
+                return new Set(value);
             }
-            subTreeMap.set(id, subtTreeNode);
-        });
 
-        const tree = new Tree(currentNode, '');
-
-        return tree;
+            if (key === 'nodes') {
+                return new Map(JSON.parse(value));
+            }
+            return value;
+        }
+        return JSON.parse(assetTreeStr, reviver);
     }
 
-    getTree(): Trees<T> {
-        return {
-            rootID: this.rootID,
-            nodes: this.nodes,
-            treeID: this.treeID,
-        };
+    static treeToString(assetTree: AssetTree): string {
+        const replacer = (key: string, value: any) => {
+            if (key === 'children') {
+                return Array.from(value);
+            }
+            
+            if (key === 'nodes') {
+                return Array.from(value.entries());
+            }
+            return value;
+        }
+
+        return JSON.stringify(assetTree, replacer);
     }
 
     size(): number {
-        return Object.keys(this.nodes).length;
+        return this.nodes.size;
     }
-}
-
-export function CreateTree(tree: Trees<TreeNode>): Tree<TreeNode> {
-    const currRoot = tree.nodes.get(tree.rootID);
-    if (!currRoot) {
-        log('CreateTree:: rootID is missing');
-        throw new Error("The rootnode of the tree doesn't exist: " + tree.rootID);
-    }
-    if (!tree.treeID) {
-        log('CreateTree:: treeID is missing, new tree will be created with a new treeID');
-    }
-    const newTree = new Tree(currRoot, tree.treeID);
-    newTree.nodes = tree.nodes;
-    return newTree;
-}
-
-export function ConvertToTreeNode(orphanNode: OrphanTreeNode): TreeNode {
-    return {
-        ...orphanNode,
-        children: new Set(),
-        parentID: '',
-    };
 }

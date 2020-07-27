@@ -1,29 +1,22 @@
-export interface TreeNode {
-    id: string;
-    children: Array<TreeNode['id']>;
-    meta: Record<string, unknown>;
-    parentID: string;
+import 'core-js/features/map';
+export declare type AssetID = string;
+export interface AssetTreeNode {
+    id: AssetID;
+    parentID: AssetID;
+    children: Set<AssetID>;
 }
-export interface NodeDict<T extends TreeNode> {
-    [key: string]: T;
-}
-export interface Trees<T extends TreeNode> {
-    rootID: string;
-    nodes: NodeDict<T>;
+export declare class AssetTree {
     treeID: string;
+    rootID: AssetID;
+    nodes: Map<AssetID, AssetTreeNode>;
+    constructor(rootNode: AssetTreeNode, treeID?: string, nodes?: Map<AssetID, AssetTreeNode>);
+    static createAssetNode(id: AssetID, parentID?: AssetID, children?: Set<AssetID>): AssetTreeNode;
+    createNewAssetTree(rootNode: AssetTreeNode, nodes: Map<AssetID, AssetTreeNode>): AssetTree;
+    addChildTree(childTree: AssetTree, parentID: AssetID): void;
+    addChildLeaf(childNode: AssetTreeNode, parentID: AssetID): AssetTree;
+    removeChild(childID: AssetID): AssetTree;
+    getSubtreeIDs(assetID: AssetID): Array<AssetID>;
+    static treeFromString(assetTreeStr: string): AssetTree;
+    static treeToString(assetTree: AssetTree): string;
+    size(): number;
 }
-export declare class Tree<T extends TreeNode> implements Trees<T> {
-    treeID: string;
-    constructor(rootNode: T, treeID: string);
-    rootID: string;
-    nodes: NodeDict<T>;
-    createNewTree(rootID: TreeNode['id'], treeNodes: NodeDict<T>): Tree<T>;
-    findNodeByID(nodeID: string): T;
-    addChild(node: T, parentID: T['id']): Tree<T>;
-    getAllNodes(): NodeDict<T>;
-    removeChild(nodeID: string): Tree<T>;
-    getSubtreeIDs(nodeID: string): Array<TreeNode['id']>;
-    getSubtreeByID(nodeID: string): Tree<T>;
-    getTree(): Trees<T>;
-}
-export declare function CreateTree(tree: Trees<TreeNode>): Tree<TreeNode>;
