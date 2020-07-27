@@ -29,24 +29,10 @@ export class AssetTree {
         };
     }
 
-    createNewAssetTree(rootNode: AssetTreeNode, nodes: Map<AssetID, AssetTreeNode>): AssetTree {
-        const tree = new AssetTree(rootNode);
-        tree.nodes = nodes;
-
-        return tree;
-    }
-
     addChildTree(childTree: AssetTree, parentID: AssetID): void {
         const childRootID = childTree.rootID;
         const childRootNode = childTree.nodes.get(childRootID);
         const parentNode = this.nodes.get(parentID);
-
-        // Check if any assets from the tree being added already exist in the tree being added to.
-        childTree.nodes.forEach(assetNode => {
-            if (this.nodes.has(assetNode.id)) {
-                throw new Error(`Asset ${assetNode.id} from tree ${childTree.treeID} already exists in tree ${this.treeID}, not adding tree.`);
-            }
-        });
 
         if (!parentNode) {
             throw new Error(`Tree ${this.treeID} does not have requested parent ${parentID}, not adding tree.`);
@@ -58,6 +44,17 @@ export class AssetTree {
 
         parentNode.children.add(childRootID);
         childRootNode.parentID = parentID;
+
+        // Check if any assets from the tree being added already exist in the tree being added to.
+        childTree.nodes.forEach(assetNode => {
+            if (this.nodes.has(assetNode.id)) {
+                throw new Error(
+                    `Asset ${assetNode.id} from tree ${childTree.treeID} already exists in tree ${this.treeID}, not adding tree.`,
+                );
+            } else {
+                this.nodes.set(assetNode.id, assetNode);
+            }
+        });
     }
 
     addChildLeaf(childNode: AssetTreeNode, parentID: AssetID): AssetTree {
@@ -117,7 +114,7 @@ export class AssetTree {
             this.nodes.delete(assetID);
         });
 
-        return new AssetTree(subTreeMap.get(childID)!);
+        return new AssetTree(subTreeMap.get(childID)!, undefined, subTreeMap);
     }
 
     getSubtreeIDs(assetID: AssetID): Array<AssetID> {
@@ -142,12 +139,23 @@ export class AssetTree {
                 return new Set(value);
             }
 
-            if (key === 'nodes') {
-                return new Map(JSON.parse(value));
+            if (typeof value === 'object' && value !== null) {
+                if (value.dataType === 'Map' && key === 'nodes') {
+                    return new Map(value.value);
+                }
             }
+
             return value;
+        };
+
+        const tree = JSON.parse(assetTreeStr, reviver) as AssetTree;
+        const rootNode = tree.nodes.get(tree.rootID);
+
+        if (!rootNode) {
+            throw new Error('Tree is missing its root node, cannot convert from string');
         }
-        return JSON.parse(assetTreeStr, reviver);
+
+        return new AssetTree(rootNode, tree.treeID, tree.nodes);
     }
 
     static treeToString(assetTree: AssetTree): string {
@@ -155,12 +163,16 @@ export class AssetTree {
             if (key === 'children') {
                 return Array.from(value);
             }
-            
-            if (key === 'nodes') {
-                return Array.from(value.entries());
+
+            if (value instanceof Map && key === 'nodes') {
+                return {
+                    dataType: 'Map',
+                    value: Array.from(value.entries()),
+                };
             }
+
             return value;
-        }
+        };
 
         return JSON.stringify(assetTree, replacer);
     }
