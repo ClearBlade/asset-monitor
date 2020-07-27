@@ -16,10 +16,10 @@ describe('Asset Tree', () => {
         assetTree = new AssetTree(asset1);
     });
 
-    describe('adding child nodes', () => {
+    describe('add child nodes', () => {
         it('add child node', () => {
             assetTree.addChildLeaf(asset2, 'asset1');
-            
+
             expect(assetTree.nodes.get('asset2')).toEqual(asset2);
             expect(assetTree.nodes.get('asset1').children.has('asset2')).toBeTruthy();
             expect(assetTree.nodes.get('asset2').parentID === 'asset1').toBeTruthy();
@@ -31,18 +31,17 @@ describe('Asset Tree', () => {
             }).toThrowError();
         });
 
-
         it('add child node with children throws error', () => {
-            let nodeWithChildren = AssetTree.createAssetNode('node', undefined, new Set('asset2'));
+            const nodeWithChildren = AssetTree.createAssetNode('node', undefined, new Set('asset2'));
 
             expect(() => {
                 assetTree.addChildLeaf(nodeWithChildren, 'asset1');
             }).toThrowError();
         });
-    
+
         it('add existing node throws error', () => {
             assetTree.addChildLeaf(asset2, 'asset1');
-    
+
             expect(() => {
                 assetTree.addChildLeaf(asset2, 'asset1');
             }).toThrowError();
@@ -61,10 +60,17 @@ describe('Asset Tree', () => {
             assetTree.addChildLeaf(asset3, 'asset2');
             assetTree.addChildLeaf(asset4, 'asset1');
 
-            expect(['asset1', 'asset2', 'asset3', 'asset4'].every(assetID => assetTree.getSubtreeIDs('asset1').includes(assetID))).toBeTruthy();
-            expect(['asset2', 'asset3'].every(assetID => assetTree.getSubtreeIDs('asset2').includes(assetID))).toBeTruthy();
-            expect(['asset1', 'asset4'].every(assetID => assetTree.getSubtreeIDs('asset2').includes(assetID))).toBeFalsy();
-
+            expect(
+                ['asset1', 'asset2', 'asset3', 'asset4'].every(assetID =>
+                    assetTree.getSubtreeIDs('asset1').includes(assetID),
+                ),
+            ).toBeTruthy();
+            expect(
+                ['asset2', 'asset3'].every(assetID => assetTree.getSubtreeIDs('asset2').includes(assetID)),
+            ).toBeTruthy();
+            expect(
+                ['asset1', 'asset4'].every(assetID => assetTree.getSubtreeIDs('asset2').includes(assetID)),
+            ).toBeFalsy();
         });
     });
 
@@ -106,10 +112,9 @@ describe('Asset Tree', () => {
                 expect(assetTree.nodes.get(assetID)).toBeTruthy();
             });
         });
-
     });
 
-    describe('removing child nodes', () => {
+    describe('remove child nodes', () => {
         it('remove root throws error', () => {
             expect(() => {
                 assetTree.removeChild('asset1');
