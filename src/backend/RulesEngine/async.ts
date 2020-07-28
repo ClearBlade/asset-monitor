@@ -6,7 +6,7 @@ import { Actions } from '../collection-schema/Actions';
 import { EventType, EventSchema } from '../collection-schema/Events';
 import { Entities, SplitEntities } from './types';
 import { uniqueArray } from './utils';
-import { Rules } from '../collection-schema/Rules';
+// import { Rules } from '../collection-schema/Rules';
 
 export function getAllAssetsForType(assetType: string): Promise<Array<CbServer.CollectionSchema<Asset>>> {
     const assetsCollection = CbCollectionLib(CollectionName.ASSETS);
@@ -205,47 +205,59 @@ export function closeRules(ids: string[], splitEntities: SplitEntities): Promise
         let shouldProceed = false;
         const promise = Promise.all(
             ids.map(id => {
-                const rulesCollection = CbCollectionLib(CollectionName.RULES);
-                const query = ClearBlade.Query().equalTo('id', id);
-                const promise = rulesCollection
+                // NOTE: removing this section for now since customer's event states are going to be hard coded
+                // const rulesCollection = CbCollectionLib(CollectionName.RULES);
+                // const query = ClearBlade.Query().equalTo('id', id);
+                // const promise = rulesCollection
+                //     .cbFetchPromise({ query })
+                //     .then((data: CbServer.CollectionFetchData<Rules>) => {
+                //         const state = JSON.parse(data.DATA[0].closed_by_rule || '{}').state;
+                const eventsCollection = CbCollectionLib(CollectionName.EVENTS);
+                const query = ClearBlade.Query()
+                    .equalTo('rule_id', id)
+                    .equalTo('is_open', true);
+                const promise = eventsCollection
                     .cbFetchPromise({ query })
-                    .then((data: CbServer.CollectionFetchData<Rules>) => {
-                        const state = JSON.parse(data.DATA[0].closed_by_rule || '{}').state;
-                        const eventsCollection = CbCollectionLib(CollectionName.EVENTS);
-                        const query = ClearBlade.Query()
-                            .equalTo('rule_id', id)
-                            .equalTo('is_open', true);
-                        const promise = eventsCollection
-                            .cbFetchPromise({ query })
-                            .then((data: CbServer.CollectionFetchData<EventSchema>) => {
-                                for (let i = 0; i < data.DATA.length; i++) {
-                                    const hasOverlappingEntities = compareOverlappingEntities(
-                                        data.DATA[i],
-                                        splitEntities,
-                                    );
-                                    if (hasOverlappingEntities) {
-                                        shouldProceed = true;
-                                        const eventHistoryCollection = CbCollectionLib(CollectionName.EVENT_HISTORY);
-                                        const query = ClearBlade.Query().equalTo('id', data.DATA[i].id as string);
-                                        return Promise.all([
-                                            eventsCollection.cbUpdatePromise({
-                                                query,
-                                                changes: { state, is_open: false },
-                                            }),
-                                            eventHistoryCollection.cbCreatePromise({
-                                                item: {
-                                                    event_id: data.DATA[i].id,
-                                                    timestamp: new Date().toISOString(),
-                                                    transition_attribute: 'state',
-                                                    transition_value: state,
-                                                },
-                                            }),
-                                        ]);
-                                    }
+                    .then((eventData: CbServer.CollectionFetchData<EventSchema>) => {
+                        for (let i = 0; i < eventData.DATA.length; i++) {
+                            const hasOverlappingEntities = compareOverlappingEntities(eventData.DATA[i], splitEntities);
+                            if (hasOverlappingEntities) {
+                                shouldProceed = true;
+                                const eventHistoryCollection = CbCollectionLib(CollectionName.EVENT_HISTORY);
+                                const query = ClearBlade.Query().equalTo('id', eventData.DATA[i].id as string);
+                                if (eventData.DATA[i].state === 'Active and Acknowledged') {
+                                    return Promise.all([
+                                        eventsCollection.cbUpdatePromise({
+                                            query,
+                                            changes: { state: 'Cleared and Acknowledged', is_open: false },
+                                        }),
+                                        eventHistoryCollection.cbCreatePromise({
+                                            item: {
+                                                event_id: eventData.DATA[i].id,
+                                                timestamp: new Date().toISOString(),
+                                                transition_attribute: 'state',
+                                                transition_value: 'Cleared and Acknowledged',
+                                            },
+                                        }),
+                                    ]);
+                                } else {
+                                    return Promise.all([
+                                        eventsCollection.cbUpdatePromise({
+                                            query,
+                                            changes: { state: 'Cleared and Unacknowledged' },
+                                        }),
+                                        eventHistoryCollection.cbCreatePromise({
+                                            item: {
+                                                event_id: eventData.DATA[i].id,
+                                                timestamp: new Date().toISOString(),
+                                                transition_attribute: 'state',
+                                                transition_value: 'Cleared and Unacknowledged',
+                                            },
+                                        }),
+                                    ]);
                                 }
-                            });
-                        Promise.runQueue();
-                        return promise;
+                            }
+                        }
                     });
                 Promise.runQueue();
                 return promise;
