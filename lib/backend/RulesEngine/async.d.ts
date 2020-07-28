@@ -21,4 +21,4 @@ export declare function createEvent(item: Record<string, string | boolean | numb
 export declare function createEventHistoryItem(item: Record<string, string | boolean | number>): Promise<{
     item_id: string;
 }[]>;
-export declare function closeRules(ids: string[], splitEntities: SplitEntities): Promise<boolean>;
+export declare function closeRules(ids: string[], splitEntities: SplitEntities, timestamp?: string): Promise<boolean>;

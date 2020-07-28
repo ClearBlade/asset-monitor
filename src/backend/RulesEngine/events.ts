@@ -20,7 +20,7 @@ export function processSuccessfulEvent(
     actionTopic: string,
     trigger: WithParsedCustomData,
 ): void {
-    if (doesTimeframeMatchRule(new Date().toISOString(), ruleParams.timeframe)) {
+    if (doesTimeframeMatchRule(getDefaultTimestamp(), ruleParams.timeframe)) {
         const filteredEntities = ids.reduce((acc: Entities, id: string) => {
             acc[id] = entities[id];
             return acc;
@@ -58,7 +58,7 @@ export function processEvent(
 ): Promise<EventSchema | void> {
     const { eventTypeID, actionIDs, priority, severity, ruleID, closesIds } = ruleParams;
     const splitEntities = getSplitEntities(entities);
-    const promise = closeRules(closesIds, splitEntities).then(shouldProceed => {
+    const promise = closeRules(closesIds, splitEntities, ruleParams.timestamp).then(shouldProceed => {
         if (shouldProceed) {
             const promise = shouldCreateOrUpdateEvent(ruleID, splitEntities).then(shouldCreate => {
                 if (shouldCreate) {
