@@ -11,7 +11,6 @@ export declare class AssetTree {
     nodes: Map<AssetID, AssetTreeNode>;
     constructor(rootNode: AssetTreeNode, treeID?: string, nodes?: Map<AssetID, AssetTreeNode>);
     static createAssetNode(id: AssetID, parentID?: AssetID, children?: Set<AssetID>): AssetTreeNode;
-    createNewAssetTree(rootNode: AssetTreeNode, nodes: Map<AssetID, AssetTreeNode>): AssetTree;
     addChildTree(childTree: AssetTree, parentID: AssetID): void;
     addChildLeaf(childNode: AssetTreeNode, parentID: AssetID): AssetTree;
     removeChild(childID: AssetID): AssetTree;

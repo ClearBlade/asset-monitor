@@ -1,9 +1,10 @@
-import { AssetTree, AssetID, AssetTreeNode } from "./tree";
+import { AssetTree, AssetID, AssetTreeNode } from './tree';
 import { AssetTreeSchema } from '../collection-schema/AssetTree';
-import { CbCollectionLib } from "../collection-lib";
-import { CollectionName } from "../global-config";
-import { Asset } from "../collection-schema/Assets";
+import { CbCollectionLib } from '../collection-lib';
+import { CollectionName } from '../global-config';
+import { Asset } from '../collection-schema/Assets';
 import 'core-js/features/array';
+import { RawQueryLib } from '../collection-lib/raw-query';
 
 export function insertTree(newTree: AssetTree): Promise<unknown> {
     const treeCol = CbCollectionLib(CollectionName.ASSET_TREES);
@@ -236,6 +237,31 @@ export function removeChild(childID: string, treeID: string): Promise<unknown> {
     });
 }
 
+export function getTopLevelAssets(resp: CbServer.Resp): void {
+    // TODO: On availability of json column / json cast support, switch to single query.
+    // const query = "WITH roots AS (SELECT tree::json->>'rootID' FROM asset_trees) SELECT * FROM assets WHERE id IN roots;";
+
+    RawQueryLib()
+        .cbQueryPromise({ query: 'SELECT tree FROM asset_trees' })
+        .then(function(res) {
+            const topLevelAssetIDs = new Array<AssetID>();
+            (res as { tree: string }[]).forEach(item => {
+                topLevelAssetIDs.push(JSON.parse(item.tree).rootID);
+            });
+
+            const idString = `(${topLevelAssetIDs.map(assetID => `"${assetID}"`).join(',')})`;
+            const assetQuery = `SELECT * FROM assets WHERE id IN ${idString}`;
+
+            return RawQueryLib().cbQueryPromise({ query: assetQuery });
+        })
+        .then(function(res) {
+            resp.success(res);
+        })
+        .catch(err => {
+            resp.error(err);
+        });
+}
+
 export enum AssetTreeMethod {
     GET_TREE = 'getTree',
     GET_TOP_LEVEL_ASSETS = 'getTopLevelAssets',
@@ -315,6 +341,9 @@ export function assetTreeHandler(req: CbServer.BasicReq, resp: CbServer.Resp, op
             break;
         case AssetTreeMethod.MOVE_CHILD:
             handleMoveChild(options.METHOD_OPTIONS);
+            break;
+        case AssetTreeMethod.GET_TOP_LEVEL_ASSETS:
+            getTopLevelAssets(resp);
             break;
         default:
             break;

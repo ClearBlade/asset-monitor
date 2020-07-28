@@ -11,13 +11,31 @@ interface RawQueryExecOptions {
 }
 
 interface RawQueryLib {
-    cbQueryPromise: (opts: RawQueryFetchOptions) => Promise<[]unknown>;
-    //cbExecPromise: (opts: RawQueryExecOptions) => Promise<'success'>;
+    cbQueryPromise: (opts: RawQueryFetchOptions) => Promise<unknown[]>;
+    cbExecPromise: (opts: RawQueryExecOptions) => Promise<'success'>;
 }
 
-export function RawQueryLib():RawQueryLib{
-    function cbExecPromise(opts:RawQueryExecOptions ):Promise<'success'>{
-return new Promise(function(resolve, reject) {
+export function RawQueryLib(): RawQueryLib {
+    function cbQueryPromise(opts: RawQueryFetchOptions): Promise<unknown[]> {
+        return new Promise(function(resolve, reject) {
+            const database = ClearBlade.Database();
+
+            if (!opts || !opts.query) {
+                const errMsg = 'ERROR: raw query is missing';
+                reject(new Error(errMsg));
+            }
+            database.query(opts.query, function(err, res) {
+                if (err) {
+                    reject(new Error('Error' + err));
+                } else {
+                    resolve(res);
+                }
+            });
+        });
+    }
+
+    function cbExecPromise(opts: RawQueryExecOptions): Promise<'success'> {
+        return new Promise(function(resolve, reject) {
             const database = ClearBlade.Database();
 
             if (!opts || !opts.query) {
@@ -26,9 +44,9 @@ return new Promise(function(resolve, reject) {
             }
             database.exec(opts.query, function(err, res) {
                 if (err) {
-                    reject(new Error(res));
+                    reject(new Error('Error' + err));
                 } else {
-                    resolve(res);
+                    resolve('success');
                 }
             });
         });
@@ -36,6 +54,6 @@ return new Promise(function(resolve, reject) {
 
     return {
         cbQueryPromise,
-        cbExecPromise
-    }
+        cbExecPromise,
+    };
 }

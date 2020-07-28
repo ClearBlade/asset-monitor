@@ -1,4 +1,4 @@
-import { AssetTree, AssetID, AssetTreeNode } from "./tree";
+import { AssetTree, AssetID, AssetTreeNode } from './tree';
 import 'core-js/features/array';
 export declare function insertTree(newTree: AssetTree): Promise<unknown>;
 export declare function removeTree(tree: AssetTree): Promise<unknown>;
@@ -10,6 +10,7 @@ export declare function addChild<T>(parentID: string, child: AssetTreeNode): Pro
 export declare function updateTreeIDForAssets(treeID: string, assets: Array<AssetID>): Promise<unknown>;
 export declare function moveChild(parentID: string, childNode: AssetTreeNode, currentTreeID: string): Promise<unknown>;
 export declare function removeChild(childID: string, treeID: string): Promise<unknown>;
+export declare function getTopLevelAssets(resp: CbServer.Resp): void;
 export declare enum AssetTreeMethod {
     GET_TREE = "getTree",
     GET_TOP_LEVEL_ASSETS = "getTopLevelAssets",
