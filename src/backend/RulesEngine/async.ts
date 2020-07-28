@@ -261,6 +261,9 @@ export function closeRules(ids: string[], splitEntities: SplitEntities): Promise
                     });
                 Promise.runQueue();
                 return promise;
+                // });
+                // Promise.runQueue();
+                // return promise;
             }),
         ).then(() => {
             return shouldProceed;
