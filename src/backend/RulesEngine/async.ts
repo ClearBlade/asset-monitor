@@ -201,7 +201,7 @@ export function createEventHistoryItem(
     return eventHistoryCollection.cbCreatePromise({ item });
 }
 
-const compoundEventTypes = ['dev-dau-external-alarm'];
+const compoundEventTypes = ['dau-external-alarm'];
 
 export function closeRules(ids: string[], splitEntities: SplitEntities, timestamp?: string): Promise<boolean> {
     if (ids.length) {
