@@ -1,11 +1,7 @@
 import '../tree_helper.ts';
 import '../../collection-lib';
-import { CbCollectionLib } from '../../collection-lib';
-import { CollectionName } from '../../global-config';
 import { addChild, removeChild, getTree } from '../tree_helper';
 import { AssetTreeNode, AssetTree } from '../tree';
-import { Asset } from '../../collection-schema/Assets';
-import { AssetTreeSchema } from '../../collection-schema/AssetTree';
 
 let fetchFn = (): Record<string, unknown> => cbValue;
 
@@ -136,51 +132,3 @@ const removedTree = {
 const updatedCbValue = {
     DATA: [updatedTree],
 };
-
-const assets = new Map<string, Asset>([
-    [
-        'asset1',
-        {
-            id: 'asset1',
-            tree_id: '',
-        },
-    ],
-    [
-        'asset2',
-        {
-            id: 'asset2',
-            tree_id: '',
-        },
-    ],
-    [
-        'asset3',
-        {
-            id: 'asset3',
-            tree_id: '',
-        },
-    ],
-    [
-        'asset3',
-        {
-            id: 'asset3',
-            tree_id: '',
-        },
-    ],
-    [
-        'asset4',
-        {
-            id: 'asset4',
-            tree_id: '',
-        },
-    ],
-]);
-
-const assetTrees = new Map<string, AssetTreeSchema>([
-    [
-        'tree1',
-        {
-            id: 'tree1',
-            tree: '',
-        },
-    ],
-]);

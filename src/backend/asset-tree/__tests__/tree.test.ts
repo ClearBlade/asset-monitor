@@ -20,9 +20,9 @@ describe('Asset Tree', () => {
         it('add child node', () => {
             assetTree.addChildLeaf(asset2, 'asset1');
 
-            expect(assetTree.nodes.get('asset2')).toEqual(asset2);
-            expect(assetTree.nodes.get('asset1').children.has('asset2')).toBeTruthy();
-            expect(assetTree.nodes.get('asset2').parentID === 'asset1').toBeTruthy();
+            expect(assetTree.nodes['asset2']).toEqual(asset2);
+            expect(assetTree.nodes['asset1'].children.has('asset2')).toBeTruthy();
+            expect(assetTree.nodes['asset2'].parentID === 'asset1').toBeTruthy();
         });
 
         it('add child node with non-existent parent throws error', () => {
@@ -97,7 +97,7 @@ describe('Asset Tree', () => {
         });
 
         it('add child tree missing root node throws error', () => {
-            childTree.nodes.delete('asset2');
+            delete childTree.nodes['asset2'];
             expect(() => {
                 assetTree.addChildTree(childTree, 'asset1');
             }).toThrowError();
@@ -106,10 +106,10 @@ describe('Asset Tree', () => {
         it('add child tree updates parent/child connections', () => {
             assetTree.addChildTree(childTree, 'asset1');
 
-            expect(assetTree.nodes.get('asset1').children.has('asset2')).toBeTruthy();
-            expect(assetTree.nodes.get('asset2').parentID).toEqual('asset1');
+            expect(assetTree.nodes['asset1'].children.has('asset2')).toBeTruthy();
+            expect(assetTree.nodes['asset2'].parentID).toEqual('asset1');
             ['asset2', 'asset3', 'asset4'].every(assetID => {
-                expect(assetTree.nodes.get(assetID)).toBeTruthy();
+                expect(assetTree.nodes[assetID]).toBeTruthy();
             });
         });
     });
@@ -146,10 +146,10 @@ describe('Asset Tree', () => {
             assetTree.addChildLeaf(asset2, 'asset1');
             const newTree = assetTree.removeChild('asset2');
 
-            expect(assetTree.nodes.has('asset2')).toBeFalsy();
-            expect(assetTree.nodes.get('asset1').children.has('asset2')).toBeFalsy();
-            expect(newTree.nodes.has('asset2')).toBeTruthy();
-            expect(newTree.nodes.get('asset2').parentID).toBeFalsy();
+            expect(assetTree.nodes['asset2']).toBeFalsy();
+            expect(assetTree.nodes['asset1'].children.has('asset2')).toBeFalsy();
+            expect(newTree.nodes['asset2']).toBeTruthy();
+            expect(newTree.nodes['asset2'].parentID).toBeFalsy();
         });
 
         it('remove child subtree returns subtree as new tree', () => {
@@ -159,10 +159,10 @@ describe('Asset Tree', () => {
 
             const newTree = assetTree.removeChild('asset2');
 
-            expect(assetTree.nodes.has('asset2')).toBeFalsy();
-            expect(assetTree.nodes.has('asset3')).toBeFalsy();
-            expect(newTree.nodes.has('asset2')).toBeTruthy();
-            expect(newTree.nodes.has('asset3')).toBeTruthy();
+            expect(assetTree.nodes['asset2']).toBeFalsy();
+            expect(assetTree.nodes['asset3']).toBeFalsy();
+            expect(newTree.nodes['asset2']).toBeTruthy();
+            expect(newTree.nodes['asset3']).toBeTruthy();
         });
     });
 

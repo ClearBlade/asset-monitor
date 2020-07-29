@@ -1,6 +1,5 @@
-import { AssetTree, AssetID, AssetTreeNode } from './tree';
+import { AssetTree, AssetID, AssetTreeNode, AssetTreeNodeDict } from './tree';
 import 'core-js/features/array';
-import 'core-js/features/set';
 export declare function insertTree(newTree: AssetTree): Promise<unknown>;
 export declare function removeTree(tree: AssetTree): Promise<unknown>;
 export declare function updateTree(tree: AssetTree): Promise<unknown>;
@@ -9,7 +8,7 @@ export declare function getTreeIdForAsset(assetID: AssetID): Promise<string>;
 export declare function getTreeByAssetID(assetID: string): Promise<AssetTree>;
 export declare function addChild(parentID: string, child: AssetTreeNode): Promise<unknown>;
 export declare function updateTreeIDForAssets(treeID: string, assets: Array<AssetID>): Promise<unknown>;
-export declare function moveChild(parentID: string, childNode: AssetTreeNode, currentTreeID: string): Promise<unknown>;
+export declare function moveChild(parentID: string, childNode: AssetTreeNode, childTreeID: string): Promise<unknown>;
 export declare function removeChild(childID: string, treeID: string): Promise<unknown>;
 export declare function getTopLevelAssets(resp: CbServer.Resp): void;
 export declare enum AssetTreeMethod {
@@ -19,9 +18,6 @@ export declare enum AssetTreeMethod {
     ADD_CHILD = "addChild",
     REMOVE_CHILD = "removeChild",
     MOVE_CHILD = "moveChild"
-}
-interface AssetTreeNodeDict {
-    [id: string]: AssetTreeNode;
 }
 export interface CreateAssetTreeOptions {
     ROOT_ID: AssetID;
@@ -38,7 +34,10 @@ export interface RemoveChildOptions {
 export interface MoveChildOptions {
     PARENT_ID: string;
     CHILD_NODE: AssetTreeNode;
-    CURRENT_TREE_ID: string;
+    CHILD_TREE_ID: string;
+}
+export interface GetTreeOptions {
+    TREE_ID: string;
 }
 export interface CreateOperation {
     METHOD: AssetTreeMethod.CREATE_ASSET_TREE;
@@ -59,6 +58,9 @@ export interface MoveChildOperation {
 export interface GetTopLevelAssetsOperation {
     METHOD: AssetTreeMethod.GET_TOP_LEVEL_ASSETS;
 }
-export declare type AssetTreeOperations = CreateOperation | AddChildOperation | RemoveChildOperation | MoveChildOperation | GetTopLevelAssetsOperation;
+export interface GetTreeOperation {
+    METHOD: AssetTreeMethod.GET_TREE;
+    METHOD_OPTIONS: GetTreeOptions;
+}
+export declare type AssetTreeOperations = CreateOperation | AddChildOperation | RemoveChildOperation | MoveChildOperation | GetTopLevelAssetsOperation | GetTreeOperation;
 export declare function assetTreeHandler(req: CbServer.BasicReq, resp: CbServer.Resp, options: AssetTreeOperations): void;
-export {};

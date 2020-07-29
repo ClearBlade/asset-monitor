@@ -1,10 +1,10 @@
-import { AssetTree, AssetID, AssetTreeNode } from './tree';
+import { AssetTree, AssetID, AssetTreeNode, AssetTreeNodeDict } from './tree';
 import { AssetTreeSchema } from '../collection-schema/AssetTree';
 import { CbCollectionLib } from '../collection-lib';
 import { CollectionName } from '../global-config';
 import { Asset } from '../collection-schema/Assets';
-import 'core-js/features/array';
 import { RawQueryLib } from '../collection-lib/raw-query';
+import 'core-js/features/array';
 
 export function insertTree(newTree: AssetTree): Promise<unknown> {
     const treeCol = CbCollectionLib(CollectionName.ASSET_TREES);
@@ -144,10 +144,10 @@ export function updateTreeIDForAssets(treeID: string, assets: Array<AssetID>): P
     });
 }
 
-export function moveChild(parentID: string, childNode: AssetTreeNode, currentTreeID: string): Promise<unknown> {
+export function moveChild(parentID: string, childNode: AssetTreeNode, childTreeID: string): Promise<unknown> {
     const destTree = getTreeIdForAsset(parentID).then(getTree);
 
-    const srcTree = getTree(currentTreeID);
+    const srcTree = getTree(childTreeID);
 
     return Promise.all([destTree, srcTree])
         .then(function(resolved) {
@@ -275,10 +275,6 @@ export enum AssetTreeMethod {
     MOVE_CHILD = 'moveChild',
 }
 
-interface AssetTreeNodeDict {
-    [id: string]: AssetTreeNode;
-}
-
 export interface CreateAssetTreeOptions {
     ROOT_ID: AssetID;
     NODES: AssetTreeNodeDict;
@@ -297,7 +293,11 @@ export interface RemoveChildOptions {
 export interface MoveChildOptions {
     PARENT_ID: string;
     CHILD_NODE: AssetTreeNode;
-    CURRENT_TREE_ID: string;
+    CHILD_TREE_ID: string;
+}
+
+export interface GetTreeOptions {
+    TREE_ID: string;
 }
 
 export interface CreateOperation {
@@ -324,12 +324,18 @@ export interface GetTopLevelAssetsOperation {
     METHOD: AssetTreeMethod.GET_TOP_LEVEL_ASSETS;
 }
 
+export interface GetTreeOperation {
+    METHOD: AssetTreeMethod.GET_TREE;
+    METHOD_OPTIONS: GetTreeOptions;
+}
+
 export type AssetTreeOperations =
     | CreateOperation
     | AddChildOperation
     | RemoveChildOperation
     | MoveChildOperation
-    | GetTopLevelAssetsOperation;
+    | GetTopLevelAssetsOperation
+    | GetTreeOperation;
 
 export function assetTreeHandler(req: CbServer.BasicReq, resp: CbServer.Resp, options: AssetTreeOperations): void {
     switch (options.METHOD) {
@@ -348,6 +354,9 @@ export function assetTreeHandler(req: CbServer.BasicReq, resp: CbServer.Resp, op
         case AssetTreeMethod.GET_TOP_LEVEL_ASSETS:
             getTopLevelAssets(resp);
             break;
+        case AssetTreeMethod.GET_TREE:
+            handleGetTree(options.METHOD_OPTIONS);
+            break;
         default:
             break;
     }
@@ -356,16 +365,12 @@ export function assetTreeHandler(req: CbServer.BasicReq, resp: CbServer.Resp, op
 
     function handleCreate(options: CreateAssetTreeOptions) {
         const rootNodeID = options.ROOT_ID;
-        log(Object.keys(options.NODES));
-        log(Object.keys(options.NODES).map(k => [k, options.NODES[k]]));
-        const nodes = new Map(Object.keys(options.NODES).map(k => [k, options.NODES[k]]));
-
-        const rootNode = nodes.get(rootNodeID);
+        const rootNode = options.NODES[rootNodeID];
         if (!rootNode) {
             resp.error('Root node is missing.');
         }
 
-        const tree = new AssetTree(rootNode, undefined, nodes);
+        const tree = new AssetTree(rootNode, undefined, options.NODES);
 
         log('logging tree');
         log(AssetTree.treeToString(tree));
@@ -392,7 +397,13 @@ export function assetTreeHandler(req: CbServer.BasicReq, resp: CbServer.Resp, op
     }
 
     function handleMoveChild(options: MoveChildOptions) {
-        moveChild(options.PARENT_ID, options.CHILD_NODE, options.CURRENT_TREE_ID)
+        moveChild(options.PARENT_ID, options.CHILD_NODE, options.CHILD_TREE_ID)
+            .then(successFn)
+            .then(failureFn);
+    }
+
+    function handleGetTree(options: GetTreeOptions) {
+        getTree(options.TREE_ID)
             .then(successFn)
             .then(failureFn);
     }
