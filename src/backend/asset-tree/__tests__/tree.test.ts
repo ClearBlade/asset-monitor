@@ -167,13 +167,11 @@ describe('Asset Tree', () => {
     });
 
     describe('stringify and parse tree', () => {
-        beforeEach(() => {
+        it('convert tree to and from JSON string', () => {
             assetTree.addChildLeaf(asset2, 'asset1');
             assetTree.addChildLeaf(asset3, 'asset2');
             assetTree.addChildLeaf(asset4, 'asset2');
-        });
 
-        it('convert tree to and from JSON string', () => {
             const treeStr = AssetTree.treeToString(assetTree);
             const tree = AssetTree.treeFromString(treeStr);
 
