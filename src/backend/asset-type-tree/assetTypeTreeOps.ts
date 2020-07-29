@@ -56,9 +56,7 @@ export class AssetTypeTree {
             }
         };
 
-        const idString = JSON.stringify(topLevelAssetTypesIDs)
-            .replace('[', '(')
-            .replace(']', ')');
+        const idString = `(${topLevelAssetTypesIDs.map(assetID => `"${assetID}`).join(',')})`;
 
         const db = ClearBlade.Database();
         const query = `SELECT * FROM asset_types WHERE id in ${idString}`;
