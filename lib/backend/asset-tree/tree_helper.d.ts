@@ -1,12 +1,13 @@
 import { AssetTree, AssetID, AssetTreeNode } from './tree';
 import 'core-js/features/array';
+import 'core-js/features/set';
 export declare function insertTree(newTree: AssetTree): Promise<unknown>;
 export declare function removeTree(tree: AssetTree): Promise<unknown>;
 export declare function updateTree(tree: AssetTree): Promise<unknown>;
 export declare function getTree(treeID: string): Promise<AssetTree>;
 export declare function getTreeIdForAsset(assetID: AssetID): Promise<string>;
 export declare function getTreeByAssetID(assetID: string): Promise<AssetTree>;
-export declare function addChild<T>(parentID: string, child: AssetTreeNode): Promise<unknown>;
+export declare function addChild(parentID: string, child: AssetTreeNode): Promise<unknown>;
 export declare function updateTreeIDForAssets(treeID: string, assets: Array<AssetID>): Promise<unknown>;
 export declare function moveChild(parentID: string, childNode: AssetTreeNode, currentTreeID: string): Promise<unknown>;
 export declare function removeChild(childID: string, treeID: string): Promise<unknown>;

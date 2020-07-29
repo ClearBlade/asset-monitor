@@ -1,5 +1,6 @@
 import uuid = require('uuid');
 import 'core-js/features/map';
+import 'core-js/features/set';
 
 export type AssetID = string;
 
@@ -16,7 +17,7 @@ export class AssetTree {
 
     constructor(rootNode: AssetTreeNode, treeID?: string, nodes?: Map<AssetID, AssetTreeNode>) {
         this.rootID = rootNode.id;
-        this.treeID = treeID || uuid(); // Check for possible collision?
+        this.treeID = treeID || uuid();
         this.nodes = nodes || new Map();
         this.nodes.set(this.rootID, rootNode);
     }

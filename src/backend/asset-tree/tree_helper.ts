@@ -56,12 +56,12 @@ export function getTree(treeID: string): Promise<AssetTree> {
             if (data.DATA.length != 1) {
                 return Promise.reject(new Error(data.DATA.length + 'trees found for id ' + treeID));
             }
-            const treeStr = (data.DATA[0] as AssetTreeSchema) as string;
+            const treeStr = (data.DATA[0] as AssetTreeSchema).tree as string;
 
             try {
                 const tree = AssetTree.treeFromString(treeStr);
                 //treeObj.treeID = treeID;
-                log('getTree::: ', tree);
+                log('getTree::: ', AssetTree.treeToString(tree));
                 return Promise.resolve(tree);
             } catch (e) {
                 return Promise.reject(new Error('Failed while parsing: ' + e.message));
@@ -99,7 +99,7 @@ export function getTreeByAssetID(assetID: string): Promise<AssetTree> {
     return getTreeIdForAsset(assetID).then(getTree);
 }
 
-export function addChild<T>(parentID: string, child: AssetTreeNode): Promise<unknown> {
+export function addChild(parentID: string, child: AssetTreeNode): Promise<unknown> {
     return getTreeIdForAsset(parentID)
         .then(getTree)
         .then(
@@ -149,46 +149,50 @@ export function moveChild(parentID: string, childNode: AssetTreeNode, currentTre
 
     const srcTree = getTree(currentTreeID);
 
-    return Promise.all([destTree, srcTree]).then(function(resolved) {
-        let destT = resolved[0];
-        const srcT = resolved[1];
-        const srcDestSame = destT.treeID === srcT.treeID;
-        let treeToMove, updateTreePromise, removeTreePromise;
-        const promises = [];
+    return Promise.all([destTree, srcTree])
+        .then(function(resolved) {
+            let destT = resolved[0];
+            const srcT = resolved[1];
+            const srcDestSame = destT.treeID === srcT.treeID;
+            let treeToMove, updateTreePromise, removeTreePromise;
+            const promises = [];
 
-        if (childNode.id === srcT.rootID) {
-            log('srcT root itself is the new childTree');
-            treeToMove = srcT;
-        } else {
-            treeToMove = srcT.removeChild(childNode.id);
-        }
+            if (childNode.id === srcT.rootID) {
+                log('srcT root itself is the new childTree');
+                treeToMove = srcT;
+            } else {
+                treeToMove = srcT.removeChild(childNode.id);
+            }
 
-        destT = srcDestSame ? srcT : destT;
+            destT = srcDestSame ? srcT : destT;
 
-        destT.addChildTree(treeToMove, parentID);
-        const destTPromise = updateTree(destT);
-        promises.push(destTPromise);
-        if (srcT.size() <= 1 || childNode.id === srcT.rootID) {
-            // remove entry from trees collection!!
-            log("removing the src tree because either it's size is less than 1 or the root is moved.. ");
-            removeTreePromise = removeTree(srcT).then(function() {
-                return updateTreeIDForAssets('', [srcT.rootID]);
+            destT.addChildTree(treeToMove, parentID);
+            const destTPromise = updateTree(destT);
+            promises.push(destTPromise);
+            if (srcT.size() <= 1 || childNode.id === srcT.rootID) {
+                // remove entry from trees collection!!
+                log("removing the src tree because either it's size is less than 1 or the root is moved.. ");
+                removeTreePromise = removeTree(srcT).then(function() {
+                    return updateTreeIDForAssets('', [srcT.rootID]);
+                });
+                promises.push(removeTreePromise);
+            } else if (!srcDestSame) {
+                // update entry in trees collection
+                updateTreePromise = updateTree(srcT);
+                promises.push(updateTreePromise);
+            }
+
+            const assetsToUpdate = treeToMove.getSubtreeIDs(treeToMove.rootID);
+            //const assetUpdatePromise = updateTreeIDForAssets(destT.treeID, assetsToUpdate);
+            //promises.push(assetUpdatePromise);
+
+            return Promise.all(promises).then(function() {
+                return updateTreeIDForAssets(destT.treeID, assetsToUpdate);
             });
-            promises.push(removeTreePromise);
-        } else if (!srcDestSame) {
-            // update entry in trees collection
-            updateTreePromise = updateTree(srcT);
-            promises.push(updateTreePromise);
-        }
-
-        const assetsToUpdate = treeToMove.getSubtreeIDs(treeToMove.rootID);
-        //const assetUpdatePromise = updateTreeIDForAssets(destT.treeID, assetsToUpdate);
-        //promises.push(assetUpdatePromise);
-
-        return Promise.all(promises).then(function() {
-            return updateTreeIDForAssets(destT.treeID, assetsToUpdate);
+        })
+        .catch(err => {
+            log(err);
         });
-    });
 }
 
 export function removeChild(childID: string, treeID: string): Promise<unknown> {
@@ -328,7 +332,6 @@ export type AssetTreeOperations =
     | GetTopLevelAssetsOperation;
 
 export function assetTreeHandler(req: CbServer.BasicReq, resp: CbServer.Resp, options: AssetTreeOperations): void {
-    log('in handler');
     switch (options.METHOD) {
         case AssetTreeMethod.CREATE_ASSET_TREE:
             handleCreate(options.METHOD_OPTIONS);
