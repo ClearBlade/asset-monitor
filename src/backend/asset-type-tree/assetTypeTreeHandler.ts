@@ -217,6 +217,9 @@ export function assetTypeTreeHandler(
     const successFn = (data: unknown): never => resp.success(data);
     const errorFn = (data: unknown): never => resp.error(data);
 
+    if (!options) errorFn('Missing operation options.');
+    if (!options.METHOD) errorFn('Missing method.');
+
     const initPromise = fetchTree().then(assetTypeTree => {
         if (!req.params.trigger) {
             return syncAssetTypeTreeWithAssetTypes(assetTypeTree);
@@ -225,7 +228,7 @@ export function assetTypeTreeHandler(
         }
     });
 
-    switch (options?.METHOD) {
+    switch (options.METHOD) {
         case AssetTypeTreeMethod.GET_TREE:
             initPromise.then(successFn, errorFn);
             break;
