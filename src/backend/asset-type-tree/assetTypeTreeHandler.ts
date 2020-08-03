@@ -230,7 +230,7 @@ export function assetTypeTreeHandler(
 
     switch (options.METHOD) {
         case AssetTypeTreeMethod.GET_TREE:
-            initPromise.then(successFn, errorFn);
+            initPromise.then(assetTypeTree => AssetTypeTree.treeToString(assetTypeTree)).then(successFn, errorFn);
             break;
         case AssetTypeTreeMethod.GET_TOP_LEVEL_ASSET_TYPES:
             initPromise.then(assetTypeTree => getTopLevelAssetTypes(assetTypeTree)).then(successFn, errorFn);
