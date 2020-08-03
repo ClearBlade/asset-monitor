@@ -5,7 +5,7 @@ import { Areas } from '../collection-schema/Areas';
 import { Actions } from '../collection-schema/Actions';
 import { EventType, EventSchema } from '../collection-schema/Events';
 import { Entities, SplitEntities } from './types';
-import { uniqueArray } from './utils';
+import { uniqueArray, publishToEventTopic } from './utils';
 import { Rules } from '../collection-schema/Rules';
 import { getDefaultTimestamp } from './events';
 
@@ -233,6 +233,14 @@ export function closeRules(ids: string[], splitEntities: SplitEntities, timestam
                                         if (compoundEventTypes.indexOf(eventData.DATA[i].type as string) > -1) {
                                             // bulky code but will make it easier to handle modifications
                                             if (eventData.DATA[i].state === 'Active and Acknowledged') {
+                                                // publish to closed topic
+                                                const msg = ClearBlade.Messaging();
+                                                publishToEventTopic(
+                                                    msg,
+                                                    eventData.DATA[i].type as string,
+                                                    'closed',
+                                                    splitEntities,
+                                                );
                                                 return Promise.all([
                                                     eventsCollection.cbUpdatePromise({
                                                         query,
