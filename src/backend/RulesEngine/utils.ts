@@ -262,7 +262,7 @@ export function aggregateFactMap(processedRule: ProcessedFiltered, almanac: Alma
 }
 
 function createEventTopic(eventTypeId: string, state: 'open' | 'closed'): string {
-    return `_events/_monitor/${eventTypeId}/${state}`;
+    return `_events/_monitor/${eventTypeId}/${state}/_platform`;
 }
 
 export function publishToEventTopic(
