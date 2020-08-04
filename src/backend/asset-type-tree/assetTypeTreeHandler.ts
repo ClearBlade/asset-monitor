@@ -76,7 +76,10 @@ function handleTrigger(assetTypeTree: AssetTypeTree, req: CbServer.BasicReq): Pr
         assetTypeTree.deleteAssetTypeFromTree(assetTypeID);
     }
 
-    return updateAssetTypeTreeCollection(assetTypeTree).then(() => Promise.resolve(`${trigger}::${assetTypeID}`));
+    return updateAssetTypeTreeCollection(assetTypeTree).then(() => {
+        log(`${trigger}::${assetTypeID}`);
+        return Promise.resolve(`${trigger}::${assetTypeID}`);
+    });
 }
 
 function createAssetType(
@@ -90,10 +93,7 @@ function createAssetType(
         assetTypeTree.addAssetTypeToTree(assetTypeID);
         return addToAssetTypesCollection(assetType)
             .then(() => updateAssetTypeTreeCollection(assetTypeTree))
-            .then(() => {
-                log(`${assetTypeID} created.`);
-                return Promise.resolve(`${assetTypeID} created.`);
-            });
+            .then(() => Promise.resolve(`${assetTypeID} created.`));
     } else {
         return Promise.reject('Error: Missing asset type id.');
     }
@@ -217,18 +217,19 @@ export function assetTypeTreeHandler(
     const successFn = (data: unknown): never => resp.success(data);
     const errorFn = (data: unknown): never => resp.error(data);
 
-    if (!options) errorFn('Missing operation options.');
-    if (!options.METHOD) errorFn('Missing method.');
+    const trigger = req.params.trigger;
+
+    if (!options?.METHOD && !trigger) errorFn('Missing operation method.');
 
     const initPromise = fetchTree().then(assetTypeTree => {
-        if (!req.params.trigger) {
+        if (!trigger) {
             return syncAssetTypeTreeWithAssetTypes(assetTypeTree);
         } else {
             return handleTrigger(assetTypeTree, req).then(successFn, errorFn);
         }
     });
 
-    switch (options.METHOD) {
+    switch (options?.METHOD) {
         case AssetTypeTreeMethod.GET_TREE:
             initPromise.then(assetTypeTree => AssetTypeTree.treeToString(assetTypeTree)).then(successFn, errorFn);
             break;
@@ -254,6 +255,7 @@ export function assetTypeTreeHandler(
             initPromise.then(assetTypeTree => addChild(assetTypeTree, options.METHOD_OPTIONS)).then(successFn, errorFn);
             break;
         default:
+            if (!trigger) errorFn('Unsupported method provided.');
             break;
     }
 
