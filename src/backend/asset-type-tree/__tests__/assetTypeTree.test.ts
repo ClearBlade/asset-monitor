@@ -111,15 +111,15 @@ describe('Asset Type Tree', () => {
 
         it('prevents cycle on addChild and responds with error', () => {
             assetTypeTree.addChild('truck', 'vehicle');
-            assetTypeTree.addChild('tractor', 'vehicle');
             assetTypeTree.addChild('engine', 'truck');
-            assetTypeTree.addChild('engine', 'tractor');
 
-            expect(assetTypeTree.nodes['vehicle'].children.has('vehicle')).toBeFalsy();
-            expect(assetTypeTree.nodes['vehicle'].parents.has('vehicle')).toBeFalsy();
+            expect(() => {
+                assetTypeTree.addChild('vehicle', 'engine');
+            }).toThrowError();
 
-            assetTypeTree.addChild('engine', 'vehicle');
-            expect(assetTypeTree.nodes['engine'].children.has('vehicle')).toBeFalsy();
+            expect(() => {
+                assetTypeTree.addChild('engine', 'engine');
+            }).toThrowError();
         });
     });
 
