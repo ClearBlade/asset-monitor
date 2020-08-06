@@ -14,9 +14,10 @@ global.ClearBlade = {
     } => ({
         remove: (): void => undefined,
     }),
-    Query: function(): { equalTo: () => void } {
+    Query: function(): { equalTo: () => void; or: () => void } {
         return {
             equalTo: (): void => undefined,
+            or: (): void => undefined,
         };
     },
     Messaging: (): {

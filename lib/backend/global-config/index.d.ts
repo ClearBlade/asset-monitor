@@ -17,6 +17,7 @@ export declare enum CollectionName {
     ASSETS = "assets",
     ASSET_HISTORY = "asset_history",
     ASSET_TYPES = "asset_types",
+    ASSET_TREES = "asset_trees",
     ASSET_TYPE_TREE = "asset_type_tree",
     AREAS = "areas",
     ACTIONS = "actions",
