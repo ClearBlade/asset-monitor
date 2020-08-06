@@ -39,22 +39,28 @@ function syncAssetTypeTreeWithAssetTypes(assetTypeTree: AssetTypeTree): Promise<
         .then(data => {
             const typesFromAssetTypesCollection = new Set(
                 data.map(assetType => {
-                    return (assetType as AssetType).id;
+                    if ((assetType as AssetType).id) {
+                        return (assetType as AssetType).id;
+                    }
                 }),
-            );
+            ) as Set<AssetTypeID>;
 
             const typesFromTree = new Set(Object.keys(assetTypeTree.nodes));
 
             // Types added to the asset_types collection that are not in the tree yet.
             const typesToAddToTree = Array.from(typesFromAssetTypesCollection).filter(x => !typesFromTree.has(x));
-            typesToAddToTree.forEach(assetType => {
-                assetTypeTree.addAssetTypeToTree(assetType);
+            typesToAddToTree.forEach(assetTypeID => {
+                if (assetTypeID) {
+                    assetTypeTree.addAssetTypeToTree(assetTypeID);
+                }
             });
 
             // Types removed from the asset_types collection that need to be removed from the tree.
             const typesToRemoveFromTree = Array.from(typesFromTree).filter(x => !typesFromAssetTypesCollection.has(x));
-            typesToRemoveFromTree.forEach(assetType => {
-                assetTypeTree.deleteAssetTypeFromTree(assetType);
+            typesToRemoveFromTree.forEach(assetTypeID => {
+                if (assetTypeID) {
+                    assetTypeTree.deleteAssetTypeFromTree(assetTypeID);
+                }
             });
 
             return updateAssetTypeTreeCollection(assetTypeTree);
@@ -63,23 +69,44 @@ function syncAssetTypeTreeWithAssetTypes(assetTypeTree: AssetTypeTree): Promise<
 
 function handleTrigger(assetTypeTree: AssetTypeTree, req: CbServer.BasicReq): Promise<string> {
     const trigger = req.params.trigger;
-    const assetType = (req.params['items'] as AssetType[])[0];
-    const assetTypeID = assetType.id;
+    let assetTypeIDs: AssetTypeID[];
 
-    if (!assetType) {
-        return Promise.reject('Asset type is missing.');
+    if (trigger === 'Data::ItemCreated') {
+        const assetTypeItemIDs = (req.params['items'] as { item_id: string }[]).map(item => item.item_id);
+        const idString = `(${assetTypeItemIDs.map(itemID => `"${itemID}"`).join(',')})`;
+        const query = `SELECT id FROM asset_types WHERE item_id IN ${idString}`;
+
+        return RawQueryLib()
+            .cbQueryPromise({ query: query })
+            .then(data => {
+                assetTypeIDs = (data as { id: AssetTypeID }[]).map(assetType => assetType.id);
+                assetTypeIDs.forEach(assetTypeID => {
+                    if (assetTypeID) {
+                        assetTypeTree.addAssetTypeToTree(assetTypeID);
+                    }
+                });
+
+                return updateAssetTypeTreeCollection(assetTypeTree);
+            })
+            .then(() => {
+                log(`${trigger}\n${assetTypeIDs}`);
+                return Promise.resolve(trigger);
+            });
+    } else if (trigger === 'Data::ItemDeleted') {
+        assetTypeIDs = (req.params['items'] as AssetType[]).map(assetType => assetType.id);
+        assetTypeIDs.forEach(assetTypeID => {
+            if (assetTypeID) {
+                assetTypeTree.deleteAssetTypeFromTree(assetTypeID);
+            }
+        });
+
+        return updateAssetTypeTreeCollection(assetTypeTree).then(() => {
+            log(`${trigger}\n${assetTypeIDs}`);
+            return Promise.resolve(trigger);
+        });
+    } else {
+        return Promise.reject(`${trigger} not handled.`);
     }
-
-    if (trigger === 'Data::ItemCreated' && assetTypeID) {
-        assetTypeTree.addAssetTypeToTree(assetTypeID);
-    } else if (trigger === 'Data::ItemDeleted' && assetTypeID) {
-        assetTypeTree.deleteAssetTypeFromTree(assetTypeID);
-    }
-
-    return updateAssetTypeTreeCollection(assetTypeTree).then(() => {
-        log(`${trigger}::${assetTypeID}`);
-        return Promise.resolve(`${trigger}::${assetTypeID}`);
-    });
 }
 
 function createAssetType(
