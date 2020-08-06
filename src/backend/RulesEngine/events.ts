@@ -46,8 +46,12 @@ function getSplitEntities(entities: Entities): SplitEntities {
     );
 }
 
+export function getDefaultTimestamp(): string {
+    return new Date().toISOString();
+}
+
 export function processEvent(
-    ruleParams: Omit<RuleParams, 'ruleType' | 'ruleName'>,
+    ruleParams: Omit<RuleParams, 'ruleType' | 'ruleName'> & { timestamp?: string },
     entities: Entities,
     actionTopic: string,
     trigger: WithParsedCustomData,
@@ -60,7 +64,7 @@ export function processEvent(
                 if (shouldCreate) {
                     const promise = getStateForEvent(eventTypeID).then(({ is_open, state }) => {
                         const id = uuid();
-                        const timestamp = new Date().toISOString();
+                        const timestamp = ruleParams.timestamp ? ruleParams.timestamp : getDefaultTimestamp();
                         const item = {
                             last_updated: timestamp,
                             is_open,

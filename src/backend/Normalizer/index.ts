@@ -63,11 +63,12 @@ publishExternalEvent is a utility function for publishing external events to the
 export function publishExternalEvent(
     asset: Asset,
     ruleId: string,
+    timestamp?: string,
     ruleTopicFn: typeof Topics.RulesAssetLocation = Topics.RulesAssetLocation,
 ): void {
     ClearBlade.Messaging().publish(
         ruleTopicFn(asset.id as string),
-        JSON.stringify({ ...asset, meta: { rule_id: ruleId, is_external_rule_type: true } }),
+        JSON.stringify({ ...asset, meta: { rule_id: ruleId, is_external_rule_type: true, timestamp } }),
     );
 }
 

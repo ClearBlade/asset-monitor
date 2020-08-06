@@ -9,9 +9,11 @@ global.Promise.runQueue = (): void => {
 global.ClearBlade = {
     // add any utilized ClearBlade methods, ts-ignores are required due to partial implementations
     init: (): void => undefined,
-    Collection: function(): object {
-        return {};
-    },
+    Collection: (): {
+        remove: () => void;
+    } => ({
+        remove: (): void => undefined,
+    }),
     Query: function(): { equalTo: () => void; or: () => void } {
         return {
             equalTo: (): void => undefined,
