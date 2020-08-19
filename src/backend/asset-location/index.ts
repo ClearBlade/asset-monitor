@@ -5,6 +5,7 @@ import { Logger } from '../Logger';
 import { Topics, getErrorMessage } from '../Util';
 import { bulkSubscriber } from '../Normalizer';
 import '@clearblade/promise-polyfill';
+import createAsset from '../Util/createAsset';
 
 interface UpdateAssetLocationDataOptions {
     fetchedData: CbServer.CollectionSchema;
@@ -87,29 +88,6 @@ export function updateAssetLocationSS({
         return assetsCol.cbUpdatePromise({ query, changes });
     }
 
-    function createAsset(assetID: string, assetData: Asset): Promise<unknown> {
-        logger.publishLog(LogLevels.DEBUG, 'DEBUG: ', 'in Create Asset');
-
-        const assetsCol = CbCollectionLib(CollectionName.ASSETS);
-        const newAsset = assetData;
-
-        //DEV_TODO: optional/debatable, setting the date
-        const date = new Date().toISOString();
-        newAsset['last_location_updated'] = newAsset['last_location_updated']
-            ? newAsset['last_location_updated']
-            : date;
-        newAsset['last_updated'] = newAsset['last_updated'] ? newAsset['last_updated'] : date;
-        newAsset['id'] = assetID;
-        try {
-            newAsset['custom_data'] = JSON.stringify(assetData['custom_data'] ? assetData['custom_data'] : {});
-        } catch (e) {
-            logger.publishLog(LogLevels.ERROR, 'ERROR Failed to stringify ', e.message);
-            return Promise.reject(new Error('Failed to stringify ' + e.message));
-        }
-
-        return assetsCol.cbCreatePromise({ item: [newAsset] as Record<string, unknown>[] });
-    }
-
     function HandleMessage(err: boolean, msg: string, topic: string): void {
         if (err) {
             logger.publishLog(LogLevels.ERROR, ' Failed to wait for message: ', err, ' ', msg, '  ', topic);
@@ -149,7 +127,7 @@ export function updateAssetLocationSS({
                     updateAssetLocation({ fetchedData, incomingMsg }).then(successCb, failureCb);
                 } else if (data.DATA.length === 0) {
                     if (CREATE_NEW_ASSET_IF_MISSING) {
-                        createAsset(assetID, incomingMsg).then(successCb, failureCb);
+                        createAsset(assetID, incomingMsg, logger).then(successCb, failureCb);
                         logger.publishLog(LogLevels.DEBUG, "Creating Asset since it doesn't exist");
                     } else {
                         logger.publishLog(LogLevels.DEBUG, 'DEBUG: ', " Asset doesn't exist so, ignoring: ", data);

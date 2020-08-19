@@ -5,6 +5,7 @@ import { Topics, getErrorMessage } from '../Util';
 import { Asset } from '../collection-schema/Assets';
 import { bulkSubscriber } from '../Normalizer';
 import '@clearblade/promise-polyfill';
+import createAsset from '../Util/createAsset';
 
 interface UpdateAssetStatusConfig {
     req: CbServer.BasicReq;
@@ -12,10 +13,11 @@ interface UpdateAssetStatusConfig {
     options: UpdateAssetStatusOptions;
 }
 
-const defaultOptions = {
+const defaultOptions: UpdateAssetStatusOptions = {
     LOG_SETTING: GC.UPDATE_ASSET_STATUS_OPTIONS.LOG_SETTING,
     UPDATE_METHOD: GC.UPDATE_ASSET_STATUS_OPTIONS.UPDATE_METHOD,
     LOG_SERVICE_NAME: GC.UPDATE_ASSET_STATUS_OPTIONS.LOG_SERVICE_NAME,
+    CREATE_NEW_ASSET_IF_MISSING: GC.UPDATE_ASSET_STATUS_OPTIONS.CREATE_NEW_ASSET_IF_MISSING,
 };
 export function updateAssetStatusSS({
     req,
@@ -24,6 +26,7 @@ export function updateAssetStatusSS({
         LOG_SETTING = defaultOptions.LOG_SETTING,
         UPDATE_METHOD = defaultOptions.UPDATE_METHOD,
         LOG_SERVICE_NAME = defaultOptions.LOG_SERVICE_NAME,
+        CREATE_NEW_ASSET_IF_MISSING = defaultOptions.CREATE_NEW_ASSET_IF_MISSING,
     } = defaultOptions,
 }: UpdateAssetStatusConfig): void {
     ClearBlade.init({ request: req });
@@ -43,6 +46,10 @@ export function updateAssetStatusSS({
         const assetFetchQuery = ClearBlade.Query({ collectionName: CollectionName.ASSETS }).equalTo('id', assetID);
         const promise = assetsCol.cbFetchPromise({ query: assetFetchQuery }).then(function(data) {
             if (data.DATA.length <= 0) {
+                if (CREATE_NEW_ASSET_IF_MISSING) {
+                    logger.publishLog(LogLevels.DEBUG, "Creating Asset since it doesn't exist");
+                    return createAsset(assetID, msg, logger);
+                }
                 //TODO think of a better way to handle this
                 logger.publishLog(LogLevels.ERROR, 'No asset found for id ', assetID);
                 return Promise.reject(new Error('No asset found for id ' + assetID));
