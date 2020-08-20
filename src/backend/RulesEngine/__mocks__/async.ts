@@ -1,4 +1,4 @@
-import { Asset } from '../../collection-schema/assets';
+import { Asset } from '../../collection-schema/Assets';
 import { Areas } from '../../collection-schema/Areas';
 import { EventState } from '../async';
 

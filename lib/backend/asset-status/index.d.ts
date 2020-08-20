@@ -5,5 +5,5 @@ interface UpdateAssetStatusConfig {
     resp: CbServer.Resp;
     options: UpdateAssetStatusOptions;
 }
-export declare function updateAssetStatusSS({ req, resp, options: { LOG_SETTING, UPDATE_METHOD, LOG_SERVICE_NAME, }, }: UpdateAssetStatusConfig): void;
+export declare function updateAssetStatusSS({ req, resp, options: { LOG_SETTING, UPDATE_METHOD, LOG_SERVICE_NAME, CREATE_NEW_ASSET_IF_MISSING, }, }: UpdateAssetStatusConfig): void;
 export {};
