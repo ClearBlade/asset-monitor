@@ -3,7 +3,7 @@ import { Asset } from '../collection-schema/Assets';
 import { CollectionName } from '../global-config';
 import { CbCollectionLib } from '../collection-lib';
 import { Areas } from '../collection-schema/Areas';
-import { ProcessedCondition, WithParsedCustomData, Entities } from './types';
+import { ProcessedCondition, WithParsedCustomData, Entities, SplitEntities } from './types';
 
 /////////// for evaluating facts while engine is running
 
@@ -259,4 +259,17 @@ export function aggregateFactMap(processedRule: ProcessedFiltered, almanac: Alma
     }, factMap);
 
     return factMap;
+}
+
+function createEventTopic(eventTypeId: string, state: 'open' | 'closed'): string {
+    return `_events/_monitor/${eventTypeId}/${state}/_platform`;
+}
+
+export function publishToEventTopic(
+    msg: CbServer.Messaging,
+    eventTypeId: string,
+    state: 'open' | 'closed',
+    payload: SplitEntities,
+): void {
+    msg.publish(createEventTopic(eventTypeId, state), JSON.stringify(payload));
 }

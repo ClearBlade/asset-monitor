@@ -12,6 +12,7 @@ import * as uuid from 'uuid/v4';
 import { EventSchema } from '../collection-schema/Events';
 import { Areas } from '../collection-schema/Areas';
 import { doesTimeframeMatchRule } from './timeframe';
+import { publishToEventTopic } from './utils';
 
 export function processSuccessfulEvent(
     ids: string[],
@@ -63,6 +64,11 @@ export function processEvent(
             const promise = shouldCreateOrUpdateEvent(ruleID, splitEntities).then(shouldCreate => {
                 if (shouldCreate) {
                     const promise = getStateForEvent(eventTypeID).then(({ is_open, state }) => {
+                        const msg = ClearBlade.Messaging();
+                        if (is_open) {
+                            // publish to open topic
+                            publishToEventTopic(msg, eventTypeID, 'open', splitEntities);
+                        }
                         const id = uuid();
                         const timestamp = ruleParams.timestamp ? ruleParams.timestamp : getDefaultTimestamp();
                         const item = {

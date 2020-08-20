@@ -1,6 +1,6 @@
 import { Almanac, TopLevelCondition, ConditionProperties } from 'json-rules-engine';
 import { CollectionName } from '../global-config';
-import { ProcessedCondition, WithParsedCustomData, Entities } from './types';
+import { ProcessedCondition, WithParsedCustomData, Entities, SplitEntities } from './types';
 export interface FactData {
     data: WithParsedCustomData;
 }
@@ -15,4 +15,5 @@ interface ProcessedFiltered {
 export declare function filterProcessedRule(processedRule: Array<ProcessedCondition[]>, triggerId: string): ProcessedFiltered;
 export declare function uniqueArray(arr: string[]): string[];
 export declare function aggregateFactMap(processedRule: ProcessedFiltered, almanac: Almanac): Entities;
+export declare function publishToEventTopic(msg: CbServer.Messaging, eventTypeId: string, state: 'open' | 'closed', payload: SplitEntities): void;
 export {};
