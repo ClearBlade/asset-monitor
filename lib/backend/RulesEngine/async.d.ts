@@ -9,7 +9,7 @@ export declare function getAllAssets(): Promise<Array<CbServer.CollectionSchema<
 export declare function getAllAreas(): Promise<Array<CbServer.CollectionSchema<Areas>>>;
 export declare function getActionByID(actionID: string): Promise<Actions>;
 export declare function compareOverlappingEntities(event: EventSchema, splitEntities: SplitEntities): boolean | SplitEntities;
-export declare function shouldCreateOrUpdateEvent(ruleID: string, splitEntities: SplitEntities): Promise<boolean>;
+export declare function shouldCreateOrUpdateEvent(ruleID: string, splitEntities: SplitEntities, eventTypeId: string): Promise<boolean>;
 export interface EventState {
     is_open: boolean;
     state: string;

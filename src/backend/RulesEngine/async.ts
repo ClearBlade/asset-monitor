@@ -128,7 +128,16 @@ function updateEvent(id: string, entities: SplitEntities): void {
     eventsCollection.cbUpdatePromise({ query, changes });
 }
 
-export function shouldCreateOrUpdateEvent(ruleID: string, splitEntities: SplitEntities): Promise<boolean> {
+const compoundEventTypes = ['dau-external-alarm'];
+
+export function shouldCreateOrUpdateEvent(
+    ruleID: string,
+    splitEntities: SplitEntities,
+    eventTypeId: string,
+): Promise<boolean> {
+    if (compoundEventTypes.indexOf(eventTypeId) > -1) {
+        return new Promise(res => res(true));
+    }
     // if overlapping entities with existing event for rule, then update with added entities or do nothing if none added, else create new
     const eventsCollection = CbCollectionLib(CollectionName.EVENTS);
     const query = ClearBlade.Query({ collectionName: CollectionName.EVENTS })
@@ -201,8 +210,6 @@ export function createEventHistoryItem(
     return eventHistoryCollection.cbCreatePromise({ item });
 }
 
-const compoundEventTypes = ['dau-external-alarm'];
-
 export function closeRules(ids: string[], splitEntities: SplitEntities, timestamp?: string): Promise<boolean> {
     if (ids.length) {
         let shouldProceed = false;
@@ -221,37 +228,50 @@ export function closeRules(ids: string[], splitEntities: SplitEntities, timestam
                         const promise = eventsCollection
                             .cbFetchPromise({ query })
                             .then((eventData: CbServer.CollectionFetchData<EventSchema>) => {
-                                for (let i = 0; i < eventData.DATA.length; i++) {
-                                    const hasOverlappingEntities = compareOverlappingEntities(
-                                        eventData.DATA[i],
-                                        splitEntities,
-                                    );
-                                    if (hasOverlappingEntities) {
-                                        shouldProceed = true;
-                                        const eventHistoryCollection = CbCollectionLib(CollectionName.EVENT_HISTORY);
-                                        const query = ClearBlade.Query().equalTo('id', eventData.DATA[i].id as string);
-                                        if (compoundEventTypes.indexOf(eventData.DATA[i].type as string) > -1) {
-                                            // bulky code but will make it easier to handle modifications
-                                            if (eventData.DATA[i].state === 'Active and Acknowledged') {
-                                                // publish to closed topic
-                                                const msg = ClearBlade.Messaging();
-                                                publishToEventTopic(
-                                                    msg,
-                                                    eventData.DATA[i].type as string,
-                                                    'closed',
-                                                    splitEntities,
-                                                );
+                                return Promise.all(
+                                    eventData.DATA.map(e => {
+                                        const hasOverlappingEntities = compareOverlappingEntities(e, splitEntities);
+                                        if (hasOverlappingEntities) {
+                                            shouldProceed = true;
+                                            const eventHistoryCollection = CbCollectionLib(
+                                                CollectionName.EVENT_HISTORY,
+                                            );
+                                            const query = ClearBlade.Query().equalTo('id', e.id as string);
+                                            if (compoundEventTypes.indexOf(e.type as string) > -1) {
+                                                // bulky code but will make it easier to handle modifications
+                                                if (e.state === 'Active and Acknowledged') {
+                                                    // publish to closed topic
+                                                    const msg = ClearBlade.Messaging();
+                                                    publishToEventTopic(msg, e.type as string, 'closed', splitEntities);
+                                                    return Promise.all([
+                                                        eventsCollection.cbUpdatePromise({
+                                                            query,
+                                                            changes: {
+                                                                state: 'Cleared and Acknowledged',
+                                                                is_open: false,
+                                                            },
+                                                        }),
+                                                        eventHistoryCollection.cbCreatePromise({
+                                                            item: {
+                                                                event_id: e.id,
+                                                                timestamp: timestamp || getDefaultTimestamp(),
+                                                                transition_attribute: 'state',
+                                                                transition_value: 'Cleared and Acknowledged',
+                                                            },
+                                                        }),
+                                                    ]);
+                                                }
                                                 return Promise.all([
                                                     eventsCollection.cbUpdatePromise({
                                                         query,
-                                                        changes: { state: 'Cleared and Acknowledged', is_open: false },
+                                                        changes: { state: 'Cleared and Unacknowledged' },
                                                     }),
                                                     eventHistoryCollection.cbCreatePromise({
                                                         item: {
-                                                            event_id: eventData.DATA[i].id,
+                                                            event_id: e.id,
                                                             timestamp: timestamp || getDefaultTimestamp(),
                                                             transition_attribute: 'state',
-                                                            transition_value: 'Cleared and Acknowledged',
+                                                            transition_value: 'Cleared and Unacknowledged',
                                                         },
                                                     }),
                                                 ]);
@@ -259,34 +279,20 @@ export function closeRules(ids: string[], splitEntities: SplitEntities, timestam
                                             return Promise.all([
                                                 eventsCollection.cbUpdatePromise({
                                                     query,
-                                                    changes: { state: 'Cleared and Unacknowledged' },
+                                                    changes: { state, is_open: false },
                                                 }),
                                                 eventHistoryCollection.cbCreatePromise({
                                                     item: {
-                                                        event_id: eventData.DATA[i].id,
+                                                        event_id: e.id,
                                                         timestamp: timestamp || getDefaultTimestamp(),
                                                         transition_attribute: 'state',
-                                                        transition_value: 'Cleared and Unacknowledged',
+                                                        transition_value: state,
                                                     },
                                                 }),
                                             ]);
                                         }
-                                        return Promise.all([
-                                            eventsCollection.cbUpdatePromise({
-                                                query,
-                                                changes: { state, is_open: false },
-                                            }),
-                                            eventHistoryCollection.cbCreatePromise({
-                                                item: {
-                                                    event_id: data.DATA[i].id,
-                                                    timestamp: timestamp || getDefaultTimestamp(),
-                                                    transition_attribute: 'state',
-                                                    transition_value: state,
-                                                },
-                                            }),
-                                        ]);
-                                    }
-                                }
+                                    }),
+                                );
                             });
                         Promise.runQueue();
                         return promise;

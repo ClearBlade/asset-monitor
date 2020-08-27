@@ -61,7 +61,7 @@ export function processEvent(
     const splitEntities = getSplitEntities(entities);
     const promise = closeRules(closesIds, splitEntities, ruleParams.timestamp).then(shouldProceed => {
         if (shouldProceed) {
-            const promise = shouldCreateOrUpdateEvent(ruleID, splitEntities).then(shouldCreate => {
+            const promise = shouldCreateOrUpdateEvent(ruleID, splitEntities, eventTypeID).then(shouldCreate => {
                 if (shouldCreate) {
                     const promise = getStateForEvent(eventTypeID).then(({ is_open, state }) => {
                         const msg = ClearBlade.Messaging();
