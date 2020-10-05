@@ -1,5 +1,7 @@
 declare const _default: ({ edgeShouldRelayAssetHistory, edgeShouldRelayAssetStatus, edgeShouldRelayLocation, edgeShouldRelayRules, topics, ...rest }: {
-    req: CbServer.BasicReq;
+    req: CbServer.BasicReq<{
+        [id: string]: unknown;
+    }>;
     resp: CbServer.Resp;
     edgeShouldRelayLocation: boolean;
     edgeShouldRelayAssetStatus: boolean;
