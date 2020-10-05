@@ -127,7 +127,7 @@ function getLocationConditions(
         Promise.runQueue();
         return promise;
     } else if (relationship.attribute_type === EntityTypes.AREA && relationship.attribute === '') {
-        promise = getAllAreasForType(relationship.attribute).then(areas => {
+        promise = getAllAreas().then(areas => {
             return onFetchEntitiesForLocation(areas, id, entity, relationship, isPartOfType);
         });
         Promise.runQueue();
