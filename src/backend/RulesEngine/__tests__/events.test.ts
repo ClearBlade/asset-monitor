@@ -73,8 +73,8 @@ const finishedEvent: EventSchema = {
     priority: 1,
     action_ids: '[]',
     rule_id: 'rule1',
-    assets: '{"entityOne":{"id":"EntityOne"},"entityTwo":{"id":"EntityTwo"}}',
-    areas: '{"entityThree":{"id":"EntityThree","polygon":"[]"}}',
+    assets: '{"entityOne":{"id":"EntityOne","image":""},"entityTwo":{"id":"EntityTwo","image":""}}',
+    areas: '{"entityThree":{"id":"EntityThree","polygon":"[]","image":""}}',
 };
 
 const existingEventMatch: EventSchema = {

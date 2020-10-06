@@ -35,13 +35,13 @@ function getSplitEntities(entities: Entities): SplitEntities {
             if ((entities[id] as Areas).polygon) {
                 acc.areas[id] = {
                     ...entities[id],
-                    image: ''
-                 }
+                    image: '',
+                };
             } else {
                 acc.assets[id] = {
                     ...entities[id],
-                    image: ''
-                 }
+                    image: '',
+                };
             }
             return acc;
         },
