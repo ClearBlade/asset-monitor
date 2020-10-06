@@ -33,9 +33,15 @@ function getSplitEntities(entities: Entities): SplitEntities {
     return Object.keys(entities).reduce(
         (acc, id) => {
             if ((entities[id] as Areas).polygon) {
-                acc.areas[id] = entities[id];
+                acc.areas[id] = {
+                    ...entities[id],
+                    image: ''
+                 }
             } else {
-                acc.assets[id] = entities[id];
+                acc.assets[id] = {
+                    ...entities[id],
+                    image: ''
+                 }
             }
             return acc;
         },
